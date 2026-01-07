@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   LineChart,
   Line,
@@ -9,10 +9,12 @@ import {
   ResponsiveContainer,
   Legend,
   Brush,
+  ReferenceArea,
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
 import type { AnalyticsData } from '@/types';
 import { format, subMinutes, subHours, subDays, subWeeks, subMonths, subYears } from 'date-fns';
+import { Ghost } from 'lucide-react';
 
 interface AnalyticsChartProps {
   data: AnalyticsData[];
@@ -62,6 +64,24 @@ function formatDateForRange(date: Date, range: TimeRange): string {
   }
 }
 
+// Full date for tooltip - always shows exact date
+function formatTooltipDate(date: Date, range: TimeRange): string {
+  switch (range) {
+    case '30m':
+    case '6h':
+    case '1d':
+      return format(date, 'd MMM yyyy, HH:mm');
+    case '1w':
+    case '1m':
+      return format(date, 'd MMM yyyy');
+    case '1y':
+    case '3y':
+      return format(date, 'd MMM yyyy');
+    default:
+      return format(date, 'd MMM yyyy');
+  }
+}
+
 export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange }: AnalyticsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
@@ -69,9 +89,17 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     leads: true,
     sales: true,
   });
+  
+  // Brush state for update-on-release behavior
+  const [brushIndices, setBrushIndices] = useState<{ startIndex?: number; endIndex?: number }>({});
+  const [isDragging, setIsDragging] = useState(false);
+  const [tempBrushIndices, setTempBrushIndices] = useState<{ startIndex?: number; endIndex?: number }>({});
 
   const handleTimeRangeChange = (range: TimeRange) => {
     setTimeRange(range);
+    // Reset brush when changing time range
+    setBrushIndices({});
+    setTempBrushIndices({});
     if (onTimeRangeChange) {
       const startDate = getDateRangeStart(range);
       const filtered = data.filter(item => new Date(item.date) >= startDate);
@@ -87,8 +115,17 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
       .map(item => ({
         ...item,
         dateFormatted: formatDateForRange(new Date(item.date), timeRange),
+        tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
       }));
   }, [data, timeRange]);
+
+  // Data to display in main chart (respects brush selection)
+  const displayData = useMemo(() => {
+    if (brushIndices.startIndex !== undefined && brushIndices.endIndex !== undefined) {
+      return chartData.slice(brushIndices.startIndex, brushIndices.endIndex + 1);
+    }
+    return chartData;
+  }, [chartData, brushIndices]);
 
   const toggleMetric = (metric: MetricKey) => {
     setVisibleMetrics(prev => ({
@@ -97,19 +134,48 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     }));
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Handle brush change - only store temp values while dragging
+  const handleBrushChange = useCallback((newIndex: { startIndex?: number; endIndex?: number }) => {
+    if (isDragging) {
+      setTempBrushIndices(newIndex);
+    } else {
+      setBrushIndices(newIndex);
+    }
+  }, [isDragging]);
+
+  // Mouse down on brush - start dragging
+  const handleBrushMouseDown = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  // Mouse up anywhere - apply the brush indices
+  const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      setIsDragging(false);
+      if (tempBrushIndices.startIndex !== undefined) {
+        setBrushIndices(tempBrushIndices);
+      }
+    }
+  }, [isDragging, tempBrushIndices]);
+
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const dataPoint = payload[0]?.payload;
       return (
-        <div className="bg-popover border border-border rounded-lg p-3 shadow-lg">
-          <p className="text-sm font-medium text-foreground mb-2">{label}</p>
+        <div className="bg-card/95 backdrop-blur-sm border border-border/80 rounded-lg p-3 shadow-xl">
+          <p className="text-xs font-medium text-foreground mb-2 border-b border-border/50 pb-2">
+            {dataPoint?.tooltipDate}
+          </p>
           {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 text-sm">
-              <div 
-                className="w-2 h-2 rounded-full" 
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-muted-foreground capitalize">{entry.dataKey}:</span>
-              <span className="font-medium text-foreground">{entry.value.toLocaleString()}</span>
+            <div key={index} className="flex items-center justify-between gap-4 text-sm py-0.5">
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-2 h-2 rounded-full" 
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-muted-foreground capitalize">{entry.dataKey}</span>
+              </div>
+              <span className="font-semibold text-foreground tabular-nums">{entry.value.toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -150,6 +216,14 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     );
   };
 
+  // Watermark component
+  const Watermark = () => (
+    <div className="absolute bottom-14 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
+      <Ghost className="w-4 h-4 text-foreground" />
+      <span className="text-xs font-medium text-foreground tracking-wide">Ghost Link</span>
+    </div>
+  );
+
   return (
     <div className="bg-card rounded-lg border border-border p-5">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -157,9 +231,13 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
         <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
-      <div className="h-[350px] w-full">
+      <div 
+        className="h-[350px] w-full relative"
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <LineChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="brushGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -192,27 +270,6 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
               domain={['auto', 'auto']}
             />
             <Tooltip content={<CustomTooltip />} />
-            
-            {/* TradingView-style Brush / Mini-map */}
-            <Brush 
-              dataKey="dateFormatted" 
-              height={40} 
-              stroke="hsl(var(--border))"
-              fill="hsl(var(--card))"
-              travellerWidth={8}
-              gap={1}
-            >
-              <LineChart data={chartData}>
-                <Line
-                  type="linear"
-                  dataKey="clicks"
-                  stroke={METRIC_COLORS.clicks}
-                  strokeWidth={1}
-                  dot={false}
-                  strokeOpacity={0.6}
-                />
-              </LineChart>
-            </Brush>
 
             {visibleMetrics.clicks && (
               <Line
@@ -249,6 +306,51 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
                 isAnimationActive={false}
               />
             )}
+          </LineChart>
+        </ResponsiveContainer>
+        
+        <Watermark />
+      </div>
+
+      {/* Separate Brush / Mini-map below main chart */}
+      <div 
+        className="h-[50px] w-full mt-2"
+        onMouseDown={handleBrushMouseDown}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
+            <XAxis 
+              dataKey="dateFormatted" 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={9}
+              tickLine={false}
+              axisLine={false}
+              interval="preserveStartEnd"
+              minTickGap={80}
+            />
+            <Brush 
+              dataKey="dateFormatted" 
+              height={35}
+              stroke="hsl(var(--border))"
+              fill="hsl(var(--muted))"
+              travellerWidth={10}
+              gap={1}
+              onChange={handleBrushChange}
+              startIndex={isDragging ? tempBrushIndices.startIndex : brushIndices.startIndex}
+              endIndex={isDragging ? tempBrushIndices.endIndex : brushIndices.endIndex}
+            >
+              <LineChart data={chartData}>
+                <Line
+                  type="linear"
+                  dataKey="clicks"
+                  stroke={METRIC_COLORS.clicks}
+                  strokeWidth={1}
+                  dot={false}
+                  strokeOpacity={0.5}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </Brush>
           </LineChart>
         </ResponsiveContainer>
       </div>
