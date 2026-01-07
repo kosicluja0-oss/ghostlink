@@ -5,7 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { StatCard } from '@/components/analytics/StatCard';
 import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
-import { LinkKanban } from '@/components/links/LinkKanban';
+import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import type { TierType, AnalyticsData } from '@/types';
@@ -150,14 +150,14 @@ const Index = () => {
 
         {/* Link Management */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Your Links</h2>
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground">Your Links</h2>
+            <span className="text-[12px] text-muted-foreground">
               {activeLinksCount} of {tier.maxLinks} active
             </span>
           </div>
           
-          <LinkKanban
+          <LinkTable
             links={links}
             userTier={userTier}
             onArchive={archiveLink}

@@ -58,6 +58,7 @@ export interface AnalyticsData {
   clicks: number;
   leads: number;
   sales: number;
+  linkId?: string; // Optional: for per-link filtering
 }
 
 export interface DashboardStats {

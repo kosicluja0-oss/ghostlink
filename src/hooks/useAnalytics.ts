@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { AnalyticsData, DashboardStats, GhostLink } from '@/types';
 
+// Link IDs for mock data
+const LINK_IDS = ['1', '2', '3', '4'];
+
 // Mock data generator for demo - generates 6 months of growing data with minute-level precision
 const generateMockAnalytics = (): AnalyticsData[] => {
   const data: AnalyticsData[] = [];
@@ -12,21 +15,26 @@ const generateMockAnalytics = (): AnalyticsData[] => {
     date.setDate(date.getDate() - i);
     date.setHours(12, 0, 0, 0); // Normalize to noon for daily data
     
-    // Exponential growth: starts low, accelerates toward today
-    const progressFactor = (180 - i) / 180; // 0 at start → 1 today
-    const growthMultiplier = 0.1 + Math.pow(progressFactor, 2) * 3; // Hockey stick curve
-    const weekdayFactor = date.getDay() === 0 || date.getDay() === 6 ? 0.7 : 1;
-    const randomVariation = 0.7 + Math.random() * 0.6; // 70-130% variation
-    
-    const baseClicks = Math.floor((20 + 380 * growthMultiplier) * weekdayFactor * randomVariation);
-    const leads = Math.floor(baseClicks * (Math.random() * 0.1 + 0.08));
-    const sales = Math.floor(leads * (Math.random() * 0.2 + 0.15));
-    
-    data.push({
-      date: date.toISOString(),
-      clicks: baseClicks,
-      leads,
-      sales,
+    // Generate data for each link
+    LINK_IDS.forEach((linkId, linkIndex) => {
+      // Different growth patterns for each link
+      const progressFactor = (180 - i) / 180;
+      const linkWeight = linkIndex === 0 ? 1.5 : linkIndex === 1 ? 1.0 : linkIndex === 2 ? 0.6 : 0.2;
+      const growthMultiplier = 0.1 + Math.pow(progressFactor, 2) * 3 * linkWeight;
+      const weekdayFactor = date.getDay() === 0 || date.getDay() === 6 ? 0.7 : 1;
+      const randomVariation = 0.7 + Math.random() * 0.6;
+      
+      const baseClicks = Math.floor((10 + 100 * growthMultiplier) * weekdayFactor * randomVariation);
+      const leads = Math.floor(baseClicks * (Math.random() * 0.1 + 0.08));
+      const sales = Math.floor(leads * (Math.random() * 0.2 + 0.15));
+      
+      data.push({
+        date: date.toISOString(),
+        clicks: baseClicks,
+        leads,
+        sales,
+        linkId,
+      });
     });
   }
   
@@ -38,17 +46,23 @@ const generateMockAnalytics = (): AnalyticsData[] => {
     
     const hour = date.getHours();
     const hourFactor = hour >= 9 && hour <= 21 ? 1 : 0.3;
-    const minuteVariation = 0.5 + Math.random() * 1;
     
-    const baseClicks = Math.floor((Math.random() * 3 + 1) * hourFactor * minuteVariation);
-    const leads = Math.random() < 0.15 ? Math.floor(Math.random() * 2) : 0;
-    const sales = Math.random() < 0.05 ? 1 : 0;
-    
-    data.push({
-      date: date.toISOString(),
-      clicks: baseClicks,
-      leads,
-      sales,
+    // Generate data for each link
+    LINK_IDS.forEach((linkId, linkIndex) => {
+      const linkWeight = linkIndex === 0 ? 1.2 : linkIndex === 1 ? 0.8 : linkIndex === 2 ? 0.5 : 0.1;
+      const minuteVariation = 0.5 + Math.random() * 1;
+      
+      const baseClicks = Math.floor((Math.random() * 2 + 0.5) * hourFactor * minuteVariation * linkWeight);
+      const leads = Math.random() < 0.1 ? Math.floor(Math.random() * 2) : 0;
+      const sales = Math.random() < 0.03 ? 1 : 0;
+      
+      data.push({
+        date: date.toISOString(),
+        clicks: baseClicks,
+        leads,
+        sales,
+        linkId,
+      });
     });
   }
   

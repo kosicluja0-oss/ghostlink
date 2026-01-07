@@ -237,20 +237,47 @@ export function AnalyticsChart({
   }, [data, onTimeRangeChange]);
 
   // Conditional data density: minute-level for short ranges, daily for long ranges
+  // Also filters by activeLinkId if present
   const chartData = useMemo(() => {
     const startDate = getDateRangeStart(timeRange);
     const useMinuteData = ['30m', '6h', '1d'].includes(timeRange);
     
     // Filter data by date range first
-    const filtered = data.filter(item => new Date(item.date) >= startDate);
+    let filtered = data.filter(item => new Date(item.date) >= startDate);
+    
+    // Filter by active link if one is selected
+    if (activeLinkId) {
+      filtered = filtered.filter(item => item.linkId === activeLinkId);
+    }
     
     if (useMinuteData) {
-      // For short ranges: use minute-level data (max ~1440 points)
-      return filtered.map(item => ({
-        ...item,
-        dateFormatted: formatDateForRange(new Date(item.date), timeRange),
-        tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
-      }));
+      // For short ranges: aggregate all links per timestamp (or show single link data)
+      const timeMap = new Map<string, { clicks: number; leads: number; sales: number; date: string }>();
+      
+      filtered.forEach(item => {
+        const timeKey = item.date;
+        if (timeMap.has(timeKey)) {
+          const existing = timeMap.get(timeKey)!;
+          existing.clicks += item.clicks;
+          existing.leads += item.leads;
+          existing.sales += item.sales;
+        } else {
+          timeMap.set(timeKey, {
+            date: item.date,
+            clicks: item.clicks,
+            leads: item.leads,
+            sales: item.sales,
+          });
+        }
+      });
+      
+      return Array.from(timeMap.values())
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .map(item => ({
+          ...item,
+          dateFormatted: formatDateForRange(new Date(item.date), timeRange),
+          tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
+        }));
     } else {
       // For long ranges: aggregate to daily data (max ~1095 points for 3y)
       const dailyMap = new Map<string, { clicks: number; leads: number; sales: number; date: string }>();
@@ -282,7 +309,7 @@ export function AnalyticsChart({
           tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
         }));
     }
-  }, [data, timeRange]);
+  }, [data, timeRange, activeLinkId]);
 
   // Data to display in main chart - ONLY updates when range is committed (mouse released)
   const displayData = useMemo(() => {
@@ -404,32 +431,26 @@ export function AnalyticsChart({
     </div>
   );
 
-  // Live indicator component
-  const LiveIndicator = () => (
-    <div className="flex items-center gap-1.5">
-      <div className="relative flex items-center justify-center">
-        <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-        <div className="absolute w-2 h-2 bg-destructive rounded-full animate-ping opacity-75" />
-      </div>
-      <span className="text-[10px] font-bold uppercase tracking-wider text-destructive">Live</span>
-    </div>
+  // Streaming indicator component - subtle, non-animated
+  const StreamingIndicator = () => (
+    <span className="text-[11px] text-muted-foreground/70">• Streaming live data</span>
   );
 
   return (
     <div className="bg-card rounded-lg border border-border p-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+      <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
           <h3 className="text-base font-semibold text-foreground">Traffic Overview</h3>
-          <LiveIndicator />
+          <StreamingIndicator />
           {activeLinkId && selectedLinkAlias && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-xs font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
+            <div className="flex items-center gap-2 ml-2 pl-3 border-l border-border">
+              <span className="text-[12px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
               <button
                 onClick={onClearSelection}
-                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded bg-muted/50 hover:bg-muted"
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
               >
-                View All
+                <span>×</span>
+                <span>Clear</span>
               </button>
             </div>
           )}
