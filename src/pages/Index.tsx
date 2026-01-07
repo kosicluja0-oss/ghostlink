@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent } from 'lucide-react';
+import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { Header } from '@/components/layout/Header';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { StatCard } from '@/components/analytics/StatCard';
@@ -14,12 +15,42 @@ const Index = () => {
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState<typeof analyticsData | null>(null);
   
   const { analyticsData, links, stats, isLoading, addLink, archiveLink, restoreLink } = useAnalytics();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
   const activeLinksCount = links.filter(l => l.status === 'active').length;
+
+  // Calculate stats based on filtered data (time range)
+  const displayStats = useMemo(() => {
+    const dataToUse = filteredData ?? analyticsData;
+    const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
+    const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
+    const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
+    
+    let conversionRate = 0;
+    let earningsPerClick = 0;
+    
+    if (totalClicks > 0) {
+      conversionRate = ((totalLeads + totalSales) / totalClicks) * 100;
+      const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
+      earningsPerClick = totalEarnings / totalClicks;
+    }
+    
+    return {
+      totalClicks,
+      totalLeads,
+      totalSales,
+      conversionRate,
+      earningsPerClick,
+    };
+  }, [filteredData, analyticsData, links]);
+
+  const handleTimeRangeChange = (range: TimeRange, data: typeof analyticsData) => {
+    setFilteredData(data);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -44,14 +75,14 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <StatCard
               label="Total Clicks"
-              value={stats.totalClicks.toLocaleString()}
+              value={displayStats.totalClicks.toLocaleString()}
               icon={MousePointer}
               trend={{ value: 12.5, isPositive: true }}
               accentColor="primary"
             />
             <StatCard
               label="Total Leads"
-              value={stats.totalLeads.toLocaleString()}
+              value={displayStats.totalLeads.toLocaleString()}
               icon={Users}
               trend={{ value: 8.3, isPositive: true }}
               isLocked={isFreeTier}
@@ -59,7 +90,7 @@ const Index = () => {
             />
             <StatCard
               label="Total Sales"
-              value={stats.totalSales.toLocaleString()}
+              value={displayStats.totalSales.toLocaleString()}
               icon={DollarSign}
               trend={{ value: 15.2, isPositive: true }}
               isLocked={isFreeTier}
@@ -67,7 +98,7 @@ const Index = () => {
             />
             <StatCard
               label="Conversion Rate"
-              value={`${stats.conversionRate.toFixed(2)}%`}
+              value={`${displayStats.conversionRate.toFixed(2)}%`}
               icon={Percent}
               trend={{ value: 2.1, isPositive: true }}
               isLocked={isFreeTier}
@@ -75,7 +106,7 @@ const Index = () => {
             />
             <StatCard
               label="EPC"
-              value={formatCurrency(stats.earningsPerClick)}
+              value={formatCurrency(displayStats.earningsPerClick)}
               icon={TrendingUp}
               trend={{ value: 5.7, isPositive: true }}
               isLocked={isFreeTier}
@@ -89,6 +120,7 @@ const Index = () => {
           <AnalyticsChart 
             data={analyticsData} 
             showConversions={!isFreeTier}
+            onTimeRangeChange={handleTimeRangeChange}
           />
         </section>
 

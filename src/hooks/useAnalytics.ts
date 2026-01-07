@@ -1,28 +1,53 @@
 import { useState, useEffect } from 'react';
 import type { AnalyticsData, DashboardStats, GhostLink } from '@/types';
 
-// Mock data generator for demo
+// Mock data generator for demo - generates 3 years of data
 const generateMockAnalytics = (): AnalyticsData[] => {
   const data: AnalyticsData[] = [];
-  const today = new Date();
+  const now = new Date();
   
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
+  // Generate hourly data for the past 3 years (simplified: daily with hourly granularity for recent data)
+  // For 3 years: ~1095 days of data
+  for (let i = 1095; i >= 0; i--) {
+    const date = new Date(now);
     date.setDate(date.getDate() - i);
     
-    const baseClicks = Math.floor(Math.random() * 500) + 100;
-    const leads = Math.floor(baseClicks * (Math.random() * 0.15 + 0.05));
-    const sales = Math.floor(leads * (Math.random() * 0.3 + 0.1));
+    // Add some seasonality and trends
+    const seasonalFactor = 1 + 0.3 * Math.sin((i / 365) * 2 * Math.PI);
+    const trendFactor = 1 + (1095 - i) / 2000; // Growing trend
+    const weekdayFactor = date.getDay() === 0 || date.getDay() === 6 ? 0.7 : 1;
+    
+    const baseClicks = Math.floor((Math.random() * 300 + 150) * seasonalFactor * trendFactor * weekdayFactor);
+    const leads = Math.floor(baseClicks * (Math.random() * 0.12 + 0.05));
+    const sales = Math.floor(leads * (Math.random() * 0.25 + 0.1));
     
     data.push({
-      date: date.toISOString().split('T')[0],
+      date: date.toISOString(),
       clicks: baseClicks,
       leads,
       sales,
     });
   }
   
-  return data;
+  // Add more granular data for recent hours
+  for (let i = 47; i >= 0; i--) {
+    const date = new Date(now);
+    date.setHours(date.getHours() - i);
+    
+    const hourFactor = date.getHours() >= 9 && date.getHours() <= 21 ? 1 : 0.4;
+    const baseClicks = Math.floor((Math.random() * 30 + 10) * hourFactor);
+    const leads = Math.floor(baseClicks * (Math.random() * 0.15 + 0.05));
+    const sales = Math.floor(leads * (Math.random() * 0.3 + 0.1));
+    
+    data.push({
+      date: date.toISOString(),
+      clicks: baseClicks,
+      leads,
+      sales,
+    });
+  }
+  
+  return data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
 const generateMockLinks = (): GhostLink[] => [
