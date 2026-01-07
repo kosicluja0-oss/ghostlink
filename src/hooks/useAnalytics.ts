@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { AnalyticsData, DashboardStats, GhostLink } from '@/types';
 
-// Mock data generator for demo - generates 6 months of growing data
+// Mock data generator for demo - generates 6 months of growing data with minute-level precision
 const generateMockAnalytics = (): AnalyticsData[] => {
   const data: AnalyticsData[] = [];
   const now = new Date();
@@ -10,6 +10,7 @@ const generateMockAnalytics = (): AnalyticsData[] => {
   for (let i = 180; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
+    date.setHours(12, 0, 0, 0); // Normalize to noon for daily data
     
     // Exponential growth: starts low, accelerates toward today
     const progressFactor = (180 - i) / 180; // 0 at start → 1 today
@@ -29,15 +30,19 @@ const generateMockAnalytics = (): AnalyticsData[] => {
     });
   }
   
-  // Add more granular data for recent hours
-  for (let i = 47; i >= 0; i--) {
+  // Generate minute-level data for the last 24 hours (1440 minutes)
+  for (let i = 1440; i >= 0; i--) {
     const date = new Date(now);
-    date.setHours(date.getHours() - i);
+    date.setMinutes(date.getMinutes() - i);
+    date.setSeconds(0, 0);
     
-    const hourFactor = date.getHours() >= 9 && date.getHours() <= 21 ? 1 : 0.4;
-    const baseClicks = Math.floor((Math.random() * 30 + 10) * hourFactor);
-    const leads = Math.floor(baseClicks * (Math.random() * 0.15 + 0.05));
-    const sales = Math.floor(leads * (Math.random() * 0.3 + 0.1));
+    const hour = date.getHours();
+    const hourFactor = hour >= 9 && hour <= 21 ? 1 : 0.3;
+    const minuteVariation = 0.5 + Math.random() * 1;
+    
+    const baseClicks = Math.floor((Math.random() * 3 + 1) * hourFactor * minuteVariation);
+    const leads = Math.random() < 0.15 ? Math.floor(Math.random() * 2) : 0;
+    const sales = Math.random() < 0.05 ? 1 : 0;
     
     data.push({
       date: date.toISOString(),
