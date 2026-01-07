@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import {
   LineChart,
   Line,
@@ -7,9 +7,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  Brush,
-  ReferenceArea,
+  Area,
+  AreaChart,
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
 import type { AnalyticsData } from '@/types';
@@ -64,7 +63,6 @@ function formatDateForRange(date: Date, range: TimeRange): string {
   }
 }
 
-// Full date for tooltip - always shows exact date
 function formatTooltipDate(date: Date, range: TimeRange): string {
   switch (range) {
     case '30m':
@@ -73,7 +71,6 @@ function formatTooltipDate(date: Date, range: TimeRange): string {
       return format(date, 'd MMM yyyy, HH:mm');
     case '1w':
     case '1m':
-      return format(date, 'd MMM yyyy');
     case '1y':
     case '3y':
       return format(date, 'd MMM yyyy');
@@ -82,82 +79,16 @@ function formatTooltipDate(date: Date, range: TimeRange): string {
   }
 }
 
-export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange }: AnalyticsChartProps) {
-  const [timeRange, setTimeRange] = useState<TimeRange>('1m');
-  const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
-    clicks: true,
-    leads: true,
-    sales: true,
-  });
-  
-  // Brush state for update-on-release behavior
-  const [brushIndices, setBrushIndices] = useState<{ startIndex?: number; endIndex?: number }>({});
-  const [isDragging, setIsDragging] = useState(false);
-  const [tempBrushIndices, setTempBrushIndices] = useState<{ startIndex?: number; endIndex?: number }>({});
-
-  const handleTimeRangeChange = (range: TimeRange) => {
-    setTimeRange(range);
-    // Reset brush when changing time range
-    setBrushIndices({});
-    setTempBrushIndices({});
-    if (onTimeRangeChange) {
-      const startDate = getDateRangeStart(range);
-      const filtered = data.filter(item => new Date(item.date) >= startDate);
-      onTimeRangeChange(range, filtered);
-    }
-  };
-
-  const chartData = useMemo(() => {
-    const startDate = getDateRangeStart(timeRange);
-    
-    return data
-      .filter(item => new Date(item.date) >= startDate)
-      .map(item => ({
-        ...item,
-        dateFormatted: formatDateForRange(new Date(item.date), timeRange),
-        tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
-      }));
-  }, [data, timeRange]);
-
-  // Data to display in main chart (respects brush selection)
-  const displayData = useMemo(() => {
-    if (brushIndices.startIndex !== undefined && brushIndices.endIndex !== undefined) {
-      return chartData.slice(brushIndices.startIndex, brushIndices.endIndex + 1);
-    }
-    return chartData;
-  }, [chartData, brushIndices]);
-
-  const toggleMetric = (metric: MetricKey) => {
-    setVisibleMetrics(prev => ({
-      ...prev,
-      [metric]: !prev[metric],
-    }));
-  };
-
-  // Handle brush change - only store temp values while dragging
-  const handleBrushChange = useCallback((newIndex: { startIndex?: number; endIndex?: number }) => {
-    if (isDragging) {
-      setTempBrushIndices(newIndex);
-    } else {
-      setBrushIndices(newIndex);
-    }
-  }, [isDragging]);
-
-  // Mouse down on brush - start dragging
-  const handleBrushMouseDown = useCallback(() => {
-    setIsDragging(true);
-  }, []);
-
-  // Mouse up anywhere - apply the brush indices
-  const handleMouseUp = useCallback(() => {
-    if (isDragging) {
-      setIsDragging(false);
-      if (tempBrushIndices.startIndex !== undefined) {
-        setBrushIndices(tempBrushIndices);
-      }
-    }
-  }, [isDragging, tempBrushIndices]);
-
+// Memoized main chart component
+const MainChart = memo(({ 
+  displayData, 
+  visibleMetrics, 
+  showConversions 
+}: { 
+  displayData: any[]; 
+  visibleMetrics: Record<MetricKey, boolean>; 
+  showConversions: boolean;
+}) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0]?.payload;
@@ -183,6 +114,189 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     }
     return null;
   };
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <CartesianGrid 
+          strokeDasharray="3 3" 
+          stroke="hsl(var(--border))" 
+          strokeOpacity={0.5}
+          vertical={false}
+        />
+        <XAxis 
+          dataKey="dateFormatted" 
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={11}
+          tickLine={false}
+          axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.5 }}
+          dy={10}
+          interval="preserveStartEnd"
+          minTickGap={50}
+        />
+        <YAxis 
+          stroke="hsl(var(--muted-foreground))"
+          fontSize={11}
+          tickLine={false}
+          axisLine={false}
+          dx={-10}
+          tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
+          domain={['auto', 'auto']}
+        />
+        <Tooltip content={<CustomTooltip />} />
+
+        {visibleMetrics.clicks && (
+          <Line
+            type="linear"
+            dataKey="clicks"
+            stroke={METRIC_COLORS.clicks}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4, fill: METRIC_COLORS.clicks, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        )}
+        
+        {showConversions && visibleMetrics.leads && (
+          <Line
+            type="linear"
+            dataKey="leads"
+            stroke={METRIC_COLORS.leads}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4, fill: METRIC_COLORS.leads, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        )}
+        
+        {showConversions && visibleMetrics.sales && (
+          <Line
+            type="linear"
+            dataKey="sales"
+            stroke={METRIC_COLORS.sales}
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4, fill: METRIC_COLORS.sales, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        )}
+      </LineChart>
+    </ResponsiveContainer>
+  );
+});
+
+MainChart.displayName = 'MainChart';
+
+export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange }: AnalyticsChartProps) {
+  const [timeRange, setTimeRange] = useState<TimeRange>('1m');
+  const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
+    clicks: true,
+    leads: true,
+    sales: true,
+  });
+  
+  // Brush state for update-on-release behavior
+  const [brushRange, setBrushRange] = useState<{ start: number; end: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [dragEnd, setDragEnd] = useState<number | null>(null);
+
+  const handleTimeRangeChange = useCallback((range: TimeRange) => {
+    setTimeRange(range);
+    setBrushRange(null);
+    if (onTimeRangeChange) {
+      const startDate = getDateRangeStart(range);
+      const filtered = data.filter(item => new Date(item.date) >= startDate);
+      onTimeRangeChange(range, filtered);
+    }
+  }, [data, onTimeRangeChange]);
+
+  // Memoized chart data
+  const chartData = useMemo(() => {
+    const startDate = getDateRangeStart(timeRange);
+    
+    return data
+      .filter(item => new Date(item.date) >= startDate)
+      .map(item => ({
+        ...item,
+        dateFormatted: formatDateForRange(new Date(item.date), timeRange),
+        tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
+      }));
+  }, [data, timeRange]);
+
+  // Data to display in main chart - ONLY updates when brush is released
+  const displayData = useMemo(() => {
+    if (brushRange) {
+      return chartData.slice(brushRange.start, brushRange.end + 1);
+    }
+    return chartData;
+  }, [chartData, brushRange]);
+
+  // Simplified mini-map data for navigator
+  const navigatorData = useMemo(() => {
+    // Sample data for performance (max 100 points for navigator)
+    const step = Math.max(1, Math.floor(chartData.length / 100));
+    return chartData.filter((_, i) => i % step === 0);
+  }, [chartData]);
+
+  const toggleMetric = useCallback((metric: MetricKey) => {
+    setVisibleMetrics(prev => ({
+      ...prev,
+      [metric]: !prev[metric],
+    }));
+  }, []);
+
+  // Navigator (custom brush) handlers
+  const handleNavigatorMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const index = Math.floor(x * chartData.length);
+    setIsDragging(true);
+    setDragStart(index);
+    setDragEnd(index);
+  }, [chartData.length]);
+
+  const handleNavigatorMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const index = Math.floor(x * chartData.length);
+    setDragEnd(index);
+  }, [isDragging, chartData.length]);
+
+  const handleNavigatorMouseUp = useCallback(() => {
+    if (isDragging && dragStart !== null && dragEnd !== null) {
+      const start = Math.min(dragStart, dragEnd);
+      const end = Math.max(dragStart, dragEnd);
+      if (end - start > 1) {
+        setBrushRange({ start, end: Math.min(end, chartData.length - 1) });
+      }
+    }
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+  }, [isDragging, dragStart, dragEnd, chartData.length]);
+
+  const handleResetZoom = useCallback(() => {
+    setBrushRange(null);
+  }, []);
+
+  // Calculate selection highlight position
+  const selectionStyle = useMemo(() => {
+    if (isDragging && dragStart !== null && dragEnd !== null) {
+      const start = Math.min(dragStart, dragEnd);
+      const end = Math.max(dragStart, dragEnd);
+      const left = (start / chartData.length) * 100;
+      const width = ((end - start) / chartData.length) * 100;
+      return { left: `${left}%`, width: `${width}%` };
+    }
+    if (brushRange) {
+      const left = (brushRange.start / chartData.length) * 100;
+      const width = ((brushRange.end - brushRange.start) / chartData.length) * 100;
+      return { left: `${left}%`, width: `${width}%` };
+    }
+    return null;
+  }, [isDragging, dragStart, dragEnd, brushRange, chartData.length]);
 
   const CustomLegend = () => {
     const metrics: { key: MetricKey; label: string; locked?: boolean }[] = [
@@ -218,7 +332,7 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
 
   // Watermark component
   const Watermark = () => (
-    <div className="absolute bottom-14 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
+    <div className="absolute bottom-4 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
       <Ghost className="w-4 h-4 text-foreground" />
       <span className="text-xs font-medium text-foreground tracking-wide">Ghost Link</span>
     </div>
@@ -227,132 +341,91 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
   return (
     <div className="bg-card rounded-lg border border-border p-5">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Traffic Overview</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-foreground">Traffic Overview</h3>
+          {brushRange && (
+            <button 
+              onClick={handleResetZoom}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border/50 hover:border-border"
+            >
+              Reset Zoom
+            </button>
+          )}
+        </div>
         <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
-      <div 
-        className="h-[350px] w-full relative"
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-            <defs>
-              <linearGradient id="brushGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              stroke="hsl(var(--border))" 
-              strokeOpacity={0.5}
-              vertical={false}
-            />
-            <XAxis 
-              dataKey="dateFormatted" 
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={11}
-              tickLine={false}
-              axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.5 }}
-              dy={10}
-              interval="preserveStartEnd"
-              minTickGap={50}
-            />
-            <YAxis 
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={11}
-              tickLine={false}
-              axisLine={false}
-              dx={-10}
-              tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
-              domain={['auto', 'auto']}
-            />
-            <Tooltip content={<CustomTooltip />} />
-
-            {visibleMetrics.clicks && (
-              <Line
-                type="linear"
-                dataKey="clicks"
-                stroke={METRIC_COLORS.clicks}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: METRIC_COLORS.clicks, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-            )}
-            
-            {showConversions && visibleMetrics.leads && (
-              <Line
-                type="linear"
-                dataKey="leads"
-                stroke={METRIC_COLORS.leads}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: METRIC_COLORS.leads, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-            )}
-            
-            {showConversions && visibleMetrics.sales && (
-              <Line
-                type="linear"
-                dataKey="sales"
-                stroke={METRIC_COLORS.sales}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: METRIC_COLORS.sales, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-                isAnimationActive={false}
-              />
-            )}
-          </LineChart>
-        </ResponsiveContainer>
-        
+      {/* Main Chart */}
+      <div className="h-[280px] w-full relative">
+        <MainChart 
+          displayData={displayData} 
+          visibleMetrics={visibleMetrics} 
+          showConversions={showConversions} 
+        />
         <Watermark />
       </div>
 
-      {/* Separate Brush / Mini-map below main chart */}
-      <div 
-        className="h-[50px] w-full mt-2"
-        onMouseDown={handleBrushMouseDown}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 0, right: 10, left: 0, bottom: 0 }}>
-            <XAxis 
-              dataKey="dateFormatted" 
-              stroke="hsl(var(--muted-foreground))"
-              fontSize={9}
-              tickLine={false}
-              axisLine={false}
-              interval="preserveStartEnd"
-              minTickGap={80}
-            />
-            <Brush 
-              dataKey="dateFormatted" 
-              height={35}
-              stroke="hsl(var(--border))"
-              fill="hsl(var(--muted))"
-              travellerWidth={10}
-              gap={1}
-              onChange={handleBrushChange}
-              startIndex={isDragging ? tempBrushIndices.startIndex : brushIndices.startIndex}
-              endIndex={isDragging ? tempBrushIndices.endIndex : brushIndices.endIndex}
-            >
-              <LineChart data={chartData}>
-                <Line
+      {/* Divider */}
+      <div className="h-px bg-border/50 my-4" />
+
+      {/* Custom Navigator / Mini-map */}
+      <div className="space-y-1">
+        <div 
+          className="relative h-[40px] bg-muted/30 rounded border border-border/50 cursor-crosshair overflow-hidden select-none"
+          onMouseDown={handleNavigatorMouseDown}
+          onMouseMove={handleNavigatorMouseMove}
+          onMouseUp={handleNavigatorMouseUp}
+          onMouseLeave={handleNavigatorMouseUp}
+        >
+          {/* Mini area chart */}
+          <div className="absolute inset-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={navigatorData} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
+                <defs>
+                  <linearGradient id="navigatorGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <Area
                   type="linear"
                   dataKey="clicks"
-                  stroke={METRIC_COLORS.clicks}
+                  stroke="hsl(var(--chart-clicks))"
                   strokeWidth={1}
-                  dot={false}
                   strokeOpacity={0.5}
+                  fill="url(#navigatorGradient)"
                   isAnimationActive={false}
                 />
-              </LineChart>
-            </Brush>
-          </LineChart>
-        </ResponsiveContainer>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Selection overlay */}
+          {selectionStyle && (
+            <div 
+              className="absolute top-0 bottom-0 bg-primary/20 border-l-2 border-r-2 border-primary/60"
+              style={selectionStyle}
+            >
+              {/* Left handle */}
+              <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary rounded-full" />
+              {/* Right handle */}
+              <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary rounded-full" />
+            </div>
+          )}
+        </div>
+
+        {/* Static timeline labels */}
+        <div className="flex justify-between px-1">
+          {navigatorData
+            .filter((_, i) => i % Math.max(1, Math.floor(navigatorData.length / 6)) === 0 || i === navigatorData.length - 1)
+            .slice(0, 7)
+            .map((item, i) => (
+              <span key={i} className="text-[10px] text-muted-foreground">
+                {item.dateFormatted}
+              </span>
+            ))
+          }
+        </div>
       </div>
 
       <CustomLegend />
