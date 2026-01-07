@@ -19,6 +19,9 @@ interface AnalyticsChartProps {
   data: AnalyticsData[];
   showConversions?: boolean;
   onTimeRangeChange?: (range: TimeRange, filteredData: AnalyticsData[]) => void;
+  activeLinkId?: string | null;
+  selectedLinkAlias?: string;
+  onClearSelection?: () => void;
 }
 
 type MetricKey = 'clicks' | 'leads' | 'sales';
@@ -197,7 +200,14 @@ const MainChart = memo(({
 
 MainChart.displayName = 'MainChart';
 
-export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange }: AnalyticsChartProps) {
+export function AnalyticsChart({ 
+  data, 
+  showConversions = true, 
+  onTimeRangeChange,
+  activeLinkId,
+  selectedLinkAlias,
+  onClearSelection
+}: AnalyticsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
     clicks: true,
@@ -394,12 +404,36 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     </div>
   );
 
+  // Live indicator component
+  const LiveIndicator = () => (
+    <div className="flex items-center gap-1.5">
+      <div className="relative flex items-center justify-center">
+        <div className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+        <div className="absolute w-2 h-2 bg-destructive rounded-full animate-ping opacity-75" />
+      </div>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-destructive">Live</span>
+    </div>
+  );
+
   return (
-    <div className="bg-card rounded-lg border border-border p-5">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <div className="bg-card rounded-lg border border-border p-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-foreground">Traffic Overview</h3>
-          {isZoomed && (
+          <h3 className="text-base font-semibold text-foreground">Traffic Overview</h3>
+          <LiveIndicator />
+          {activeLinkId && selectedLinkAlias && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">•</span>
+              <span className="text-xs font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
+              <button
+                onClick={onClearSelection}
+                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded bg-muted/50 hover:bg-muted"
+              >
+                View All
+              </button>
+            </div>
+          )}
+          {isZoomed && !activeLinkId && (
             <button 
               onClick={handleResetZoom}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border/50 hover:border-border"
@@ -412,7 +446,7 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
       </div>
 
       {/* Main Chart */}
-      <div className="h-[280px] w-full relative">
+      <div className="h-[240px] w-full relative">
         <MainChart 
           displayData={displayData} 
           visibleMetrics={visibleMetrics} 
@@ -422,7 +456,7 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-border/50 my-4" />
+      <div className="h-px bg-border/50 my-3" />
 
       {/* Fixed Range Slider / Navigator */}
       <div className="space-y-1">
