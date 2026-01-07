@@ -195,15 +195,20 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     sales: true,
   });
   
-  // Brush state for update-on-release behavior
-  const [brushRange, setBrushRange] = useState<{ start: number; end: number } | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<number | null>(null);
-  const [dragEnd, setDragEnd] = useState<number | null>(null);
+  // Fixed range slider state - always has a selection
+  const [rangeStart, setRangeStart] = useState(0);
+  const [rangeEnd, setRangeEnd] = useState(100); // percentage
+  const [dragMode, setDragMode] = useState<'left' | 'right' | 'middle' | null>(null);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartRange, setDragStartRange] = useState({ start: 0, end: 100 });
+  const [committedRange, setCommittedRange] = useState({ start: 0, end: 100 });
 
+  // Reset range when time range changes
   const handleTimeRangeChange = useCallback((range: TimeRange) => {
     setTimeRange(range);
-    setBrushRange(null);
+    setRangeStart(0);
+    setRangeEnd(100);
+    setCommittedRange({ start: 0, end: 100 });
     if (onTimeRangeChange) {
       const startDate = getDateRangeStart(range);
       const filtered = data.filter(item => new Date(item.date) >= startDate);
@@ -224,13 +229,15 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
       }));
   }, [data, timeRange]);
 
-  // Data to display in main chart - ONLY updates when brush is released
+  // Data to display in main chart - ONLY updates when range is committed (mouse released)
   const displayData = useMemo(() => {
-    if (brushRange) {
-      return chartData.slice(brushRange.start, brushRange.end + 1);
+    if (committedRange.start === 0 && committedRange.end === 100) {
+      return chartData;
     }
-    return chartData;
-  }, [chartData, brushRange]);
+    const startIdx = Math.floor((committedRange.start / 100) * chartData.length);
+    const endIdx = Math.floor((committedRange.end / 100) * chartData.length);
+    return chartData.slice(startIdx, Math.max(endIdx, startIdx + 1));
+  }, [chartData, committedRange]);
 
   // Simplified mini-map data for navigator
   const navigatorData = useMemo(() => {
@@ -246,57 +253,62 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     }));
   }, []);
 
-  // Navigator (custom brush) handlers
-  const handleNavigatorMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const index = Math.floor(x * chartData.length);
-    setIsDragging(true);
-    setDragStart(index);
-    setDragEnd(index);
-  }, [chartData.length]);
+  // Range slider handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent, mode: 'left' | 'right' | 'middle') => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDragMode(mode);
+    setDragStartX(e.clientX);
+    setDragStartRange({ start: rangeStart, end: rangeEnd });
+  }, [rangeStart, rangeEnd]);
 
-  const handleNavigatorMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragMode) return;
+    
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const index = Math.floor(x * chartData.length);
-    setDragEnd(index);
-  }, [isDragging, chartData.length]);
-
-  const handleNavigatorMouseUp = useCallback(() => {
-    if (isDragging && dragStart !== null && dragEnd !== null) {
-      const start = Math.min(dragStart, dragEnd);
-      const end = Math.max(dragStart, dragEnd);
-      if (end - start > 1) {
-        setBrushRange({ start, end: Math.min(end, chartData.length - 1) });
+    const deltaPercent = ((e.clientX - dragStartX) / rect.width) * 100;
+    const minWidth = 5; // Minimum 5% width
+    
+    if (dragMode === 'left') {
+      const newStart = Math.max(0, Math.min(rangeEnd - minWidth, dragStartRange.start + deltaPercent));
+      setRangeStart(newStart);
+    } else if (dragMode === 'right') {
+      const newEnd = Math.min(100, Math.max(rangeStart + minWidth, dragStartRange.end + deltaPercent));
+      setRangeEnd(newEnd);
+    } else if (dragMode === 'middle') {
+      const width = dragStartRange.end - dragStartRange.start;
+      let newStart = dragStartRange.start + deltaPercent;
+      let newEnd = dragStartRange.end + deltaPercent;
+      
+      if (newStart < 0) {
+        newStart = 0;
+        newEnd = width;
       }
+      if (newEnd > 100) {
+        newEnd = 100;
+        newStart = 100 - width;
+      }
+      
+      setRangeStart(newStart);
+      setRangeEnd(newEnd);
     }
-    setIsDragging(false);
-    setDragStart(null);
-    setDragEnd(null);
-  }, [isDragging, dragStart, dragEnd, chartData.length]);
+  }, [dragMode, dragStartX, dragStartRange, rangeStart, rangeEnd]);
+
+  const handleMouseUp = useCallback(() => {
+    if (dragMode) {
+      // Commit the range on mouse release - this triggers main chart update
+      setCommittedRange({ start: rangeStart, end: rangeEnd });
+    }
+    setDragMode(null);
+  }, [dragMode, rangeStart, rangeEnd]);
 
   const handleResetZoom = useCallback(() => {
-    setBrushRange(null);
+    setRangeStart(0);
+    setRangeEnd(100);
+    setCommittedRange({ start: 0, end: 100 });
   }, []);
 
-  // Calculate selection highlight position
-  const selectionStyle = useMemo(() => {
-    if (isDragging && dragStart !== null && dragEnd !== null) {
-      const start = Math.min(dragStart, dragEnd);
-      const end = Math.max(dragStart, dragEnd);
-      const left = (start / chartData.length) * 100;
-      const width = ((end - start) / chartData.length) * 100;
-      return { left: `${left}%`, width: `${width}%` };
-    }
-    if (brushRange) {
-      const left = (brushRange.start / chartData.length) * 100;
-      const width = ((brushRange.end - brushRange.start) / chartData.length) * 100;
-      return { left: `${left}%`, width: `${width}%` };
-    }
-    return null;
-  }, [isDragging, dragStart, dragEnd, brushRange, chartData.length]);
+  const isZoomed = rangeStart !== 0 || rangeEnd !== 100;
 
   const CustomLegend = () => {
     const metrics: { key: MetricKey; label: string; locked?: boolean }[] = [
@@ -343,7 +355,7 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-foreground">Traffic Overview</h3>
-          {brushRange && (
+          {isZoomed && (
             <button 
               onClick={handleResetZoom}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border/50 hover:border-border"
@@ -368,17 +380,16 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
       {/* Divider */}
       <div className="h-px bg-border/50 my-4" />
 
-      {/* Custom Navigator / Mini-map */}
+      {/* Fixed Range Slider / Navigator */}
       <div className="space-y-1">
         <div 
-          className="relative h-[40px] bg-muted/30 rounded border border-border/50 cursor-crosshair overflow-hidden select-none"
-          onMouseDown={handleNavigatorMouseDown}
-          onMouseMove={handleNavigatorMouseMove}
-          onMouseUp={handleNavigatorMouseUp}
-          onMouseLeave={handleNavigatorMouseUp}
+          className="relative h-[40px] bg-muted/30 rounded border border-border/50 overflow-hidden select-none"
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           {/* Mini area chart */}
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 pointer-events-none">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={navigatorData} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
                 <defs>
@@ -400,18 +411,46 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
             </ResponsiveContainer>
           </div>
 
-          {/* Selection overlay */}
-          {selectionStyle && (
+          {/* Dimmed areas outside selection */}
+          <div 
+            className="absolute top-0 bottom-0 left-0 bg-background/60 pointer-events-none"
+            style={{ width: `${rangeStart}%` }}
+          />
+          <div 
+            className="absolute top-0 bottom-0 right-0 bg-background/60 pointer-events-none"
+            style={{ width: `${100 - rangeEnd}%` }}
+          />
+
+          {/* Selection window - always visible, never disappears */}
+          <div 
+            className="absolute top-0 bottom-0 border-l-2 border-r-2 border-primary/60"
+            style={{ 
+              left: `${rangeStart}%`, 
+              width: `${rangeEnd - rangeStart}%` 
+            }}
+          >
+            {/* Middle drag area */}
             <div 
-              className="absolute top-0 bottom-0 bg-primary/20 border-l-2 border-r-2 border-primary/60"
-              style={selectionStyle}
+              className="absolute inset-0 cursor-grab active:cursor-grabbing"
+              onMouseDown={(e) => handleMouseDown(e, 'middle')}
+            />
+            
+            {/* Left handle */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-3 -translate-x-1/2 cursor-ew-resize flex items-center justify-center z-10"
+              onMouseDown={(e) => handleMouseDown(e, 'left')}
             >
-              {/* Left handle */}
-              <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary rounded-full" />
-              {/* Right handle */}
-              <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1.5 h-5 bg-primary rounded-full" />
+              <div className="w-1.5 h-5 bg-primary rounded-full shadow-sm" />
             </div>
-          )}
+            
+            {/* Right handle */}
+            <div 
+              className="absolute right-0 top-0 bottom-0 w-3 translate-x-1/2 cursor-ew-resize flex items-center justify-center z-10"
+              onMouseDown={(e) => handleMouseDown(e, 'right')}
+            >
+              <div className="w-1.5 h-5 bg-primary rounded-full shadow-sm" />
+            </div>
+          </div>
         </div>
 
         {/* Static timeline labels */}
