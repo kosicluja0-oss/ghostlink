@@ -11,6 +11,7 @@ interface StatCardProps {
   };
   isLocked?: boolean;
   accentColor?: 'primary' | 'success' | 'warning' | 'chart-conversions';
+  compact?: boolean;
 }
 
 export function StatCard({ 
@@ -19,7 +20,8 @@ export function StatCard({
   icon: Icon, 
   trend, 
   isLocked = false,
-  accentColor = 'primary'
+  accentColor = 'primary',
+  compact = false
 }: StatCardProps) {
   const colorClasses = {
     primary: 'text-primary',
@@ -29,26 +31,32 @@ export function StatCard({
   };
 
   return (
-    <div className="relative bg-card rounded-lg border border-border p-5 transition-ghost hover:border-primary/30">
-      <div className="flex items-start justify-between mb-3">
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
-        <Icon className={cn('h-5 w-5', colorClasses[accentColor])} />
+    <div className={cn(
+      "relative bg-card rounded-lg border border-border transition-ghost hover:border-primary/30",
+      compact ? "p-3" : "p-5"
+    )}>
+      <div className={cn("flex items-start justify-between", compact ? "mb-1.5" : "mb-3")}>
+        <span className={cn("font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>{label}</span>
+        <Icon className={cn(colorClasses[accentColor], compact ? "h-4 w-4" : "h-5 w-5")} />
       </div>
       
       <div className={cn('relative', isLocked && 'tier-locked')}>
-        <p className={cn('stat-number', colorClasses[accentColor])}>
+        <p className={cn(
+          colorClasses[accentColor],
+          compact ? "text-xl font-bold tabular-nums" : "stat-number"
+        )}>
           {value}
         </p>
         
         {trend && (
-          <div className="flex items-center gap-1 mt-2">
+          <div className={cn("flex items-center gap-1", compact ? "mt-1" : "mt-2")}>
             <span className={cn(
               'text-xs font-medium',
               trend.isPositive ? 'text-success' : 'text-destructive'
             )}>
               {trend.isPositive ? '+' : ''}{trend.value}%
             </span>
-            <span className="text-xs text-muted-foreground">vs last period</span>
+            {!compact && <span className="text-xs text-muted-foreground">vs last period</span>}
           </div>
         )}
       </div>

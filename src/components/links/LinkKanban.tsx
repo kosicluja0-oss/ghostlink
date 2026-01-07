@@ -6,17 +6,26 @@ interface LinkKanbanProps {
   userTier: TierType;
   onArchive: (id: string) => void;
   onRestore: (id: string) => void;
+  activeLinkId?: string | null;
+  onLinkSelect?: (linkId: string) => void;
 }
 
-export function LinkKanban({ links, userTier, onArchive, onRestore }: LinkKanbanProps) {
+export function LinkKanban({ 
+  links, 
+  userTier, 
+  onArchive, 
+  onRestore,
+  activeLinkId,
+  onLinkSelect
+}: LinkKanbanProps) {
   const activeLinks = links.filter(link => link.status === 'active');
   const archivedLinks = links.filter(link => link.status === 'archived');
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Active Links Column */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-foreground">Active Links</h3>
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-success/10 text-success">
@@ -25,7 +34,7 @@ export function LinkKanban({ links, userTier, onArchive, onRestore }: LinkKanban
           </div>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-2">
           {activeLinks.length > 0 ? (
             activeLinks.map((link) => (
               <LinkCard
@@ -34,10 +43,12 @@ export function LinkKanban({ links, userTier, onArchive, onRestore }: LinkKanban
                 userTier={userTier}
                 onArchive={onArchive}
                 onRestore={onRestore}
+                isSelected={activeLinkId === link.id}
+                onSelect={onLinkSelect}
               />
             ))
           ) : (
-            <div className="text-center py-12 border border-dashed border-border rounded-lg">
+            <div className="text-center py-10 border border-dashed border-border rounded-lg">
               <p className="text-sm text-muted-foreground">No active links yet</p>
             </div>
           )}
@@ -46,7 +57,7 @@ export function LinkKanban({ links, userTier, onArchive, onRestore }: LinkKanban
 
       {/* Archived Links Column */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-foreground">Archived</h3>
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -55,7 +66,7 @@ export function LinkKanban({ links, userTier, onArchive, onRestore }: LinkKanban
           </div>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-2">
           {archivedLinks.length > 0 ? (
             archivedLinks.map((link) => (
               <LinkCard
@@ -64,10 +75,12 @@ export function LinkKanban({ links, userTier, onArchive, onRestore }: LinkKanban
                 userTier={userTier}
                 onArchive={onArchive}
                 onRestore={onRestore}
+                isSelected={activeLinkId === link.id}
+                onSelect={onLinkSelect}
               />
             ))
           ) : (
-            <div className="text-center py-12 border border-dashed border-border rounded-lg">
+            <div className="text-center py-10 border border-dashed border-border rounded-lg">
               <p className="text-sm text-muted-foreground">No archived links</p>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent } from 'lucide-react';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { Header } from '@/components/layout/Header';
@@ -8,20 +8,36 @@ import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
 import { LinkKanban } from '@/components/links/LinkKanban';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import type { TierType } from '@/types';
+import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 
 const Index = () => {
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState<typeof analyticsData | null>(null);
+  const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
+  const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
   const { analyticsData, links, stats, isLoading, addLink, archiveLink, restoreLink } = useAnalytics();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
   const activeLinksCount = links.filter(l => l.status === 'active').length;
+
+  // Get the currently selected link
+  const selectedLink = useMemo(() => {
+    return activeLinkId ? links.find(l => l.id === activeLinkId) : null;
+  }, [activeLinkId, links]);
+
+  // Handle link selection
+  const handleLinkSelect = useCallback((linkId: string) => {
+    setActiveLinkId(prev => prev === linkId ? null : linkId);
+  }, []);
+
+  // Clear link selection
+  const handleClearSelection = useCallback(() => {
+    setActiveLinkId(null);
+  }, []);
 
   // Calculate stats based on filtered data (time range)
   const displayStats = useMemo(() => {
@@ -69,16 +85,17 @@ const Index = () => {
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats Banner */}
-        <section className="mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <main className="container mx-auto px-4 py-6">
+        {/* Stats Banner - Compact */}
+        <section className="mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <StatCard
               label="Total Clicks"
               value={displayStats.totalClicks.toLocaleString()}
               icon={MousePointer}
               trend={{ value: 12.5, isPositive: true }}
               accentColor="primary"
+              compact
             />
             <StatCard
               label="Total Leads"
@@ -87,6 +104,7 @@ const Index = () => {
               trend={{ value: 8.3, isPositive: true }}
               isLocked={isFreeTier}
               accentColor="warning"
+              compact
             />
             <StatCard
               label="Total Sales"
@@ -95,6 +113,7 @@ const Index = () => {
               trend={{ value: 15.2, isPositive: true }}
               isLocked={isFreeTier}
               accentColor="success"
+              compact
             />
             <StatCard
               label="Conversion Rate"
@@ -103,6 +122,7 @@ const Index = () => {
               trend={{ value: 2.1, isPositive: true }}
               isLocked={isFreeTier}
               accentColor="chart-conversions"
+              compact
             />
             <StatCard
               label="EPC"
@@ -111,23 +131,27 @@ const Index = () => {
               trend={{ value: 5.7, isPositive: true }}
               isLocked={isFreeTier}
               accentColor="success"
+              compact
             />
           </div>
         </section>
 
         {/* Chart */}
-        <section className="mb-8">
+        <section className="mb-5">
           <AnalyticsChart 
             data={analyticsData} 
             showConversions={!isFreeTier}
             onTimeRangeChange={handleTimeRangeChange}
+            activeLinkId={activeLinkId}
+            selectedLinkAlias={selectedLink?.alias}
+            onClearSelection={handleClearSelection}
           />
         </section>
 
         {/* Link Management */}
         <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-foreground">Your Links</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Your Links</h2>
             <span className="text-sm text-muted-foreground">
               {activeLinksCount} of {tier.maxLinks} active
             </span>
@@ -138,6 +162,8 @@ const Index = () => {
             userTier={userTier}
             onArchive={archiveLink}
             onRestore={restoreLink}
+            activeLinkId={activeLinkId}
+            onLinkSelect={handleLinkSelect}
           />
         </section>
       </main>
