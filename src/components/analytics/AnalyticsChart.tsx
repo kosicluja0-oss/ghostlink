@@ -157,71 +157,96 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
         <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
-      <div className="h-[300px] w-full">
+      <div className="h-[350px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+          <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="brushGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
             <CartesianGrid 
               strokeDasharray="3 3" 
               stroke="hsl(var(--border))" 
+              strokeOpacity={0.5}
               vertical={false}
             />
             <XAxis 
               dataKey="dateFormatted" 
               stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
+              fontSize={11}
               tickLine={false}
-              axisLine={false}
+              axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.5 }}
               dy={10}
+              interval="preserveStartEnd"
+              minTickGap={50}
             />
             <YAxis 
               stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
+              fontSize={11}
               tickLine={false}
               axisLine={false}
               dx={-10}
               tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
+              domain={['auto', 'auto']}
             />
             <Tooltip content={<CustomTooltip />} />
             
-            {/* Brush for zoom/pan */}
+            {/* TradingView-style Brush / Mini-map */}
             <Brush 
               dataKey="dateFormatted" 
-              height={30} 
-              stroke="hsl(var(--primary))"
-              fill="hsl(var(--muted))"
-              tickFormatter={() => ''}
-            />
+              height={40} 
+              stroke="hsl(var(--border))"
+              fill="hsl(var(--card))"
+              travellerWidth={8}
+              gap={1}
+            >
+              <LineChart data={chartData}>
+                <Line
+                  type="linear"
+                  dataKey="clicks"
+                  stroke={METRIC_COLORS.clicks}
+                  strokeWidth={1}
+                  dot={false}
+                  strokeOpacity={0.6}
+                />
+              </LineChart>
+            </Brush>
 
             {visibleMetrics.clicks && (
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="clicks"
                 stroke={METRIC_COLORS.clicks}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: METRIC_COLORS.clicks }}
+                activeDot={{ r: 4, fill: METRIC_COLORS.clicks, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+                isAnimationActive={false}
               />
             )}
             
             {showConversions && visibleMetrics.leads && (
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="leads"
                 stroke={METRIC_COLORS.leads}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: METRIC_COLORS.leads }}
+                activeDot={{ r: 4, fill: METRIC_COLORS.leads, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+                isAnimationActive={false}
               />
             )}
             
             {showConversions && visibleMetrics.sales && (
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="sales"
                 stroke={METRIC_COLORS.sales}
                 strokeWidth={2}
                 dot={false}
-                activeDot={{ r: 4, fill: METRIC_COLORS.sales }}
+                activeDot={{ r: 4, fill: METRIC_COLORS.sales, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+                isAnimationActive={false}
               />
             )}
           </LineChart>
