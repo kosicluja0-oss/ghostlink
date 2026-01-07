@@ -47,11 +47,10 @@ function formatDateForRange(date: Date, range: TimeRange): string {
   switch (range) {
     case '30m':
     case '6h':
-      return format(date, 'HH:mm');
     case '1d':
       return format(date, 'HH:mm');
     case '1w':
-      return format(date, 'EEE');
+      return format(date, 'EEE d');
     case '1m':
       return format(date, 'MMM d');
     case '1y':
@@ -71,9 +70,10 @@ function formatTooltipDate(date: Date, range: TimeRange): string {
       return format(date, 'd MMM yyyy, HH:mm');
     case '1w':
     case '1m':
+      return format(date, 'd MMM yyyy');
     case '1y':
     case '3y':
-      return format(date, 'd MMM yyyy');
+      return format(date, 'MMM yyyy');
     default:
       return format(date, 'd MMM yyyy');
   }
@@ -132,7 +132,8 @@ const MainChart = memo(({
           axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.5 }}
           dy={10}
           interval="preserveStartEnd"
-          minTickGap={50}
+          minTickGap={60}
+          type="category"
         />
         <YAxis 
           stroke="hsl(var(--muted-foreground))"
@@ -342,9 +343,9 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     );
   };
 
-  // Watermark component
+  // Watermark component - positioned with 20px padding from bottom axis
   const Watermark = () => (
-    <div className="absolute bottom-4 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
+    <div className="absolute bottom-10 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
       <Ghost className="w-4 h-4 text-foreground" />
       <span className="text-xs font-medium text-foreground tracking-wide">Ghost Link</span>
     </div>
