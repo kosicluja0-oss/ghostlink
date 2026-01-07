@@ -217,17 +217,52 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     }
   }, [data, onTimeRangeChange]);
 
-  // Memoized chart data
+  // Conditional data density: minute-level for short ranges, daily for long ranges
   const chartData = useMemo(() => {
     const startDate = getDateRangeStart(timeRange);
+    const useMinuteData = ['30m', '6h', '1d'].includes(timeRange);
     
-    return data
-      .filter(item => new Date(item.date) >= startDate)
-      .map(item => ({
+    // Filter data by date range first
+    const filtered = data.filter(item => new Date(item.date) >= startDate);
+    
+    if (useMinuteData) {
+      // For short ranges: use minute-level data (max ~1440 points)
+      return filtered.map(item => ({
         ...item,
         dateFormatted: formatDateForRange(new Date(item.date), timeRange),
         tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
       }));
+    } else {
+      // For long ranges: aggregate to daily data (max ~1095 points for 3y)
+      const dailyMap = new Map<string, { clicks: number; leads: number; sales: number; date: string }>();
+      
+      filtered.forEach(item => {
+        const date = new Date(item.date);
+        const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        
+        if (dailyMap.has(dayKey)) {
+          const existing = dailyMap.get(dayKey)!;
+          existing.clicks += item.clicks;
+          existing.leads += item.leads;
+          existing.sales += item.sales;
+        } else {
+          dailyMap.set(dayKey, {
+            date: item.date,
+            clicks: item.clicks,
+            leads: item.leads,
+            sales: item.sales,
+          });
+        }
+      });
+      
+      return Array.from(dailyMap.values())
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .map(item => ({
+          ...item,
+          dateFormatted: formatDateForRange(new Date(item.date), timeRange),
+          tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
+        }));
+    }
   }, [data, timeRange]);
 
   // Data to display in main chart - ONLY updates when range is committed (mouse released)
@@ -240,9 +275,8 @@ export function AnalyticsChart({ data, showConversions = true, onTimeRangeChange
     return chartData.slice(startIdx, Math.max(endIdx, startIdx + 1));
   }, [chartData, committedRange]);
 
-  // Simplified mini-map data for navigator
+  // Simplified mini-map data for navigator (max 100 points)
   const navigatorData = useMemo(() => {
-    // Sample data for performance (max 100 points for navigator)
     const step = Math.max(1, Math.floor(chartData.length / 100));
     return chartData.filter((_, i) => i % step === 0);
   }, [chartData]);
