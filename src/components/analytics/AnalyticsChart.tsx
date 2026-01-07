@@ -141,8 +141,17 @@ const MainChart = memo(({
           tickLine={false}
           axisLine={false}
           dx={-10}
-          tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
-          domain={['auto', 'auto']}
+          tickFormatter={(value) => {
+            const intValue = Math.round(value);
+            return intValue >= 1000 ? `${(intValue / 1000).toFixed(intValue >= 10000 ? 0 : 1)}k` : intValue.toString();
+          }}
+          domain={[0, (dataMax: number) => {
+            const minRange = 5;
+            const paddedMax = Math.ceil(dataMax * 1.15); // 15% padding at top
+            return Math.max(minRange, paddedMax);
+          }]}
+          allowDecimals={false}
+          tickCount={5}
         />
         <Tooltip content={<CustomTooltip />} />
 
