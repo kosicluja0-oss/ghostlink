@@ -1,25 +1,25 @@
 import { useState, useEffect } from 'react';
 import type { AnalyticsData, DashboardStats, GhostLink } from '@/types';
 
-// Mock data generator for demo - generates 3 years of data
+// Mock data generator for demo - generates 6 months of growing data
 const generateMockAnalytics = (): AnalyticsData[] => {
   const data: AnalyticsData[] = [];
   const now = new Date();
   
-  // Generate hourly data for the past 3 years (simplified: daily with hourly granularity for recent data)
-  // For 3 years: ~1095 days of data
-  for (let i = 1095; i >= 0; i--) {
+  // Generate daily data for the past 6 months (180 days) with exponential growth
+  for (let i = 180; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
     
-    // Add some seasonality and trends
-    const seasonalFactor = 1 + 0.3 * Math.sin((i / 365) * 2 * Math.PI);
-    const trendFactor = 1 + (1095 - i) / 2000; // Growing trend
+    // Exponential growth: starts low, accelerates toward today
+    const progressFactor = (180 - i) / 180; // 0 at start → 1 today
+    const growthMultiplier = 0.1 + Math.pow(progressFactor, 2) * 3; // Hockey stick curve
     const weekdayFactor = date.getDay() === 0 || date.getDay() === 6 ? 0.7 : 1;
+    const randomVariation = 0.7 + Math.random() * 0.6; // 70-130% variation
     
-    const baseClicks = Math.floor((Math.random() * 300 + 150) * seasonalFactor * trendFactor * weekdayFactor);
-    const leads = Math.floor(baseClicks * (Math.random() * 0.12 + 0.05));
-    const sales = Math.floor(leads * (Math.random() * 0.25 + 0.1));
+    const baseClicks = Math.floor((20 + 380 * growthMultiplier) * weekdayFactor * randomVariation);
+    const leads = Math.floor(baseClicks * (Math.random() * 0.1 + 0.08));
+    const sales = Math.floor(leads * (Math.random() * 0.2 + 0.15));
     
     data.push({
       date: date.toISOString(),
