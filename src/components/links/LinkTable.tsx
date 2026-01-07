@@ -1,7 +1,20 @@
 import { useState, useMemo } from 'react';
-import { Link2, ExternalLink, Archive, RotateCcw, Copy, Pencil, Search } from 'lucide-react';
+import { ExternalLink, Archive, RotateCcw, Copy, Pencil, Search, MoreHorizontal, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { GhostLink, TierType } from '@/types';
 import { toast } from 'sonner';
@@ -24,6 +37,66 @@ interface LinkRowProps {
   onSelect?: (linkId: string) => void;
 }
 
+// Extract domain from URL for favicon
+function getDomain(url: string): string {
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return urlObj.hostname;
+  } catch {
+    return '';
+  }
+}
+
+// Mini sparkline component for click trends
+function Sparkline({ data }: { data: number[] }) {
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * 100;
+    const y = 100 - ((val - min) / range) * 100;
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg viewBox="0 0 100 100" className="w-16 h-6" preserveAspectRatio="none">
+      <polyline
+        points={points}
+        fill="none"
+        stroke="hsl(var(--primary))"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+}
+
+// Favicon component with fallback
+function Favicon({ url }: { url: string }) {
+  const [hasError, setHasError] = useState(false);
+  const domain = getDomain(url);
+  
+  if (hasError || !domain) {
+    return (
+      <div className="flex items-center justify-center w-5 h-5 rounded bg-muted/60 shrink-0">
+        <ExternalLink className="w-3 h-3 text-muted-foreground" />
+      </div>
+    );
+  }
+  
+  return (
+    <img
+      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+      alt=""
+      className="w-5 h-5 rounded shrink-0"
+      onError={() => setHasError(true)}
+    />
+  );
+}
+
 function LinkRow({ 
   link, 
   userTier, 
@@ -32,9 +105,17 @@ function LinkRow({
   isSelected = false,
   onSelect
 }: LinkRowProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const isFreeTier = userTier === 'free';
   const fullUrl = `ghost.link/${link.alias}`;
+  
+  // Generate mock sparkline data (last 24 hours trend)
+  const sparklineData = useMemo(() => {
+    // Simple mock: create 12 data points based on clicks with some variance
+    const baseValue = link.clicks / 24;
+    return Array.from({ length: 12 }, (_, i) => 
+      Math.max(0, Math.round(baseValue * (0.5 + Math.random())))
+    );
+  }, [link.clicks]);
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -43,112 +124,146 @@ function LinkRow({
   };
 
   return (
-    <div 
-      className={cn(
-        "flex items-center gap-4 px-3 py-2.5 border-b border-border/50 transition-all cursor-pointer group",
-        isSelected 
-          ? "bg-primary/5 border-l-2 border-l-primary" 
-          : "hover:bg-muted/30 border-l-2 border-l-transparent"
-      )}
-      onClick={() => onSelect?.(link.id)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Link Info - Left */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="flex items-center justify-center w-8 h-8 rounded bg-muted/50 shrink-0">
-          <Link2 className="w-4 h-4 text-muted-foreground" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-foreground truncate">{fullUrl}</span>
-            {link.hasBridgePage && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">
-                Bridge
-              </span>
-            )}
-          </div>
-          <p className="text-[11px] text-muted-foreground truncate font-mono">
-            {link.targetUrl}
-          </p>
-        </div>
-      </div>
-
-      {/* Metrics - Middle */}
-      <div className="flex items-center gap-6 shrink-0">
-        <div className="text-center w-16">
-          <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.clicks.toLocaleString()}</p>
-          <p className="text-[10px] text-muted-foreground">Clicks</p>
-        </div>
-        <div className={cn("text-center w-16", isFreeTier && "opacity-40")}>
-          <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.leads.toLocaleString()}</p>
-          <p className="text-[10px] text-muted-foreground">Leads</p>
-        </div>
-        <div className={cn("text-center w-16", isFreeTier && "opacity-40")}>
-          <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.sales.toLocaleString()}</p>
-          <p className="text-[10px] text-muted-foreground">Sales</p>
-        </div>
-      </div>
-
-      {/* Actions - Right */}
-      <div className={cn(
-        "flex items-center gap-1 shrink-0 transition-opacity",
-        isHovered || isSelected ? "opacity-100" : "opacity-0"
-      )}>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-7 w-7"
-          onClick={handleCopyLink}
-        >
-          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-7 w-7"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-7 w-7" 
-          asChild
-          onClick={(e) => e.stopPropagation()}
-        >
-          <a href={link.targetUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-          </a>
-        </Button>
-        {link.status === 'active' ? (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 hover:text-destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onArchive(link.id);
-            }}
-          >
-            <Archive className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
-        ) : (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-7 w-7 hover:text-success"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRestore(link.id);
-            }}
-          >
-            <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
-          </Button>
+    <TooltipProvider delayDuration={300}>
+      <div 
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 border-b border-border/40 transition-all cursor-pointer group",
+          isSelected 
+            ? "bg-primary/8 border-l-2 border-l-primary" 
+            : "hover:bg-muted/40 border-l-2 border-l-transparent"
         )}
+        onClick={() => onSelect?.(link.id)}
+      >
+        {/* Link Info - Left */}
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <Favicon url={link.targetUrl} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-foreground truncate">{fullUrl}</span>
+              {link.hasBridgePage && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium uppercase tracking-wide">
+                  Bridge
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 truncate max-w-[200px]">
+              {link.targetUrl}
+            </p>
+          </div>
+        </div>
+
+        {/* Sparkline - Trend */}
+        <div className="shrink-0 hidden lg:block">
+          <Sparkline data={sparklineData} />
+        </div>
+
+        {/* Metrics - Middle */}
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right w-14">
+            <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.clicks.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Clicks</p>
+          </div>
+          <div className={cn("text-right w-14", isFreeTier && "opacity-40")}>
+            <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.leads.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Leads</p>
+          </div>
+          <div className={cn("text-right w-14", isFreeTier && "opacity-40")}>
+            <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.sales.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Sales</p>
+          </div>
+        </div>
+
+        {/* Actions - Right */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Copy Button - Always visible on hover */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={cn(
+                  "h-7 px-2.5 text-[11px] gap-1.5 transition-opacity",
+                  "opacity-0 group-hover:opacity-100",
+                  isSelected && "opacity-100"
+                )}
+                onClick={handleCopyLink}
+              >
+                <Copy className="h-3 w-3" />
+                <span>Copy</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              Copy link to clipboard
+            </TooltipContent>
+          </Tooltip>
+
+          {/* More Actions Dropdown */}
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn(
+                      "h-7 w-7 transition-opacity",
+                      "opacity-0 group-hover:opacity-100",
+                      isSelected && "opacity-100"
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                More actions
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                <Pencil className="h-3.5 w-3.5 mr-2" />
+                Edit Link
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()} asChild>
+                <a href={link.targetUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5 mr-2" />
+                  Open Target
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                <BarChart3 className="h-3.5 w-3.5 mr-2" />
+                Reset Stats
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {link.status === 'active' ? (
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onArchive(link.id);
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Archive className="h-3.5 w-3.5 mr-2" />
+                  Archive Link
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRestore(link.id);
+                  }}
+                  className="text-success focus:text-success"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-2" />
+                  Restore Link
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
@@ -188,22 +303,22 @@ export function LinkTable({
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      {/* Header with Search */}
-      <div className="flex items-center justify-between gap-4 px-3 py-2.5 border-b border-border bg-muted/20">
+      {/* Header with Search - Pinned */}
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-3 py-2 border-b border-border bg-card">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Search links..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-8 text-[13px] bg-background border-border/50"
+            className="h-7 pl-8 text-[12px] bg-muted/30 border-border/50 focus:bg-background"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setShowArchived(false)}
             className={cn(
-              "text-[12px] px-2.5 py-1 rounded transition-colors",
+              "text-[11px] px-2 py-1 rounded transition-colors",
               !showArchived 
                 ? "bg-primary/10 text-primary font-medium" 
                 : "text-muted-foreground hover:text-foreground"
@@ -214,7 +329,7 @@ export function LinkTable({
           <button
             onClick={() => setShowArchived(true)}
             className={cn(
-              "text-[12px] px-2.5 py-1 rounded transition-colors",
+              "text-[11px] px-2 py-1 rounded transition-colors",
               showArchived 
                 ? "bg-muted text-foreground font-medium" 
                 : "text-muted-foreground hover:text-foreground"
@@ -226,18 +341,19 @@ export function LinkTable({
       </div>
 
       {/* Table Header */}
-      <div className="flex items-center gap-4 px-3 py-2 border-b border-border/50 bg-muted/10 text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border/40 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
         <div className="flex-1">Link</div>
-        <div className="flex items-center gap-6 shrink-0">
-          <div className="text-center w-16">Clicks</div>
-          <div className="text-center w-16">Leads</div>
-          <div className="text-center w-16">Sales</div>
+        <div className="w-16 shrink-0 hidden lg:block text-center">Trend</div>
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-right w-14">Clicks</div>
+          <div className="text-right w-14">Leads</div>
+          <div className="text-right w-14">Sales</div>
         </div>
-        <div className="w-[132px] shrink-0 text-right">Actions</div>
+        <div className="w-20 shrink-0"></div>
       </div>
 
       {/* Rows */}
-      <div className="max-h-[280px] overflow-y-auto">
+      <div className="max-h-[260px] overflow-y-auto">
         {filteredLinks.length > 0 ? (
           filteredLinks.map((link) => (
             <LinkRow
@@ -252,7 +368,7 @@ export function LinkTable({
           ))
         ) : (
           <div className="text-center py-8">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[12px] text-muted-foreground">
               {searchQuery ? 'No links match your search' : showArchived ? 'No archived links' : 'No active links yet'}
             </p>
           </div>
