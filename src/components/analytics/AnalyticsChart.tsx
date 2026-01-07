@@ -431,33 +431,26 @@ export function AnalyticsChart({
     </div>
   );
 
-  // Streaming indicator component - subtle, non-animated
-  const StreamingIndicator = () => (
-    <span className="text-[11px] text-muted-foreground/70">• Streaming live data</span>
-  );
-
   return (
     <div className="bg-card rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <h3 className="text-base font-semibold text-foreground">Traffic Overview</h3>
-          <StreamingIndicator />
           {activeLinkId && selectedLinkAlias && (
-            <div className="flex items-center gap-2 ml-2 pl-3 border-l border-border">
-              <span className="text-[12px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
+            <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+              <span className="text-[11px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
               <button
                 onClick={onClearSelection}
-                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                className="text-[11px] text-primary/70 hover:text-primary transition-colors font-medium"
               >
-                <span>×</span>
-                <span>Clear</span>
+                ✕
               </button>
             </div>
           )}
           {isZoomed && !activeLinkId && (
             <button 
               onClick={handleResetZoom}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border/50 hover:border-border"
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5 rounded border border-border/50 hover:border-border"
             >
               Reset Zoom
             </button>
