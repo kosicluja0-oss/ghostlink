@@ -7,7 +7,8 @@ import { StatCard } from '@/components/analytics/StatCard';
 import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
 import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useLinks } from '@/hooks/useLinks';
+import { useClicksRealtime } from '@/hooks/useClicksRealtime';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 
@@ -18,7 +19,9 @@ const Index = () => {
   const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
-  const { analyticsData, links, stats, isLoading, addLink, archiveLink, restoreLink } = useAnalytics();
+  // Use real data hooks
+  const { links, addLink, archiveLink, restoreLink, isLoading: linksLoading } = useLinks();
+  const { analyticsData, stats, isLoading: clicksLoading } = useClicksRealtime();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
