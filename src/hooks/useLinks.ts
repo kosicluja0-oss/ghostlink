@@ -16,9 +16,19 @@ export function useLinks() {
   // Fetch links and their click counts
   const fetchLinks = useCallback(async () => {
     try {
+      // Get current user session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setLinks([]);
+        setIsLoading(false);
+        return;
+      }
+
       const { data: linksData, error: linksError } = await supabase
         .from('links')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
       if (linksError) {
@@ -108,12 +118,22 @@ export function useLinks() {
       link: Omit<GhostLink, 'id' | 'clicks' | 'leads' | 'sales' | 'earnings' | 'createdAt'>
     ) => {
       try {
+        // Get current user session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          toast.error('You must be logged in to create links');
+          return;
+        }
+
         const insertData: {
+          user_id: string;
           custom_alias: string;
           target_url: string;
           has_bridge_page: boolean;
           bridge_page_config?: BridgePageConfig;
         } = {
+          user_id: session.user.id,
           custom_alias: link.alias,
           target_url: link.targetUrl,
           has_bridge_page: link.hasBridgePage,
@@ -131,7 +151,11 @@ export function useLinks() {
 
         if (error) {
           console.error('Error adding link:', error);
-          toast.error('Failed to create link');
+          if (error.code === '23505') {
+            toast.error('This alias is already taken. Please choose another.');
+          } else {
+            toast.error('Failed to create link');
+          }
           return;
         }
 
