@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { getTrackingUrl, getDisplayUrl } from '@/lib/trackingUrl';
 import type { GhostLink, TierType } from '@/types';
 import { toast } from 'sonner';
 
@@ -106,7 +107,8 @@ function LinkRow({
   onSelect
 }: LinkRowProps) {
   const isFreeTier = userTier === 'free';
-  const fullUrl = `ghost.link/${link.alias}`;
+  const displayUrl = getDisplayUrl(link.alias);
+  const trackingUrl = getTrackingUrl(link.alias);
   
   // Generate mock sparkline data (last 24 hours trend)
   const sparklineData = useMemo(() => {
@@ -119,8 +121,8 @@ function LinkRow({
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(`https://${fullUrl}`);
-    toast.success('Link copied to clipboard');
+    navigator.clipboard.writeText(trackingUrl);
+    toast.success('Tracking URL copied to clipboard');
   };
 
   return (
@@ -139,7 +141,7 @@ function LinkRow({
           <Favicon url={link.targetUrl} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-semibold text-foreground truncate">{fullUrl}</span>
+              <span className="text-[13px] font-semibold text-foreground truncate">{displayUrl}</span>
               {link.hasBridgePage && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium uppercase tracking-wide">
                   Bridge

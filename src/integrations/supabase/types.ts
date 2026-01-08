@@ -14,7 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clicks: {
+        Row: {
+          created_at: string
+          id: string
+          link_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clicks_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      links: {
+        Row: {
+          bridge_page_config: Json | null
+          created_at: string
+          custom_alias: string
+          has_bridge_page: boolean | null
+          id: string
+          target_url: string
+          user_id: string | null
+        }
+        Insert: {
+          bridge_page_config?: Json | null
+          created_at?: string
+          custom_alias: string
+          has_bridge_page?: boolean | null
+          id?: string
+          target_url: string
+          user_id?: string | null
+        }
+        Update: {
+          bridge_page_config?: Json | null
+          created_at?: string
+          custom_alias?: string
+          has_bridge_page?: boolean | null
+          id?: string
+          target_url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
