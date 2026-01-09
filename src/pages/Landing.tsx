@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { 
   Accordion,
   AccordionContent,
@@ -105,11 +106,22 @@ const features = [
   },
 ];
 
-const pricingPlans = [
-  {
+// Pricing data with Stripe-ready structure
+type PricingPlan = {
+  name: string;
+  monthly: { price: number; priceId: string | null };
+  yearly: { price: number; priceId: string | null; monthlyEquivalent?: number };
+  features: string[];
+  cta: string;
+  highlighted: boolean;
+  badge?: string;
+};
+
+const pricingPlans: Record<string, PricingPlan> = {
+  free: {
     name: 'Free',
-    price: '$0',
-    period: '/forever',
+    monthly: { price: 0, priceId: null },
+    yearly: { price: 0, priceId: null },
     features: [
       '5 active links',
       'Click tracking only',
@@ -119,10 +131,10 @@ const pricingPlans = [
     cta: 'Get Started',
     highlighted: false,
   },
-  {
+  pro: {
     name: 'Pro',
-    price: '$9.99',
-    period: '/month',
+    monthly: { price: 9.99, priceId: 'price_pro_monthly_placeholder' },
+    yearly: { price: 89, priceId: 'price_pro_yearly_placeholder', monthlyEquivalent: 7.41 },
     features: [
       '25 active links',
       'Full analytics suite',
@@ -133,10 +145,10 @@ const pricingPlans = [
     cta: 'Start Pro Trial',
     highlighted: false,
   },
-  {
+  business: {
     name: 'Business',
-    price: '$14.99',
-    period: '/month',
+    monthly: { price: 14.99, priceId: 'price_business_monthly_placeholder' },
+    yearly: { price: 134, priceId: 'price_business_yearly_placeholder', monthlyEquivalent: 11.16 },
     badge: 'Most Popular',
     features: [
       '100 active links',
@@ -149,7 +161,7 @@ const pricingPlans = [
     cta: 'Start Business Trial',
     highlighted: true,
   },
-];
+};
 
 const faqs = [
   {
@@ -174,8 +186,59 @@ const faqs = [
   },
 ];
 
+// Animated price component with count-up effect
+function AnimatedPrice({ value, cycle }: { value: number; cycle: 'monthly' | 'yearly' }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  
+  useEffect(() => {
+    const duration = 400;
+    const startTime = Date.now();
+    const startValue = displayValue;
+    const endValue = value;
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = startValue + (endValue - startValue) * easeOut;
+      setDisplayValue(current);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [value]);
+  
+  return (
+    <span className="tabular-nums">
+      ${value === 0 ? '0' : displayValue.toFixed(value % 1 === 0 ? 0 : 2)}
+    </span>
+  );
+}
+
+// Stripe-ready handler function
+function handleSubscription(planId: string, cycle: 'monthly' | 'yearly') {
+  const plan = pricingPlans[planId as keyof typeof pricingPlans];
+  if (!plan) return;
+  
+  const priceData = cycle === 'monthly' ? plan.monthly : plan.yearly;
+  console.log('[Stripe Ready] Selected Plan:', {
+    planName: plan.name,
+    billingCycle: cycle,
+    priceId: priceData.priceId,
+    amount: priceData.price,
+  });
+  
+  // TODO: Integrate with Stripe checkout
+  // await stripe.redirectToCheckout({ priceId: priceData.priceId });
+}
+
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
   return (
     <div className="min-h-screen bg-background">
@@ -307,50 +370,98 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan) => (
-              <div 
-                key={plan.name}
-                className={`relative bg-card border rounded-xl p-6 ${
-                  plan.highlighted 
-                    ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' 
-                    : 'border-border'
-                }`}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                      {plan.badge}
-                    </span>
+            {Object.entries(pricingPlans).map(([planId, plan]) => {
+              const isFree = planId === 'free';
+              const currentPrice = billingCycle === 'monthly' ? plan.monthly.price : plan.yearly.price;
+              const monthlyEquivalent = billingCycle === 'yearly' && 'monthlyEquivalent' in plan.yearly 
+                ? plan.yearly.monthlyEquivalent 
+                : null;
+              
+              return (
+                <div 
+                  key={planId}
+                  className={`relative bg-card border rounded-xl p-6 ${
+                    plan.highlighted 
+                      ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' 
+                      : 'border-border'
+                  }`}
+                >
+                  {plan.badge && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                        {plan.badge}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-2">{plan.name}</h3>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-4xl font-bold text-foreground transition-all duration-300">
+                        <AnimatedPrice value={currentPrice} cycle={billingCycle} />
+                      </span>
+                      <span className="text-muted-foreground">
+                        {isFree ? '/forever' : billingCycle === 'monthly' ? '/month' : '/year'}
+                      </span>
+                    </div>
+                    {monthlyEquivalent && billingCycle === 'yearly' && (
+                      <p className="text-sm text-primary mt-1">
+                        ${monthlyEquivalent}/mo billed annually
+                      </p>
+                    )}
                   </div>
-                )}
-                
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{plan.name}</h3>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
+                  
+                  {/* Billing Toggle - only for paid plans */}
+                  {!isFree && (
+                    <div className="flex items-center justify-center gap-3 mb-6 pb-6 border-b border-border">
+                      <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        Monthly
+                      </span>
+                      <Switch
+                        checked={billingCycle === 'yearly'}
+                        onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                      <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        Yearly
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* 3 Months Free Nudge */}
+                  {!isFree && billingCycle === 'yearly' && (
+                    <p className="text-xs text-muted-foreground text-center mb-4 -mt-2">
+                      Includes 3 months free (billed annually)
+                    </p>
+                  )}
+                  
+                  <ul className="space-y-3 mb-8">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  {isFree ? (
+                    <Link to="/auth?mode=signup">
+                      <Button variant="outline" className="w-full">
+                        {plan.cta}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button 
+                      variant={plan.highlighted ? 'glow' : 'outline'} 
+                      className="w-full"
+                      onClick={() => handleSubscription(planId, billingCycle)}
+                    >
+                      {plan.cta}
+                    </Button>
+                  )}
                 </div>
-                
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                
-                <Link to="/auth?mode=signup">
-                  <Button 
-                    variant={plan.highlighted ? 'glow' : 'outline'} 
-                    className="w-full"
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
