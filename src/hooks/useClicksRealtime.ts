@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyticsData, DashboardStats } from '@/types';
 
@@ -8,33 +8,70 @@ interface DbClick {
   created_at: string;
 }
 
+interface DbConversion {
+  id: string;
+  click_id: string;
+  type: 'lead' | 'sale';
+  value: number;
+  created_at: string;
+  link_id?: string;
+}
+
 export function useClicksRealtime() {
   const [clicks, setClicks] = useState<DbClick[]>([]);
+  const [conversions, setConversions] = useState<DbConversion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch initial clicks
+  // Fetch initial clicks and conversions
   useEffect(() => {
-    const fetchClicks = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch clicks
+        const { data: clicksData, error: clicksError } = await supabase
           .from('clicks')
           .select('*')
           .order('created_at', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching clicks:', error);
-          return;
+        if (clicksError) {
+          console.error('Error fetching clicks:', clicksError);
+        } else {
+          setClicks(clicksData ?? []);
         }
 
-        setClicks(data ?? []);
+        // Fetch conversions with link_id via clicks join
+        const { data: conversionsData, error: conversionsError } = await supabase
+          .from('conversions')
+          .select(`
+            id,
+            click_id,
+            type,
+            value,
+            created_at,
+            clicks!inner(link_id)
+          `)
+          .order('created_at', { ascending: true });
+
+        if (conversionsError) {
+          console.error('Error fetching conversions:', conversionsError);
+        } else {
+          const transformed = (conversionsData ?? []).map((conv: any) => ({
+            id: conv.id,
+            click_id: conv.click_id,
+            type: conv.type as 'lead' | 'sale',
+            value: Number(conv.value),
+            created_at: conv.created_at,
+            link_id: conv.clicks.link_id,
+          }));
+          setConversions(transformed);
+        }
       } catch (error) {
-        console.error('Error in fetchClicks:', error);
+        console.error('Error in fetchData:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchClicks();
+    fetchData();
   }, []);
 
   // Subscribe to real-time click inserts
@@ -61,67 +98,152 @@ export function useClicksRealtime() {
     };
   }, []);
 
-  // Transform clicks to analytics data format
-  const analyticsData = useMemo<AnalyticsData[]>(() => {
-    // Group clicks by date and link
-    const clicksByDateAndLink = new Map<string, Map<string, number>>();
+  // Subscribe to real-time conversion inserts
+  useEffect(() => {
+    const channel = supabase
+      .channel('conversions-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversions',
+        },
+        async (payload) => {
+          const newConversion = payload.new as DbConversion;
+          console.log('Real-time conversion received:', newConversion);
 
+          // Fetch the link_id for this conversion
+          const { data: clickData } = await supabase
+            .from('clicks')
+            .select('link_id')
+            .eq('id', newConversion.click_id)
+            .single();
+
+          if (clickData) {
+            setConversions((prev) => [
+              ...prev,
+              {
+                ...newConversion,
+                value: Number(newConversion.value),
+                link_id: clickData.link_id,
+              },
+            ]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Transform clicks and conversions to analytics data format
+  const analyticsData = useMemo<AnalyticsData[]>(() => {
+    // Create a map of click_id to link_id for quick lookup
+    const clickToLink = new Map<string, string>();
     clicks.forEach((click) => {
-      const date = new Date(click.created_at);
-      // Round to minute for recent data, to day for older data
+      clickToLink.set(click.id, click.link_id);
+    });
+
+    // Group data by date and link
+    const dataByDateAndLink = new Map<string, Map<string, { clicks: number; leads: number; sales: number }>>();
+
+    // Helper to get date key
+    const getDateKey = (dateStr: string) => {
+      const date = new Date(dateStr);
       const now = new Date();
       const hoursDiff = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-      
-      let dateKey: string;
+
       if (hoursDiff < 24) {
         // Last 24 hours: minute-level granularity
         date.setSeconds(0, 0);
-        dateKey = date.toISOString();
+        return date.toISOString();
       } else {
         // Older: daily granularity
         date.setHours(12, 0, 0, 0);
-        dateKey = date.toISOString();
+        return date.toISOString();
       }
+    };
 
-      if (!clicksByDateAndLink.has(dateKey)) {
-        clicksByDateAndLink.set(dateKey, new Map());
+    // Process clicks
+    clicks.forEach((click) => {
+      const dateKey = getDateKey(click.created_at);
+      const linkId = click.link_id;
+
+      if (!dataByDateAndLink.has(dateKey)) {
+        dataByDateAndLink.set(dateKey, new Map());
       }
-      const linkMap = clicksByDateAndLink.get(dateKey)!;
-      linkMap.set(click.link_id, (linkMap.get(click.link_id) ?? 0) + 1);
+      const linkMap = dataByDateAndLink.get(dateKey)!;
+      if (!linkMap.has(linkId)) {
+        linkMap.set(linkId, { clicks: 0, leads: 0, sales: 0 });
+      }
+      linkMap.get(linkId)!.clicks += 1;
+    });
+
+    // Process conversions
+    conversions.forEach((conv) => {
+      const dateKey = getDateKey(conv.created_at);
+      const linkId = conv.link_id ?? clickToLink.get(conv.click_id) ?? '';
+
+      if (!linkId) return;
+
+      if (!dataByDateAndLink.has(dateKey)) {
+        dataByDateAndLink.set(dateKey, new Map());
+      }
+      const linkMap = dataByDateAndLink.get(dateKey)!;
+      if (!linkMap.has(linkId)) {
+        linkMap.set(linkId, { clicks: 0, leads: 0, sales: 0 });
+      }
+      const data = linkMap.get(linkId)!;
+      if (conv.type === 'lead') {
+        data.leads += 1;
+      } else if (conv.type === 'sale') {
+        data.sales += 1;
+      }
     });
 
     // Convert to AnalyticsData format
     const result: AnalyticsData[] = [];
 
-    clicksByDateAndLink.forEach((linkMap, dateKey) => {
-      linkMap.forEach((clickCount, linkId) => {
+    dataByDateAndLink.forEach((linkMap, dateKey) => {
+      linkMap.forEach((data, linkId) => {
         result.push({
           date: dateKey,
-          clicks: clickCount,
-          leads: 0, // Will be implemented later
-          sales: 0, // Will be implemented later
+          clicks: data.clicks,
+          leads: data.leads,
+          sales: data.sales,
           linkId,
         });
       });
     });
 
     return result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [clicks]);
+  }, [clicks, conversions]);
 
   // Calculate dashboard stats
   const stats = useMemo<DashboardStats>(() => {
     const totalClicks = clicks.length;
+    const totalLeads = conversions.filter((c) => c.type === 'lead').length;
+    const totalSales = conversions.filter((c) => c.type === 'sale').length;
+    const totalEarnings = conversions.reduce((sum, c) => sum + c.value, 0);
+
+    const conversionRate = totalClicks > 0 ? ((totalLeads + totalSales) / totalClicks) * 100 : 0;
+    const earningsPerClick = totalClicks > 0 ? totalEarnings / totalClicks : 0;
+
     return {
       totalClicks,
-      totalLeads: 0, // Will be implemented later
-      totalSales: 0, // Will be implemented later
-      conversionRate: 0,
-      earningsPerClick: 0,
+      totalLeads,
+      totalSales,
+      conversionRate,
+      earningsPerClick,
     };
-  }, [clicks]);
+  }, [clicks, conversions]);
 
   return {
     clicks,
+    conversions,
     analyticsData,
     stats,
     isLoading,
