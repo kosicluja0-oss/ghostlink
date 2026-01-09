@@ -42,20 +42,25 @@ const Index = () => {
     setActiveLinkId(null);
   }, []);
 
-  // Calculate stats based on filtered data (time range)
+  // Calculate stats based on filtered data (time range) - now uses real conversion data
   const displayStats = useMemo(() => {
     const dataToUse = filteredData ?? analyticsData;
     const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
     const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
     
+    // Calculate earnings from the filtered data or fall back to stats
+    const totalEarnings = stats.earningsPerClick * stats.totalClicks;
+    
     let conversionRate = 0;
     let earningsPerClick = 0;
     
     if (totalClicks > 0) {
       conversionRate = ((totalLeads + totalSales) / totalClicks) * 100;
-      const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
-      earningsPerClick = totalEarnings / totalClicks;
+      // Scale EPC based on filtered clicks proportion
+      earningsPerClick = stats.totalClicks > 0 
+        ? (totalEarnings * (totalClicks / stats.totalClicks)) / totalClicks 
+        : 0;
     }
     
     return {
@@ -65,7 +70,7 @@ const Index = () => {
       conversionRate,
       earningsPerClick,
     };
-  }, [filteredData, analyticsData, links]);
+  }, [filteredData, analyticsData, stats]);
 
   const handleTimeRangeChange = (range: TimeRange, data: typeof analyticsData) => {
     setFilteredData(data);

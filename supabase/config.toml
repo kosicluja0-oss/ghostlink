@@ -1,1 +1,7 @@
 project_id = "mlgrbwkddyrazysxrlvo"
+
+[functions.redirect]
+verify_jwt = false
+
+[functions.postback]
+verify_jwt = false

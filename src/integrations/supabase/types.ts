@@ -40,6 +40,38 @@ export type Database = {
           },
         ]
       }
+      conversions: {
+        Row: {
+          click_id: string
+          created_at: string
+          id: string
+          type: string
+          value: number
+        }
+        Insert: {
+          click_id: string
+          created_at?: string
+          id?: string
+          type: string
+          value?: number
+        }
+        Update: {
+          click_id?: string
+          created_at?: string
+          id?: string
+          type?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversions_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "clicks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       links: {
         Row: {
           bridge_page_config: Json | null
