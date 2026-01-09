@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MousePointer, Users, DollarSign, TrendingUp, Percent } from 'lucide-react';
+import { MousePointer, Users, DollarSign, TrendingUp, Percent, Plus } from 'lucide-react';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -17,7 +17,6 @@ import { useAuth } from '@/hooks/useAuth';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Plus, Crown } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -124,21 +123,6 @@ const Dashboard = () => {
           />
           
           <SidebarInset className="flex-1">
-            {/* Top bar with tier badge and create button */}
-            <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-4">
-              <div className="flex items-center gap-2">
-                {userTier !== 'free' && <Crown className="h-3.5 w-3.5 text-primary" />}
-                <span className="text-xs font-medium text-foreground capitalize">{userTier}</span>
-                <span className="text-xs text-muted-foreground">
-                  {activeLinksCount}/{tier.maxLinks} links
-                </span>
-              </div>
-              <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                New Link
-              </Button>
-            </header>
-
             <main className="p-4 lg:p-6">
               {/* Stats Banner - Compact */}
               <section className="mb-5">
@@ -206,9 +190,15 @@ const Dashboard = () => {
               <section>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-semibold text-foreground">Your Links</h2>
-                  <span className="text-[12px] text-muted-foreground">
-                    {activeLinksCount} of {tier.maxLinks} active
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-muted-foreground">
+                      {activeLinksCount} of {tier.maxLinks} active
+                    </span>
+                    <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      New Link
+                    </Button>
+                  </div>
                 </div>
                 
                 <LinkTable

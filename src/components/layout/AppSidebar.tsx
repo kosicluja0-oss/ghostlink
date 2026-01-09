@@ -121,8 +121,13 @@ export function AppSidebar({
                       item.isActive && "bg-primary/10 text-primary"
                     )}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {!isCollapsed && <span>{item.title}</span>}
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span className={cn(
+                      "transition-opacity duration-0",
+                      isCollapsed ? "hidden" : "block"
+                    )}>
+                      {item.title}
+                    </span>
                   </SidebarMenuButton>
                 </TooltipTrigger>
                 {isCollapsed && (
@@ -140,41 +145,50 @@ export function AppSidebar({
       <SidebarFooter className="p-2">
         <SidebarSeparator className="mb-2" />
         <div className={cn(
-          "flex items-center gap-2 p-2 rounded-lg bg-ghost-surface",
-          isCollapsed ? "justify-center" : "justify-between"
+          "flex items-center p-2 rounded-lg bg-ghost-surface",
+          isCollapsed ? "justify-center" : "gap-2"
         )}>
-          <div className="flex items-center gap-2 min-w-0">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                {userInitial}
-              </AvatarFallback>
-            </Avatar>
-            {!isCollapsed && (
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground truncate max-w-[120px]">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Avatar className="h-8 w-8 flex-shrink-0 cursor-pointer">
+                <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                  {userInitial}
+                </AvatarFallback>
+              </Avatar>
+            </TooltipTrigger>
+            {isCollapsed && (
+              <TooltipContent side="right">
+                {userEmail}
+              </TooltipContent>
+            )}
+          </Tooltip>
+          {!isCollapsed && (
+            <>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-foreground truncate max-w-[100px]">
                   {userEmail}
                 </p>
                 <p className="text-[10px] text-muted-foreground capitalize">
                   {userTier} Plan
                 </p>
               </div>
-            )}
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={onSignOut}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side={isCollapsed ? "right" : "top"}>
-              Sign Out
-            </TooltipContent>
-          </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={onSignOut}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  Sign Out
+                </TooltipContent>
+              </Tooltip>
+            </>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>
