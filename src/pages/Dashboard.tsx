@@ -2,8 +2,11 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent } from 'lucide-react';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
-import { DashboardHeader } from '@/components/layout/DashboardHeader';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
+import { DataIntegrationModal } from '@/components/modals/DataIntegrationModal';
 import { StatCard } from '@/components/analytics/StatCard';
 import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
 import { LinkTable } from '@/components/links/LinkTable';
@@ -13,6 +16,8 @@ import { useClicksRealtime } from '@/hooks/useClicksRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Plus, Crown } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +25,7 @@ const Dashboard = () => {
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
@@ -106,116 +112,141 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userTier={userTier}
-        currentLinkCount={activeLinksCount}
-        userEmail={user?.email}
-        onCreateLink={() => setCreateModalOpen(true)}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onSignOut={signOut}
-      />
-
-      <main className="container mx-auto px-4 py-6">
-        {/* Stats Banner - Compact */}
-        <section className="mb-5">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            <StatCard
-              label="Total Clicks"
-              value={displayStats.totalClicks.toLocaleString()}
-              icon={MousePointer}
-              trend={{ value: 12.5, isPositive: true }}
-              accentColor="primary"
-              compact
-            />
-            <StatCard
-              label="Total Leads"
-              value={displayStats.totalLeads.toLocaleString()}
-              icon={Users}
-              trend={{ value: 8.3, isPositive: true }}
-              isLocked={isFreeTier}
-              accentColor="warning"
-              compact
-            />
-            <StatCard
-              label="Total Sales"
-              value={displayStats.totalSales.toLocaleString()}
-              icon={DollarSign}
-              trend={{ value: 15.2, isPositive: true }}
-              isLocked={isFreeTier}
-              accentColor="success"
-              compact
-            />
-            <StatCard
-              label="Conversion Rate"
-              value={`${displayStats.conversionRate.toFixed(2)}%`}
-              icon={Percent}
-              trend={{ value: 2.1, isPositive: true }}
-              isLocked={isFreeTier}
-              accentColor="chart-conversions"
-              compact
-            />
-            <StatCard
-              label="EPC"
-              value={formatCurrency(displayStats.earningsPerClick)}
-              icon={TrendingUp}
-              trend={{ value: 5.7, isPositive: true }}
-              isLocked={isFreeTier}
-              accentColor="success"
-              compact
-            />
-          </div>
-        </section>
-
-        {/* Chart */}
-        <section className="mb-5">
-          <AnalyticsChart 
-            data={analyticsData} 
-            showConversions={!isFreeTier}
-            onTimeRangeChange={handleTimeRangeChange}
-            activeLinkId={activeLinkId}
-            selectedLinkAlias={selectedLink?.alias}
-            onClearSelection={handleClearSelection}
-          />
-        </section>
-
-        {/* Link Management */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-foreground">Your Links</h2>
-            <span className="text-[12px] text-muted-foreground">
-              {activeLinksCount} of {tier.maxLinks} active
-            </span>
-          </div>
-          
-          <LinkTable
-            links={links}
+    <TooltipProvider>
+      <SidebarProvider defaultOpen={true}>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar
+            userEmail={user?.email}
             userTier={userTier}
-            onArchive={archiveLink}
-            onRestore={restoreLink}
-            activeLinkId={activeLinkId}
-            onLinkSelect={handleLinkSelect}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onOpenDataIntegration={() => setDataIntegrationOpen(true)}
+            onSignOut={signOut}
           />
-        </section>
-      </main>
+          
+          <SidebarInset className="flex-1">
+            {/* Top bar with tier badge and create button */}
+            <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-4">
+              <div className="flex items-center gap-2">
+                {userTier !== 'free' && <Crown className="h-3.5 w-3.5 text-primary" />}
+                <span className="text-xs font-medium text-foreground capitalize">{userTier}</span>
+                <span className="text-xs text-muted-foreground">
+                  {activeLinksCount}/{tier.maxLinks} links
+                </span>
+              </div>
+              <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                New Link
+              </Button>
+            </header>
 
-      {/* Modals & Drawers */}
-      <SettingsDrawer
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        userTier={userTier}
-        onChangeTier={setUserTier}
-      />
+            <main className="p-4 lg:p-6">
+              {/* Stats Banner - Compact */}
+              <section className="mb-5">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <StatCard
+                    label="Total Clicks"
+                    value={displayStats.totalClicks.toLocaleString()}
+                    icon={MousePointer}
+                    trend={{ value: 12.5, isPositive: true }}
+                    accentColor="primary"
+                    compact
+                  />
+                  <StatCard
+                    label="Total Leads"
+                    value={displayStats.totalLeads.toLocaleString()}
+                    icon={Users}
+                    trend={{ value: 8.3, isPositive: true }}
+                    isLocked={isFreeTier}
+                    accentColor="warning"
+                    compact
+                  />
+                  <StatCard
+                    label="Total Sales"
+                    value={displayStats.totalSales.toLocaleString()}
+                    icon={DollarSign}
+                    trend={{ value: 15.2, isPositive: true }}
+                    isLocked={isFreeTier}
+                    accentColor="success"
+                    compact
+                  />
+                  <StatCard
+                    label="Conversion Rate"
+                    value={`${displayStats.conversionRate.toFixed(2)}%`}
+                    icon={Percent}
+                    trend={{ value: 2.1, isPositive: true }}
+                    isLocked={isFreeTier}
+                    accentColor="chart-conversions"
+                    compact
+                  />
+                  <StatCard
+                    label="EPC"
+                    value={formatCurrency(displayStats.earningsPerClick)}
+                    icon={TrendingUp}
+                    trend={{ value: 5.7, isPositive: true }}
+                    isLocked={isFreeTier}
+                    accentColor="success"
+                    compact
+                  />
+                </div>
+              </section>
 
-      <CreateLinkModal
-        open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
-        onSubmit={addLink}
-        userTier={userTier}
-        currentLinkCount={activeLinksCount}
-        maxLinks={tier.maxLinks}
-      />
-    </div>
+              {/* Chart */}
+              <section className="mb-5">
+                <AnalyticsChart 
+                  data={analyticsData} 
+                  showConversions={!isFreeTier}
+                  onTimeRangeChange={handleTimeRangeChange}
+                  activeLinkId={activeLinkId}
+                  selectedLinkAlias={selectedLink?.alias}
+                  onClearSelection={handleClearSelection}
+                />
+              </section>
+
+              {/* Link Management */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-foreground">Your Links</h2>
+                  <span className="text-[12px] text-muted-foreground">
+                    {activeLinksCount} of {tier.maxLinks} active
+                  </span>
+                </div>
+                
+                <LinkTable
+                  links={links}
+                  userTier={userTier}
+                  onArchive={archiveLink}
+                  onRestore={restoreLink}
+                  activeLinkId={activeLinkId}
+                  onLinkSelect={handleLinkSelect}
+                />
+              </section>
+            </main>
+          </SidebarInset>
+        </div>
+
+        {/* Modals & Drawers */}
+        <SettingsDrawer
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          userTier={userTier}
+          onChangeTier={setUserTier}
+        />
+
+        <DataIntegrationModal
+          open={dataIntegrationOpen}
+          onOpenChange={setDataIntegrationOpen}
+        />
+
+        <CreateLinkModal
+          open={createModalOpen}
+          onOpenChange={setCreateModalOpen}
+          onSubmit={addLink}
+          userTier={userTier}
+          currentLinkCount={activeLinksCount}
+          maxLinks={tier.maxLinks}
+        />
+      </SidebarProvider>
+    </TooltipProvider>
   );
 };
 

@@ -1,7 +1,5 @@
-import { X, Crown, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Crown, Check } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { IntegrationPanel } from '@/components/settings/IntegrationPanel';
 import type { TierType } from '@/types';
 import { TIERS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -89,9 +87,6 @@ export function SettingsDrawer({ open, onOpenChange, userTier, onChangeTier }: S
               })}
             </div>
           </div>
-
-          {/* Integration Panel */}
-          <IntegrationPanel />
         </div>
       </SheetContent>
     </Sheet>
