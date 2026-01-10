@@ -379,29 +379,9 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+            <p className="text-muted-foreground max-w-xl mx-auto">
               Start free, upgrade when you're ready. No hidden fees.
             </p>
-            
-            {/* Global Billing Toggle */}
-            <div className="inline-flex items-center gap-3 bg-card border border-border rounded-full px-4 py-2">
-              <span className={`text-sm font-medium transition-colors ${billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                Monthly
-              </span>
-              <Switch
-                checked={billingCycle === 'yearly'}
-                onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-                className="data-[state=checked]:bg-primary"
-              />
-              <span className={`text-sm font-medium transition-colors ${billingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                Yearly
-              </span>
-              {billingCycle === 'yearly' && (
-                <span className="ml-1 text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                  3 months free
-                </span>
-              )}
-            </div>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -427,14 +407,13 @@ export default function Landing() {
                   )}
                   
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-semibold text-foreground mb-3">{plan.name}</h3>
+                    <h3 className="text-3xl font-bold text-foreground mb-4">{plan.name}</h3>
                     <div className="flex items-baseline justify-center">
-                      <span className="text-2xl font-light text-muted-foreground">$</span>
-                      <span className="text-5xl font-bold text-foreground tabular-nums transition-all duration-300">
+                      <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
                         <AnimatedPrice value={displayPrice} cycle={billingCycle} />
                       </span>
-                      <span className="text-muted-foreground text-sm ml-1">
-                        {isFree ? '' : '/mo'}
+                      <span className="text-muted-foreground text-sm ml-1.5">
+                        {isFree ? '' : 'per month'}
                       </span>
                     </div>
                     {/* Billed annually note */}
@@ -447,6 +426,21 @@ export default function Landing() {
                       <p className="text-xs text-muted-foreground mt-2">
                         Free forever
                       </p>
+                    )}
+                    
+                    {/* Individual Toggle for Pro and Business */}
+                    {!isFree && (
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        <Switch
+                          checked={billingCycle === 'yearly'}
+                          onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                        <span className="text-sm text-muted-foreground">Billed yearly</span>
+                        <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                          3 months free
+                        </span>
+                      </div>
                     )}
                   </div>
                   
