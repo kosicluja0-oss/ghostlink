@@ -10,8 +10,102 @@ import {
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
 import type { AnalyticsData } from '@/types';
-import { format, subMinutes, subHours, subDays, subWeeks, subMonths, subYears } from 'date-fns';
+import { 
+  format, 
+  subMinutes, 
+  subHours, 
+  subDays, 
+  subWeeks, 
+  subMonths, 
+  subYears,
+  eachMinuteOfInterval,
+  eachHourOfInterval,
+  eachDayOfInterval,
+  eachWeekOfInterval,
+  eachMonthOfInterval,
+  startOfMinute,
+  startOfHour,
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+} from 'date-fns';
 import { Ghost } from 'lucide-react';
+
+// Generate all time points in a range for continuous timeline
+function generateTimePoints(range: TimeRange): Date[] {
+  const now = new Date();
+  const start = getDateRangeStart(range);
+  
+  switch (range) {
+    case '30m':
+      return eachMinuteOfInterval({ start, end: now });
+    case '6h':
+      // Every 5 minutes for 6h
+      return eachMinuteOfInterval({ start, end: now }).filter((_, i) => i % 5 === 0);
+    case '1d':
+      // Every 15 minutes for 1d
+      return eachMinuteOfInterval({ start, end: now }).filter((_, i) => i % 15 === 0);
+    case '1w':
+      return eachDayOfInterval({ start, end: now });
+    case '1m':
+      return eachDayOfInterval({ start, end: now });
+    case '1y':
+      return eachWeekOfInterval({ start, end: now });
+    case '3y':
+      return eachMonthOfInterval({ start, end: now });
+    default:
+      return eachDayOfInterval({ start, end: now });
+  }
+}
+
+// Get the key for grouping data points
+function getTimeKey(date: Date, range: TimeRange): string {
+  switch (range) {
+    case '30m':
+      return startOfMinute(date).toISOString();
+    case '6h':
+      // Round to nearest 5 minutes
+      const mins5 = new Date(date);
+      mins5.setMinutes(Math.floor(mins5.getMinutes() / 5) * 5, 0, 0);
+      return mins5.toISOString();
+    case '1d':
+      // Round to nearest 15 minutes
+      const mins15 = new Date(date);
+      mins15.setMinutes(Math.floor(mins15.getMinutes() / 15) * 15, 0, 0);
+      return mins15.toISOString();
+    case '1w':
+    case '1m':
+      return startOfDay(date).toISOString();
+    case '1y':
+      return startOfWeek(date).toISOString();
+    case '3y':
+      return startOfMonth(date).toISOString();
+    default:
+      return startOfDay(date).toISOString();
+  }
+}
+
+// Get tick interval based on time range
+function getTickInterval(range: TimeRange, dataLength: number): number {
+  switch (range) {
+    case '30m':
+      return Math.max(1, Math.floor(dataLength / 6));
+    case '6h':
+      return Math.max(1, Math.floor(dataLength / 8));
+    case '1d':
+      return Math.max(1, Math.floor(dataLength / 8));
+    case '1w':
+      return 1; // Show every day
+    case '1m':
+      return Math.max(1, Math.floor(dataLength / 10)); // ~every 3 days
+    case '1y':
+      return Math.max(1, Math.floor(dataLength / 12)); // ~monthly
+    case '3y':
+      return Math.max(1, Math.floor(dataLength / 12)); // ~quarterly
+    default:
+      return Math.max(1, Math.floor(dataLength / 10));
+  }
+}
 
 interface AnalyticsChartProps {
   data: AnalyticsData[];
@@ -84,11 +178,13 @@ function formatTooltipDate(date: Date, range: TimeRange): string {
 const MainChart = memo(({ 
   displayData, 
   visibleMetrics, 
-  showConversions 
+  showConversions,
+  tickInterval 
 }: { 
   displayData: any[]; 
   visibleMetrics: Record<MetricKey, boolean>; 
   showConversions: boolean;
+  tickInterval: number;
 }) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -118,7 +214,7 @@ const MainChart = memo(({
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+      <AreaChart data={displayData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
         <defs>
           <linearGradient id="clicksGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.25} />
@@ -146,9 +242,9 @@ const MainChart = memo(({
           tickLine={false}
           axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.5 }}
           dy={10}
-          interval="preserveStartEnd"
-          minTickGap={60}
-          type="category"
+          interval={tickInterval}
+          padding={{ left: 10, right: 10 }}
+          textAnchor="middle"
         />
         <YAxis 
           stroke="hsl(var(--muted-foreground))"
@@ -251,11 +347,10 @@ export function AnalyticsChart({
     }
   }, [data, onTimeRangeChange]);
 
-  // Conditional data density: minute-level for short ranges, daily for long ranges
-  // Also filters by activeLinkId if present
+  // Continuous timeline data with gap-filling
+  // Generates all time points in range and merges actual data
   const chartData = useMemo(() => {
     const startDate = getDateRangeStart(timeRange);
-    const useMinuteData = ['30m', '6h', '1d'].includes(timeRange);
     
     // Filter data by date range first
     let filtered = data.filter(item => new Date(item.date) >= startDate);
@@ -265,65 +360,42 @@ export function AnalyticsChart({
       filtered = filtered.filter(item => item.linkId === activeLinkId);
     }
     
-    if (useMinuteData) {
-      // For short ranges: aggregate all links per timestamp (or show single link data)
-      const timeMap = new Map<string, { clicks: number; leads: number; sales: number; date: string }>();
+    // Build a map of actual data keyed by time bucket
+    const dataMap = new Map<string, { clicks: number; leads: number; sales: number }>();
+    
+    filtered.forEach(item => {
+      const key = getTimeKey(new Date(item.date), timeRange);
+      if (dataMap.has(key)) {
+        const existing = dataMap.get(key)!;
+        existing.clicks += item.clicks;
+        existing.leads += item.leads;
+        existing.sales += item.sales;
+      } else {
+        dataMap.set(key, {
+          clicks: item.clicks,
+          leads: item.leads,
+          sales: item.sales,
+        });
+      }
+    });
+    
+    // Generate all time points for continuous timeline
+    const timePoints = generateTimePoints(timeRange);
+    
+    // Merge time points with actual data (fill gaps with zeros)
+    return timePoints.map(date => {
+      const key = getTimeKey(date, timeRange);
+      const existingData = dataMap.get(key);
       
-      filtered.forEach(item => {
-        const timeKey = item.date;
-        if (timeMap.has(timeKey)) {
-          const existing = timeMap.get(timeKey)!;
-          existing.clicks += item.clicks;
-          existing.leads += item.leads;
-          existing.sales += item.sales;
-        } else {
-          timeMap.set(timeKey, {
-            date: item.date,
-            clicks: item.clicks,
-            leads: item.leads,
-            sales: item.sales,
-          });
-        }
-      });
-      
-      return Array.from(timeMap.values())
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .map(item => ({
-          ...item,
-          dateFormatted: formatDateForRange(new Date(item.date), timeRange),
-          tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
-        }));
-    } else {
-      // For long ranges: aggregate to daily data (max ~1095 points for 3y)
-      const dailyMap = new Map<string, { clicks: number; leads: number; sales: number; date: string }>();
-      
-      filtered.forEach(item => {
-        const date = new Date(item.date);
-        const dayKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
-        
-        if (dailyMap.has(dayKey)) {
-          const existing = dailyMap.get(dayKey)!;
-          existing.clicks += item.clicks;
-          existing.leads += item.leads;
-          existing.sales += item.sales;
-        } else {
-          dailyMap.set(dayKey, {
-            date: item.date,
-            clicks: item.clicks,
-            leads: item.leads,
-            sales: item.sales,
-          });
-        }
-      });
-      
-      return Array.from(dailyMap.values())
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .map(item => ({
-          ...item,
-          dateFormatted: formatDateForRange(new Date(item.date), timeRange),
-          tooltipDate: formatTooltipDate(new Date(item.date), timeRange),
-        }));
-    }
+      return {
+        date: date.toISOString(),
+        clicks: existingData?.clicks ?? 0,
+        leads: existingData?.leads ?? 0,
+        sales: existingData?.sales ?? 0,
+        dateFormatted: formatDateForRange(date, timeRange),
+        tooltipDate: formatTooltipDate(date, timeRange),
+      };
+    });
   }, [data, timeRange, activeLinkId]);
 
   // Data to display in main chart - ONLY updates when range is committed (mouse released)
@@ -335,6 +407,11 @@ export function AnalyticsChart({
     const endIdx = Math.floor((committedRange.end / 100) * chartData.length);
     return chartData.slice(startIdx, Math.max(endIdx, startIdx + 1));
   }, [chartData, committedRange]);
+
+  // Calculate tick interval based on display data length (adapts to zoom)
+  const tickInterval = useMemo(() => {
+    return getTickInterval(timeRange, displayData.length);
+  }, [timeRange, displayData.length]);
 
   // Simplified mini-map data for navigator (max 100 points)
   const navigatorData = useMemo(() => {
@@ -479,7 +556,8 @@ export function AnalyticsChart({
         <MainChart 
           displayData={displayData} 
           visibleMetrics={visibleMetrics} 
-          showConversions={showConversions} 
+          showConversions={showConversions}
+          tickInterval={tickInterval}
         />
         <Watermark />
       </div>
