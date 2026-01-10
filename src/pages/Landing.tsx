@@ -107,10 +107,13 @@ const features = [
 ];
 
 // Pricing data with Stripe-ready structure
+// Base monthly prices - yearly = monthly * 12 * 0.75 (25% discount = 3 months free)
+const YEARLY_DISCOUNT = 0.75;
+
 type PricingPlan = {
   name: string;
-  monthly: { price: number; priceId: string | null };
-  yearly: { price: number; priceId: string | null; monthlyEquivalent?: number };
+  monthlyPrice: number; // Base monthly price
+  priceIds: { monthly: string | null; yearly: string | null };
   features: string[];
   cta: string;
   highlighted: boolean;
@@ -120,8 +123,8 @@ type PricingPlan = {
 const pricingPlans: Record<string, PricingPlan> = {
   free: {
     name: 'Free',
-    monthly: { price: 0, priceId: null },
-    yearly: { price: 0, priceId: null },
+    monthlyPrice: 0,
+    priceIds: { monthly: null, yearly: null },
     features: [
       '5 active links',
       'Click tracking only',
@@ -133,8 +136,8 @@ const pricingPlans: Record<string, PricingPlan> = {
   },
   pro: {
     name: 'Pro',
-    monthly: { price: 9.99, priceId: 'price_pro_monthly_placeholder' },
-    yearly: { price: 89, priceId: 'price_pro_yearly_placeholder', monthlyEquivalent: 7.41 },
+    monthlyPrice: 9.99,
+    priceIds: { monthly: 'price_pro_monthly_placeholder', yearly: 'price_pro_yearly_placeholder' },
     features: [
       '25 active links',
       'Full analytics suite',
@@ -142,13 +145,13 @@ const pricingPlans: Record<string, PricingPlan> = {
       'Priority support',
       'Export data',
     ],
-    cta: 'Start Pro Trial',
+    cta: 'Start Free Trial',
     highlighted: false,
   },
   business: {
     name: 'Business',
-    monthly: { price: 14.99, priceId: 'price_business_monthly_placeholder' },
-    yearly: { price: 134, priceId: 'price_business_yearly_placeholder', monthlyEquivalent: 11.16 },
+    monthlyPrice: 14.99,
+    priceIds: { monthly: 'price_business_monthly_placeholder', yearly: 'price_business_yearly_placeholder' },
     badge: 'Most Popular',
     features: [
       '100 active links',
@@ -158,10 +161,18 @@ const pricingPlans: Record<string, PricingPlan> = {
       'Dedicated support',
       'Team collaboration',
     ],
-    cta: 'Start Business Trial',
+    cta: 'Start Free Trial',
     highlighted: true,
   },
 };
+
+// Helper to calculate prices
+function getDisplayPrice(plan: PricingPlan, cycle: 'monthly' | 'yearly'): number {
+  if (plan.monthlyPrice === 0) return 0;
+  if (cycle === 'monthly') return plan.monthlyPrice;
+  // For yearly, show the monthly equivalent (discounted)
+  return parseFloat((plan.monthlyPrice * YEARLY_DISCOUNT).toFixed(2));
+}
 
 const faqs = [
   {
@@ -224,16 +235,20 @@ function handleSubscription(planId: string, cycle: 'monthly' | 'yearly') {
   const plan = pricingPlans[planId as keyof typeof pricingPlans];
   if (!plan) return;
   
-  const priceData = cycle === 'monthly' ? plan.monthly : plan.yearly;
+  const priceId = cycle === 'monthly' ? plan.priceIds.monthly : plan.priceIds.yearly;
+  const displayPrice = getDisplayPrice(plan, cycle);
+  const totalYearly = cycle === 'yearly' ? parseFloat((plan.monthlyPrice * 12 * YEARLY_DISCOUNT).toFixed(2)) : null;
+  
   console.log('[Stripe Ready] Selected Plan:', {
     planName: plan.name,
     billingCycle: cycle,
-    priceId: priceData.priceId,
-    amount: priceData.price,
+    priceId,
+    displayedMonthlyPrice: displayPrice,
+    totalYearlyAmount: totalYearly,
   });
   
   // TODO: Integrate with Stripe checkout
-  // await stripe.redirectToCheckout({ priceId: priceData.priceId });
+  // await stripe.redirectToCheckout({ priceId });
 }
 
 export default function Landing() {
@@ -360,22 +375,39 @@ export default function Landing() {
       {/* Pricing Section */}
       <section id="pricing" className="py-20 px-4">
         <div className="container mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
               Start free, upgrade when you're ready. No hidden fees.
             </p>
+            
+            {/* Global Billing Toggle */}
+            <div className="inline-flex items-center gap-3 bg-card border border-border rounded-full px-4 py-2">
+              <span className={`text-sm font-medium transition-colors ${billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                Monthly
+              </span>
+              <Switch
+                checked={billingCycle === 'yearly'}
+                onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                className="data-[state=checked]:bg-primary"
+              />
+              <span className={`text-sm font-medium transition-colors ${billingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                Yearly
+              </span>
+              {billingCycle === 'yearly' && (
+                <span className="ml-1 text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                  3 months free
+                </span>
+              )}
+            </div>
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {Object.entries(pricingPlans).map(([planId, plan]) => {
               const isFree = planId === 'free';
-              const currentPrice = billingCycle === 'monthly' ? plan.monthly.price : plan.yearly.price;
-              const monthlyEquivalent = billingCycle === 'yearly' && 'monthlyEquivalent' in plan.yearly 
-                ? plan.yearly.monthlyEquivalent 
-                : null;
+              const displayPrice = getDisplayPrice(plan, billingCycle);
               
               return (
                 <div 
@@ -395,45 +427,28 @@ export default function Landing() {
                   )}
                   
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-semibold text-foreground mb-2">{plan.name}</h3>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl font-bold text-foreground transition-all duration-300">
-                        <AnimatedPrice value={currentPrice} cycle={billingCycle} />
+                    <h3 className="text-xl font-semibold text-foreground mb-3">{plan.name}</h3>
+                    <div className="flex items-baseline justify-center">
+                      <span className="text-2xl font-light text-muted-foreground">$</span>
+                      <span className="text-5xl font-bold text-foreground tabular-nums transition-all duration-300">
+                        <AnimatedPrice value={displayPrice} cycle={billingCycle} />
                       </span>
-                      <span className="text-muted-foreground">
-                        {isFree ? '/forever' : billingCycle === 'monthly' ? '/month' : '/year'}
+                      <span className="text-muted-foreground text-sm ml-1">
+                        {isFree ? '' : '/mo'}
                       </span>
                     </div>
-                    {monthlyEquivalent && billingCycle === 'yearly' && (
-                      <p className="text-sm text-primary mt-1">
-                        ${monthlyEquivalent}/mo billed annually
+                    {/* Billed annually note */}
+                    {!isFree && billingCycle === 'yearly' && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Billed annually
+                      </p>
+                    )}
+                    {isFree && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Free forever
                       </p>
                     )}
                   </div>
-                  
-                  {/* Billing Toggle - only for paid plans */}
-                  {!isFree && (
-                    <div className="flex items-center justify-center gap-3 mb-6 pb-6 border-b border-border">
-                      <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        Monthly
-                      </span>
-                      <Switch
-                        checked={billingCycle === 'yearly'}
-                        onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                      <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        Yearly
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* 3 Months Free Nudge */}
-                  {!isFree && billingCycle === 'yearly' && (
-                    <p className="text-xs text-muted-foreground text-center mb-4 -mt-2">
-                      Includes 3 months free (billed annually)
-                    </p>
-                  )}
                   
                   <ul className="space-y-3 mb-8">
                     {plan.features.map((feature) => (
