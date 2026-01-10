@@ -384,7 +384,7 @@ export default function Landing() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
             {Object.entries(pricingPlans).map(([planId, plan]) => {
               const isFree = planId === 'free';
               const displayPrice = getDisplayPrice(plan, billingCycle);
@@ -408,11 +408,6 @@ export default function Landing() {
                   
                   {/* Plan Name */}
                   <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
-                  
-                  {/* Short Description - Fixed min-height for alignment */}
-                  <p className="text-sm text-muted-foreground text-center mt-2 min-h-[40px]">
-                    {plan.description}
-                  </p>
                   
                   {/* Price Area */}
                   <div className="flex items-baseline justify-center mt-4">
@@ -446,7 +441,7 @@ export default function Landing() {
                     <div className="h-8 mt-4" /> 
                   )}
                   
-                  {/* CTA Button - Moved Up */}
+                  {/* CTA Button */}
                   <div className="mt-6">
                     {isFree ? (
                       <Link to="/auth?mode=signup">
@@ -465,11 +460,8 @@ export default function Landing() {
                     )}
                   </div>
                   
-                  {/* Divider */}
-                  <div className="border-t border-border my-6" />
-                  
-                  {/* Features List - Moved to Bottom */}
-                  <ul className="space-y-3">
+                  {/* Features List */}
+                  <ul className="space-y-3 mt-6 flex-1">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Check className="h-4 w-4 text-primary flex-shrink-0" />
