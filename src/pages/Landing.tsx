@@ -137,7 +137,7 @@ const pricingPlans: Record<string, PricingPlan> = {
   pro: {
     name: 'Pro',
     description: 'For serious marketers scaling up.',
-    monthlyPrice: 9.99,
+    monthlyPrice: 10,
     priceIds: { monthly: 'price_pro_monthly_placeholder', yearly: 'price_pro_yearly_placeholder' },
     features: [
       '25 active links',
@@ -151,7 +151,7 @@ const pricingPlans: Record<string, PricingPlan> = {
   business: {
     name: 'Business',
     description: 'For teams and agencies at scale.',
-    monthlyPrice: 14.99,
+    monthlyPrice: 15,
     priceIds: { monthly: 'price_business_monthly_placeholder', yearly: 'price_business_yearly_placeholder' },
     badge: 'Most Popular',
     features: [
@@ -171,7 +171,13 @@ function getDisplayPrice(plan: PricingPlan, cycle: 'monthly' | 'yearly'): number
   if (plan.monthlyPrice === 0) return 0;
   if (cycle === 'monthly') return plan.monthlyPrice;
   // For yearly, show the monthly equivalent (discounted)
-  return parseFloat((plan.monthlyPrice * YEARLY_DISCOUNT).toFixed(2));
+  return plan.monthlyPrice * YEARLY_DISCOUNT;
+}
+
+// Helper to format price (no decimals if whole number, otherwise 2 decimals)
+function formatPrice(value: number): string {
+  if (value === 0) return '0';
+  return value % 1 === 0 ? value.toString() : value.toFixed(2);
 }
 
 const faqs = [
@@ -225,7 +231,7 @@ function AnimatedPrice({ value, cycle }: { value: number; cycle: 'monthly' | 'ye
   
   return (
     <span className="tabular-nums">
-      ${value === 0 ? '0' : displayValue.toFixed(value % 1 === 0 ? 0 : 2)}
+      ${formatPrice(displayValue)}
     </span>
   );
 }
@@ -406,53 +412,57 @@ export default function Landing() {
                     </div>
                   )}
                   
-                  {/* Plan Name */}
-                  <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
-                  
-                  {/* Price Area */}
-                  <div className="flex items-baseline justify-center mt-4">
-                    <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
-                      <AnimatedPrice value={displayPrice} cycle={billingCycle} />
-                    </span>
-                    <span className="text-muted-foreground text-sm ml-1.5">
-                      {isFree ? '' : 'per month'}
-                    </span>
-                  </div>
-                  {isFree && (
-                    <p className="text-xs text-muted-foreground text-center mt-1">
-                      Free forever
-                    </p>
-                  )}
-                  
-                  {/* Toggle for Paid Plans */}
-                  {!isFree ? (
-                    <div className="flex items-center justify-center gap-2 mt-4 h-8">
-                      <Switch
-                        checked={billingCycle === 'yearly'}
-                        onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                      <span className="text-sm text-muted-foreground">Billed yearly</span>
-                      <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                        3 months free
+                  {/* Header Container - Fixed height for alignment */}
+                  <div className="min-h-[180px] flex flex-col">
+                    {/* Plan Name */}
+                    <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
+                    
+                    {/* Price Area */}
+                    <div className="flex items-baseline justify-center mt-4">
+                      <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
+                        <AnimatedPrice value={displayPrice} cycle={billingCycle} />
+                      </span>
+                      <span className="text-muted-foreground text-sm ml-1.5">
+                        {isFree ? '' : 'per month'}
                       </span>
                     </div>
-                  ) : (
-                    <div className="h-8 mt-4" /> 
-                  )}
+                    {isFree && (
+                      <p className="text-xs text-muted-foreground text-center mt-1">
+                        Free forever
+                      </p>
+                    )}
+                    
+                    {/* Toggle for Paid Plans */}
+                    {!isFree ? (
+                      <div className="flex items-center justify-center gap-2 mt-4 h-8">
+                        <Switch
+                          checked={billingCycle === 'yearly'}
+                          onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                        <span className="text-sm text-muted-foreground">Billed yearly</span>
+                        <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                          3 months free
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="h-8 mt-4" /> 
+                    )}
+                  </div>
                   
                   {/* CTA Button */}
                   <div className="mt-6">
                     {isFree ? (
                       <Link to="/auth?mode=signup">
-                        <Button variant="outline" className="w-full">
+                        <Button 
+                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
+                        >
                           Start free trial
                         </Button>
                       </Link>
                     ) : (
                       <Button 
-                        variant={plan.highlighted ? 'glow' : 'default'} 
-                        className="w-full"
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
                         onClick={() => handleSubscription(planId, billingCycle)}
                       >
                         Get started
