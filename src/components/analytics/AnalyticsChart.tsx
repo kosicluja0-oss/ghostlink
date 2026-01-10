@@ -1,7 +1,5 @@
 import { useState, useMemo, useCallback, memo } from 'react';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -120,11 +118,25 @@ const MainChart = memo(({
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+      <AreaChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <defs>
+          <linearGradient id="clicksGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.25} />
+            <stop offset="100%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--warning))" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="hsl(var(--warning))" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.2} />
+            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <CartesianGrid 
           strokeDasharray="3 3" 
           stroke="hsl(var(--border))" 
-          strokeOpacity={0.5}
+          strokeOpacity={0.25}
           vertical={false}
         />
         <XAxis 
@@ -159,11 +171,12 @@ const MainChart = memo(({
         <Tooltip content={<CustomTooltip />} />
 
         {visibleMetrics.clicks && (
-          <Line
-            type="linear"
+          <Area
+            type="monotone"
             dataKey="clicks"
             stroke={METRIC_COLORS.clicks}
             strokeWidth={2}
+            fill="url(#clicksGradient)"
             dot={false}
             activeDot={{ r: 4, fill: METRIC_COLORS.clicks, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
             isAnimationActive={false}
@@ -171,11 +184,12 @@ const MainChart = memo(({
         )}
         
         {showConversions && visibleMetrics.leads && (
-          <Line
-            type="linear"
+          <Area
+            type="monotone"
             dataKey="leads"
             stroke={METRIC_COLORS.leads}
             strokeWidth={2}
+            fill="url(#leadsGradient)"
             dot={false}
             activeDot={{ r: 4, fill: METRIC_COLORS.leads, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
             isAnimationActive={false}
@@ -183,17 +197,18 @@ const MainChart = memo(({
         )}
         
         {showConversions && visibleMetrics.sales && (
-          <Line
-            type="linear"
+          <Area
+            type="monotone"
             dataKey="sales"
             stroke={METRIC_COLORS.sales}
             strokeWidth={2}
+            fill="url(#salesGradient)"
             dot={false}
             activeDot={{ r: 4, fill: METRIC_COLORS.sales, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
             isAnimationActive={false}
           />
         )}
-      </LineChart>
+      </AreaChart>
     </ResponsiveContainer>
   );
 });
