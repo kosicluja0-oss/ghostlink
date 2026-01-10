@@ -112,10 +112,10 @@ const YEARLY_DISCOUNT = 0.75;
 
 type PricingPlan = {
   name: string;
+  description: string;
   monthlyPrice: number; // Base monthly price
   priceIds: { monthly: string | null; yearly: string | null };
   features: string[];
-  cta: string;
   highlighted: boolean;
   badge?: string;
 };
@@ -123,6 +123,7 @@ type PricingPlan = {
 const pricingPlans: Record<string, PricingPlan> = {
   free: {
     name: 'Free',
+    description: 'For hobbyists exploring the platform.',
     monthlyPrice: 0,
     priceIds: { monthly: null, yearly: null },
     features: [
@@ -131,11 +132,11 @@ const pricingPlans: Record<string, PricingPlan> = {
       'Basic analytics',
       'Community support',
     ],
-    cta: 'Get Started',
     highlighted: false,
   },
   pro: {
     name: 'Pro',
+    description: 'For serious marketers scaling up.',
     monthlyPrice: 9.99,
     priceIds: { monthly: 'price_pro_monthly_placeholder', yearly: 'price_pro_yearly_placeholder' },
     features: [
@@ -145,11 +146,11 @@ const pricingPlans: Record<string, PricingPlan> = {
       'Priority support',
       'Export data',
     ],
-    cta: 'Start Free Trial',
     highlighted: false,
   },
   business: {
     name: 'Business',
+    description: 'For teams and agencies at scale.',
     monthlyPrice: 14.99,
     priceIds: { monthly: 'price_business_monthly_placeholder', yearly: 'price_business_yearly_placeholder' },
     badge: 'Most Popular',
@@ -161,7 +162,6 @@ const pricingPlans: Record<string, PricingPlan> = {
       'Dedicated support',
       'Team collaboration',
     ],
-    cta: 'Start Free Trial',
     highlighted: true,
   },
 };
@@ -384,7 +384,7 @@ export default function Landing() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
             {Object.entries(pricingPlans).map(([planId, plan]) => {
               const isFree = planId === 'free';
               const displayPrice = getDisplayPrice(plan, billingCycle);
@@ -392,7 +392,7 @@ export default function Landing() {
               return (
                 <div 
                   key={planId}
-                  className={`relative bg-card border rounded-xl p-6 ${
+                  className={`relative bg-card border rounded-xl p-6 flex flex-col ${
                     plan.highlighted 
                       ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' 
                       : 'border-border'
@@ -406,45 +406,70 @@ export default function Landing() {
                     </div>
                   )}
                   
-                  <div className="text-center mb-6">
-                    <h3 className="text-3xl font-bold text-foreground mb-4">{plan.name}</h3>
-                    <div className="flex items-baseline justify-center">
-                      <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
-                        <AnimatedPrice value={displayPrice} cycle={billingCycle} />
-                      </span>
-                      <span className="text-muted-foreground text-sm ml-1.5">
-                        {isFree ? '' : 'per month'}
+                  {/* Plan Name */}
+                  <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
+                  
+                  {/* Short Description - Fixed min-height for alignment */}
+                  <p className="text-sm text-muted-foreground text-center mt-2 min-h-[40px]">
+                    {plan.description}
+                  </p>
+                  
+                  {/* Price Area */}
+                  <div className="flex items-baseline justify-center mt-4">
+                    <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
+                      <AnimatedPrice value={displayPrice} cycle={billingCycle} />
+                    </span>
+                    <span className="text-muted-foreground text-sm ml-1.5">
+                      {isFree ? '' : 'per month'}
+                    </span>
+                  </div>
+                  {isFree && (
+                    <p className="text-xs text-muted-foreground text-center mt-1">
+                      Free forever
+                    </p>
+                  )}
+                  
+                  {/* Toggle for Paid Plans */}
+                  {!isFree ? (
+                    <div className="flex items-center justify-center gap-2 mt-4 h-8">
+                      <Switch
+                        checked={billingCycle === 'yearly'}
+                        onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                      <span className="text-sm text-muted-foreground">Billed yearly</span>
+                      <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                        3 months free
                       </span>
                     </div>
-                    {/* Billed annually note */}
-                    {!isFree && billingCycle === 'yearly' && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Billed annually
-                      </p>
-                    )}
-                    {isFree && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Free forever
-                      </p>
-                    )}
-                    
-                    {/* Individual Toggle for Pro and Business */}
-                    {!isFree && (
-                      <div className="flex items-center justify-center gap-2 mt-4">
-                        <Switch
-                          checked={billingCycle === 'yearly'}
-                          onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-                          className="data-[state=checked]:bg-primary"
-                        />
-                        <span className="text-sm text-muted-foreground">Billed yearly</span>
-                        <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                          3 months free
-                        </span>
-                      </div>
+                  ) : (
+                    <div className="h-8 mt-4" /> 
+                  )}
+                  
+                  {/* CTA Button - Moved Up */}
+                  <div className="mt-6">
+                    {isFree ? (
+                      <Link to="/auth?mode=signup">
+                        <Button variant="outline" className="w-full">
+                          Start free trial
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button 
+                        variant={plan.highlighted ? 'glow' : 'default'} 
+                        className="w-full"
+                        onClick={() => handleSubscription(planId, billingCycle)}
+                      >
+                        Get started
+                      </Button>
                     )}
                   </div>
                   
-                  <ul className="space-y-3 mb-8">
+                  {/* Divider */}
+                  <div className="border-t border-border my-6" />
+                  
+                  {/* Features List - Moved to Bottom */}
+                  <ul className="space-y-3">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Check className="h-4 w-4 text-primary flex-shrink-0" />
@@ -452,22 +477,6 @@ export default function Landing() {
                       </li>
                     ))}
                   </ul>
-                  
-                  {isFree ? (
-                    <Link to="/auth?mode=signup">
-                      <Button variant="outline" className="w-full">
-                        {plan.cta}
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button 
-                      variant={plan.highlighted ? 'glow' : 'outline'} 
-                      className="w-full"
-                      onClick={() => handleSubscription(planId, billingCycle)}
-                    >
-                      {plan.cta}
-                    </Button>
-                  )}
                 </div>
               );
             })}
