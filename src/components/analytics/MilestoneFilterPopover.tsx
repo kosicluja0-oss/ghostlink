@@ -59,7 +59,7 @@ export function MilestoneFilterPopover({
   const allColorsSelected = ALL_COLORS.every(c => colorFilters.has(c));
 
   return (
-    <Popover>
+<Popover modal={false}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -68,7 +68,7 @@ export function MilestoneFilterPopover({
               ? "text-primary bg-primary/10"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
-          title="Filter milestones"
+          title="Filter notes"
         >
           <Filter className="w-3.5 h-3.5" />
           {isFilterActive && (
@@ -107,7 +107,11 @@ export function MilestoneFilterPopover({
                 return (
                   <button
                     key={color}
-                    onClick={() => onToggleColorFilter(color)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleColorFilter(color);
+                    }}
                     disabled={!isUsed}
                     className={cn(
                       "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
@@ -142,7 +146,11 @@ export function MilestoneFilterPopover({
                 {/* Global / Unassigned option */}
                 {linksWithMilestones.hasGlobalMilestones && (
                   <button
-                    onClick={() => onToggleLinkFilter('global')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleLinkFilter('global');
+                    }}
                     className={cn(
                       "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors text-left",
                       linkFilters.has('global')
@@ -162,11 +170,15 @@ export function MilestoneFilterPopover({
                   </button>
                 )}
                 
-                {/* Links with milestones */}
+                {/* Links with notes */}
                 {linksWithMilestones.associatedLinks.map((link) => (
                   <button
                     key={link.id}
-                    onClick={() => onToggleLinkFilter(link.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleLinkFilter(link.id);
+                    }}
                     className={cn(
                       "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors text-left",
                       linkFilters.has(link.id)
@@ -192,7 +204,7 @@ export function MilestoneFilterPopover({
         
         <div className="px-3 py-1.5 bg-muted/30 border-t border-border/30">
           <span className="text-[9px] text-muted-foreground">
-            Toggle to show/hide milestones
+            Toggle to show/hide notes
           </span>
         </div>
       </PopoverContent>

@@ -95,13 +95,16 @@ export function LinkSelector({ links, selectedLinkIds, onToggleLink }: LinkSelec
                         onToggleLink(link.id);
                         setSearch('');
                       }}
-                      className="flex items-center gap-2 cursor-pointer px-2 py-1.5"
+                      className={cn(
+                        "flex items-center gap-2 cursor-pointer px-2 py-1.5",
+                        isSelected && "bg-primary/15"
+                      )}
                     >
                       <div className={cn(
                         "w-4 h-4 rounded border flex items-center justify-center transition-colors",
                         isSelected 
                           ? "bg-primary border-primary" 
-                          : "border-border/50 bg-transparent"
+                          : "border-muted-foreground/40 bg-transparent"
                       )}>
                         {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
                       </div>
