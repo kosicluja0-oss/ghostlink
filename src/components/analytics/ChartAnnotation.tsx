@@ -35,8 +35,8 @@ export const MILESTONE_COLORS: Record<MilestoneColor, { bg: string; border: stri
   white: { bg: 'hsl(0 0% 98%)', border: 'hsl(0 0% 98%)', line: 'hsl(0 0% 80%)' },
 };
 
-// Size multipliers
-const SIZE_CONFIG: Record<MilestoneSize, { bubble: number; inner: number; label: string }> = {
+// Size multipliers - exported for AddMilestoneDialog
+export const SIZE_CONFIG: Record<MilestoneSize, { bubble: number; inner: number; label: string }> = {
   small: { bubble: 0.67, inner: 0.67, label: 'S' },
   medium: { bubble: 1, inner: 1, label: 'M' },
   large: { bubble: 1.33, inner: 1.33, label: 'L' },
@@ -312,7 +312,7 @@ export function ChartAnnotation({
                   <button
                     onClick={handleDelete}
                     className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-                    title="Delete milestone"
+                    title="Delete note"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -320,11 +320,11 @@ export function ChartAnnotation({
               </div>
             </div>
             
-            {/* Primary view: Milestone label */}
+            {/* Primary view: Note label */}
             {!showSettings && (
               <div className="space-y-1">
                 <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: colorConfig.bg }}>
-                  Milestone
+                  Note
                 </span>
                 <p className="text-sm text-foreground font-medium leading-tight">{annotation.label}</p>
 

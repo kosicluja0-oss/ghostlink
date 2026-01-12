@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Flag, Check } from 'lucide-react';
 import { format } from 'date-fns';
-import { type MilestoneColor, MILESTONE_COLORS } from './ChartAnnotation';
+import { type MilestoneColor, type MilestoneSize, MILESTONE_COLORS, SIZE_CONFIG } from './ChartAnnotation';
 import { cn } from '@/lib/utils';
 
 interface AddMilestoneDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   date: string | null;
-  onAdd: (date: string, label: string, color: MilestoneColor) => void;
+  onAdd: (date: string, label: string, color: MilestoneColor, size: MilestoneSize) => void;
 }
 
 const COLOR_OPTIONS: { value: MilestoneColor; label: string }[] = [
@@ -26,17 +26,25 @@ const COLOR_OPTIONS: { value: MilestoneColor; label: string }[] = [
   { value: 'white', label: 'White' },
 ];
 
+const SIZE_OPTIONS: { value: MilestoneSize; label: string }[] = [
+  { value: 'small', label: 'S' },
+  { value: 'medium', label: 'M' },
+  { value: 'large', label: 'L' },
+];
+
 export function AddMilestoneDialog({ open, onOpenChange, date, onAdd }: AddMilestoneDialogProps) {
   const [label, setLabel] = useState('');
   const [selectedColor, setSelectedColor] = useState<MilestoneColor>('teal');
+  const [selectedSize, setSelectedSize] = useState<MilestoneSize>('medium');
   const maxLength = 200;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (date && label.trim()) {
-      onAdd(date, label.trim(), selectedColor);
+      onAdd(date, label.trim(), selectedColor, selectedSize);
       setLabel('');
       setSelectedColor('teal');
+      setSelectedSize('medium');
       onOpenChange(false);
     }
   };
@@ -44,6 +52,7 @@ export function AddMilestoneDialog({ open, onOpenChange, date, onAdd }: AddMiles
   const handleClose = () => {
     setLabel('');
     setSelectedColor('teal');
+    setSelectedSize('medium');
     onOpenChange(false);
   };
 
@@ -55,7 +64,7 @@ export function AddMilestoneDialog({ open, onOpenChange, date, onAdd }: AddMiles
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-foreground">
             <Flag className="w-4 h-4 text-primary" />
-            Add Milestone
+            Add Note
           </DialogTitle>
         </DialogHeader>
         
@@ -83,6 +92,28 @@ export function AddMilestoneDialog({ open, onOpenChange, date, onAdd }: AddMiles
               <span className="text-[10px] text-muted-foreground">
                 {label.length}/{maxLength}
               </span>
+            </div>
+          </div>
+          
+          {/* Size Selector */}
+          <div className="space-y-2">
+            <Label className="text-foreground">Size</Label>
+            <div className="flex gap-1">
+              {SIZE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSelectedSize(option.value)}
+                  className={cn(
+                    "flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                    selectedSize === option.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
           
@@ -127,7 +158,7 @@ export function AddMilestoneDialog({ open, onOpenChange, date, onAdd }: AddMiles
               Cancel
             </Button>
             <Button type="submit" disabled={!label.trim()}>
-              Add Milestone
+              Add Note
             </Button>
           </DialogFooter>
         </form>

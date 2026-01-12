@@ -552,27 +552,45 @@ export function AnalyticsChart({
         return true;
       })
       .map(annotation => {
-        const annotationDate = new Date(annotation.date);
+        const annotationTimestamp = new Date(annotation.date).getTime();
         
-        // Find the matching data point in displayData
-        const dateIndex = displayData.findIndex(dataPoint => {
-          const dataDate = new Date(dataPoint.date);
+        // Find the closest matching data point by timestamp
+        let closestIndex = -1;
+        let closestDiff = Infinity;
+        
+        displayData.forEach((dataPoint, index) => {
+          const dataTimestamp = new Date(dataPoint.date).getTime();
+          const diff = Math.abs(annotationTimestamp - dataTimestamp);
           
-          // Match based on time range granularity
+          // Use tolerance based on time range granularity
+          let tolerance: number;
           switch (timeRange) {
             case '30m':
+              tolerance = 30 * 1000; // 30 seconds
+              break;
             case '6h':
+              tolerance = 2.5 * 60 * 1000; // 2.5 minutes
+              break;
             case '1d':
-              return isSameHour(annotationDate, dataDate) && 
-                     annotationDate.getMinutes() === dataDate.getMinutes();
+              tolerance = 7.5 * 60 * 1000; // 7.5 minutes
+              break;
+            case '1w':
+            case '1m':
+              tolerance = 12 * 60 * 60 * 1000; // 12 hours
+              break;
             default:
-              return isSameDay(annotationDate, dataDate);
+              tolerance = 24 * 60 * 60 * 1000; // 1 day
+          }
+          
+          if (diff < closestDiff && diff <= tolerance) {
+            closestDiff = diff;
+            closestIndex = index;
           }
         });
         
         return {
           annotation,
-          dateIndex,
+          dateIndex: closestIndex,
         };
       }).filter(a => a.dateIndex >= 0);
   }, [milestones, displayData, timeRange, milestonesVisible, activeLinkId, colorFilters, linkFilters]);
@@ -698,7 +716,7 @@ export function AnalyticsChart({
           </button>
         ))}
         
-        {/* Milestones Toggle with Filter */}
+        {/* Notes Toggle with Filter */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => setMilestonesVisible(!milestonesVisible)}
@@ -711,7 +729,7 @@ export function AnalyticsChart({
             }`}>
               <Flag className="w-1.5 h-1.5 text-primary" />
             </div>
-            <span className="text-muted-foreground">Milestones</span>
+            <span className="text-muted-foreground">Notes</span>
             {milestones.length > 0 && (
               <span className="text-[10px] text-muted-foreground/60">({visibleAnnotations.length}/{milestones.length})</span>
             )}
@@ -816,12 +834,12 @@ export function AnalyticsChart({
             className="flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 text-primary" />
-            <span>Add Milestone</span>
+            <span>Add Note</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 
-      {/* Add Milestone Dialog */}
+      {/* Add Note Dialog */}
       <AddMilestoneDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
