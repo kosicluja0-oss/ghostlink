@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Calendar, Trash2, GripVertical, Settings, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+// Movement threshold to distinguish click from drag (in pixels)
+const DRAG_THRESHOLD = 5;
 
 export type MilestoneColor = 'teal' | 'yellow' | 'red' | 'green' | 'purple' | 'pink' | 'orange' | 'white';
 export type MilestoneSize = 'small' | 'medium' | 'large';
@@ -67,7 +69,10 @@ export function ChartAnnotation({
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [hasDragged, setHasDragged] = useState(false);
+  const [pendingYOffset, setPendingYOffset] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ y: number; startOffset: number } | null>(null);
   
   const color = annotation.color || 'teal';
   const size = annotation.size || 'medium';
@@ -86,8 +91,10 @@ export function ChartAnnotation({
   const xPosition = chartLeftMargin + (dateIndex / Math.max(1, dataLength - 1)) * usableWidth;
   
   // Calculate Y position based on offset (0 = top, 100 = near bottom)
+  // Use pending offset during drag for immediate visual feedback
   const usableHeight = chartHeight - 50; // Leave space for axis
-  const yPosition = 5 + (yOffset / 100) * (usableHeight - 30);
+  const displayYOffset = pendingYOffset ?? yOffset;
+  const yPosition = 5 + (displayYOffset / 100) * (usableHeight - 30);
   
   // Don't render if position is invalid
   if (dateIndex < 0 || !isFinite(xPosition)) return null;
@@ -99,10 +106,6 @@ export function ChartAnnotation({
     setIsOpen(false);
   };
 
-  const handleSliderChange = (value: number[]) => {
-    onUpdateYOffset?.(annotation.id, value[0]);
-  };
-
   const handleColorSelect = (newColor: MilestoneColor) => {
     onUpdateColor?.(annotation.id, newColor);
   };
@@ -111,31 +114,64 @@ export function ChartAnnotation({
     onUpdateSize?.(annotation.id, newSize);
   };
 
-  // Handle drag
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Handle drag start
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return; // Only left click
     e.preventDefault();
     e.stopPropagation();
+    
+    dragStartRef.current = { y: e.clientY, startOffset: yOffset };
+    setHasDragged(false);
     setIsDragging(true);
-  };
+  }, [yOffset]);
+
+  // Handle click - only open popover if no significant drag occurred
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!hasDragged) {
+      setIsOpen(prev => !prev);
+    }
+  }, [hasDragged]);
 
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return;
-      const parent = containerRef.current.parentElement;
-      if (!parent) return;
+      if (!containerRef.current || !dragStartRef.current) return;
+      
+      // Check if we've moved past the threshold
+      const deltaY = Math.abs(e.clientY - dragStartRef.current.y);
+      if (deltaY > DRAG_THRESHOLD) {
+        setHasDragged(true);
+      }
+      
+      // Only update visual position if we're actually dragging
+      if (deltaY > DRAG_THRESHOLD) {
+        const parent = containerRef.current.parentElement;
+        if (!parent) return;
 
-      const rect = parent.getBoundingClientRect();
-      const relativeY = e.clientY - rect.top - 5;
-      const maxY = usableHeight - 30;
-      const newOffset = Math.max(0, Math.min(100, (relativeY / maxY) * 100));
-      onUpdateYOffset?.(annotation.id, Math.round(newOffset));
+        const rect = parent.getBoundingClientRect();
+        const relativeY = e.clientY - rect.top - 5;
+        const maxY = usableHeight - 30;
+        const newOffset = Math.max(0, Math.min(100, (relativeY / maxY) * 100));
+        
+        // Store pending offset for visual update, don't persist yet
+        setPendingYOffset(Math.round(newOffset));
+      }
     };
 
     const handleMouseUp = () => {
+      // Only save to localStorage on mouse up if we actually dragged
+      if (hasDragged && pendingYOffset !== null) {
+        onUpdateYOffset?.(annotation.id, pendingYOffset);
+      }
+      
       setIsDragging(false);
+      setPendingYOffset(null);
+      dragStartRef.current = null;
+      
+      // Reset hasDragged after a small delay to allow click handler to check it
+      setTimeout(() => setHasDragged(false), 10);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -144,7 +180,7 @@ export function ChartAnnotation({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, annotation.id, onUpdateYOffset, usableHeight]);
+  }, [isDragging, hasDragged, pendingYOffset, annotation.id, onUpdateYOffset, usableHeight]);
 
   // Reset settings view when popover closes
   useEffect(() => {
@@ -187,9 +223,12 @@ export function ChartAnnotation({
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
-            className={`pointer-events-auto absolute left-1/2 -translate-x-1/2 group ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            className={cn(
+              "pointer-events-auto absolute left-1/2 -translate-x-1/2 group",
+              isDragging ? "cursor-grabbing" : "cursor-grab"
+            )}
             style={{ top: yPosition }}
-            onClick={() => !isDragging && setIsOpen(!isOpen)}
+            onClick={handleClick}
             onMouseDown={handleMouseDown}
           >
             {/* Pulse ring animation */}
@@ -334,21 +373,6 @@ export function ChartAnnotation({
                     ))}
                   </div>
                 </div>
-
-                {/* Height adjustment slider */}
-                {onUpdateYOffset && (
-                  <div className="space-y-2">
-                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Height Position</Label>
-                    <Slider
-                      value={[yOffset]}
-                      onValueChange={handleSliderChange}
-                      min={0}
-                      max={100}
-                      step={5}
-                      className="w-full"
-                    />
-                  </div>
-                )}
               </div>
             )}
           </div>
