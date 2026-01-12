@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { GhostLink, BridgePageConfig } from '@/types';
 import { toast } from 'sonner';
+import { USE_MOCK_DATA, getMockLinks } from '@/lib/mockData';
 
 interface DbClick {
   id: string;
@@ -15,6 +16,13 @@ export function useLinks() {
 
   // Fetch links and their click counts
   const fetchLinks = useCallback(async () => {
+    // If using mock data, return mock links immediately
+    if (USE_MOCK_DATA) {
+      setLinks(getMockLinks());
+      setIsLoading(false);
+      return;
+    }
+
     try {
       // Get current user session
       const { data: { session } } = await supabase.auth.getSession();

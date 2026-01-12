@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyticsData, DashboardStats } from '@/types';
+import { USE_MOCK_DATA, getMockAnalyticsData, getMockStats } from '@/lib/mockData';
 
 interface DbClick {
   id: string;
@@ -24,6 +25,12 @@ export function useClicksRealtime() {
 
   // Fetch initial clicks and conversions
   useEffect(() => {
+    // If using mock data, skip database fetch
+    if (USE_MOCK_DATA) {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         // Fetch clicks
@@ -74,8 +81,10 @@ export function useClicksRealtime() {
     fetchData();
   }, []);
 
-  // Subscribe to real-time click inserts
+  // Subscribe to real-time click inserts (skip if using mock data)
   useEffect(() => {
+    if (USE_MOCK_DATA) return;
+
     const channel = supabase
       .channel('clicks-realtime')
       .on(
@@ -98,8 +107,10 @@ export function useClicksRealtime() {
     };
   }, []);
 
-  // Subscribe to real-time conversion inserts
+  // Subscribe to real-time conversion inserts (skip if using mock data)
   useEffect(() => {
+    if (USE_MOCK_DATA) return;
+
     const channel = supabase
       .channel('conversions-realtime')
       .on(
@@ -141,6 +152,11 @@ export function useClicksRealtime() {
 
   // Transform clicks and conversions to analytics data format
   const analyticsData = useMemo<AnalyticsData[]>(() => {
+    // Return mock data if enabled
+    if (USE_MOCK_DATA) {
+      return getMockAnalyticsData();
+    }
+
     // Create a map of click_id to link_id for quick lookup
     const clickToLink = new Map<string, string>();
     clicks.forEach((click) => {
@@ -224,6 +240,11 @@ export function useClicksRealtime() {
 
   // Calculate dashboard stats
   const stats = useMemo<DashboardStats>(() => {
+    // Return mock stats if enabled
+    if (USE_MOCK_DATA) {
+      return getMockStats();
+    }
+
     const totalClicks = clicks.length;
     const totalLeads = conversions.filter((c) => c.type === 'lead').length;
     const totalSales = conversions.filter((c) => c.type === 'sale').length;
