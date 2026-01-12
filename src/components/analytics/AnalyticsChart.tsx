@@ -337,7 +337,7 @@ export function AnalyticsChart({
   const [milestonesVisible, setMilestonesVisible] = useState(true);
   
   // Milestones hook for CRUD operations with localStorage persistence
-  const { milestones, addMilestone, deleteMilestone } = useMilestones();
+  const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset } = useMilestones();
   
   // Add milestone dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -692,6 +692,7 @@ export function AnalyticsChart({
                 chartLeftMargin={50}
                 chartRightMargin={20}
                 onDelete={deleteMilestone}
+                onUpdateYOffset={updateMilestoneYOffset}
               />
             ))}
             

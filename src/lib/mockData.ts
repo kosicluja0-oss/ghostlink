@@ -117,10 +117,14 @@ const LINK_PROFILES: LinkProfile[] = [
 // MOCK ANNOTATIONS DATA
 // ============================================================================
 
+export type MilestoneColor = 'teal' | 'yellow' | 'red' | 'green' | 'purple' | 'pink' | 'orange' | 'white';
+
 export interface MockAnnotation {
   id: string;
   date: string;
   label: string;
+  color?: MilestoneColor;
+  yOffset?: number;
 }
 
 /**
@@ -136,16 +140,22 @@ export const getMockAnnotations = (): MockAnnotation[] => {
       id: 'annotation-1',
       date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days ago
       label: 'Started New Campaign',
+      color: 'green',
+      yOffset: 0,
     },
     {
       id: 'annotation-2',
       date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
       label: 'Changed Ad Strategy',
+      color: 'yellow',
+      yOffset: 25,
     },
     {
       id: 'annotation-3',
       date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
       label: 'New YT Video Published',
+      color: 'red',
+      yOffset: 50,
     },
   ];
 };
