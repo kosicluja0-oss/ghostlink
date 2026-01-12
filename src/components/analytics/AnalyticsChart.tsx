@@ -10,6 +10,14 @@ import {
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
 import { ChartAnnotation, type Annotation } from './ChartAnnotation';
+import { AddMilestoneDialog } from './AddMilestoneDialog';
+import { useMilestones } from '@/hooks/useMilestones';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import type { AnalyticsData } from '@/types';
 import { 
   format, 
@@ -20,20 +28,17 @@ import {
   subMonths, 
   subYears,
   eachMinuteOfInterval,
-  eachHourOfInterval,
   eachDayOfInterval,
   eachWeekOfInterval,
   eachMonthOfInterval,
   startOfMinute,
-  startOfHour,
   startOfDay,
   startOfWeek,
   startOfMonth,
   isSameDay,
   isSameHour,
 } from 'date-fns';
-import { Ghost } from 'lucide-react';
-import { USE_MOCK_DATA, getMockAnnotations } from '@/lib/mockData';
+import { Ghost, Flag, Plus } from 'lucide-react';
 
 // Generate all time points in a range for continuous timeline
 function generateTimePoints(range: TimeRange): Date[] {
@@ -118,7 +123,6 @@ interface AnalyticsChartProps {
   activeLinkId?: string | null;
   selectedLinkAlias?: string;
   onClearSelection?: () => void;
-  annotations?: Annotation[];
 }
 
 type MetricKey = 'clicks' | 'leads' | 'sales';
@@ -323,7 +327,6 @@ export function AnalyticsChart({
   activeLinkId,
   selectedLinkAlias,
   onClearSelection,
-  annotations: externalAnnotations,
 }: AnalyticsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
@@ -331,16 +334,21 @@ export function AnalyticsChart({
     leads: true,
     sales: true,
   });
+  const [milestonesVisible, setMilestonesVisible] = useState(true);
+  
+  // Milestones hook for CRUD operations with localStorage persistence
+  const { milestones, addMilestone, deleteMilestone } = useMilestones();
+  
+  // Add milestone dialog state
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedDateForMilestone, setSelectedDateForMilestone] = useState<string | null>(null);
+  
+  // Track right-click position to determine date
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 240 });
-  
-  // Annotations - use external if provided, otherwise use mock data
-  const annotations = useMemo(() => {
-    if (externalAnnotations) return externalAnnotations;
-    return USE_MOCK_DATA ? getMockAnnotations() : [];
-  }, [externalAnnotations]);
   
   // Measure chart container
   useEffect(() => {
@@ -451,7 +459,9 @@ export function AnalyticsChart({
 
   // Calculate annotation positions within displayData
   const visibleAnnotations = useMemo(() => {
-    return annotations.map(annotation => {
+    if (!milestonesVisible) return [];
+    
+    return milestones.map(annotation => {
       const annotationDate = new Date(annotation.date);
       
       // Find the matching data point in displayData
@@ -475,7 +485,35 @@ export function AnalyticsChart({
         dateIndex,
       };
     }).filter(a => a.dateIndex >= 0);
-  }, [annotations, displayData, timeRange]);
+  }, [milestones, displayData, timeRange, milestonesVisible]);
+  
+  // Handle right-click on chart to add milestone
+  const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
+    if (!chartContainerRef.current) return;
+    
+    const rect = chartContainerRef.current.getBoundingClientRect();
+    const chartLeftMargin = 50;
+    const chartRightMargin = 20;
+    const usableWidth = rect.width - chartLeftMargin - chartRightMargin;
+    
+    // Calculate relative X position within the chart area
+    const relativeX = e.clientX - rect.left - chartLeftMargin;
+    
+    // Calculate which data point this corresponds to
+    if (relativeX >= 0 && relativeX <= usableWidth) {
+      const dataIndex = Math.round((relativeX / usableWidth) * (displayData.length - 1));
+      const clampedIndex = Math.max(0, Math.min(dataIndex, displayData.length - 1));
+      
+      if (displayData[clampedIndex]) {
+        setSelectedDateForMilestone(displayData[clampedIndex].date);
+        setContextMenuPosition({ x: e.clientX, y: e.clientY });
+      }
+    }
+  }, [displayData]);
+
+  const handleAddMilestoneClick = useCallback(() => {
+    setAddDialogOpen(true);
+  }, []);
 
   const toggleMetric = useCallback((metric: MetricKey) => {
     setVisibleMetrics(prev => ({
@@ -569,6 +607,24 @@ export function AnalyticsChart({
             <span className="text-muted-foreground">{label}</span>
           </button>
         ))}
+        
+        {/* Milestones Toggle */}
+        <button
+          onClick={() => setMilestonesVisible(!milestonesVisible)}
+          className={`flex items-center gap-2 text-sm transition-opacity cursor-pointer hover:opacity-80 ${
+            !milestonesVisible ? 'opacity-40' : ''
+          }`}
+        >
+          <div className={`w-3 h-3 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
+            milestonesVisible ? 'bg-primary/20' : 'bg-transparent opacity-30'
+          }`}>
+            <Flag className="w-1.5 h-1.5 text-primary" />
+          </div>
+          <span className="text-muted-foreground">Milestones</span>
+          {milestones.length > 0 && (
+            <span className="text-[10px] text-muted-foreground/60">({milestones.length})</span>
+          )}
+        </button>
       </div>
     );
   };
@@ -609,31 +665,57 @@ export function AnalyticsChart({
         <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
-      {/* Main Chart */}
-      <div ref={chartContainerRef} className="h-[240px] w-full relative">
-        <MainChart 
-          displayData={displayData} 
-          visibleMetrics={visibleMetrics} 
-          showConversions={showConversions}
-          tickInterval={tickInterval}
-        />
-        
-        {/* Annotations Layer */}
-        {visibleAnnotations.map(({ annotation, dateIndex }) => (
-          <ChartAnnotation
-            key={annotation.id}
-            annotation={annotation}
-            chartWidth={chartDimensions.width}
-            chartHeight={chartDimensions.height}
-            dataLength={displayData.length}
-            dateIndex={dateIndex}
-            chartLeftMargin={50} // Match XAxis left offset
-            chartRightMargin={20} // Match XAxis right padding
-          />
-        ))}
-        
-        <Watermark />
-      </div>
+      {/* Main Chart with Context Menu */}
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div 
+            ref={chartContainerRef} 
+            className="h-[240px] w-full relative"
+            onContextMenu={handleChartContextMenu}
+          >
+            <MainChart 
+              displayData={displayData} 
+              visibleMetrics={visibleMetrics} 
+              showConversions={showConversions}
+              tickInterval={tickInterval}
+            />
+            
+            {/* Annotations Layer */}
+            {visibleAnnotations.map(({ annotation, dateIndex }) => (
+              <ChartAnnotation
+                key={annotation.id}
+                annotation={annotation}
+                chartWidth={chartDimensions.width}
+                chartHeight={chartDimensions.height}
+                dataLength={displayData.length}
+                dateIndex={dateIndex}
+                chartLeftMargin={50}
+                chartRightMargin={20}
+                onDelete={deleteMilestone}
+              />
+            ))}
+            
+            <Watermark />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="bg-card/95 backdrop-blur-md border-primary/20 min-w-[180px]">
+          <ContextMenuItem 
+            onClick={handleAddMilestoneClick}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 text-primary" />
+            <span>Add Milestone</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      {/* Add Milestone Dialog */}
+      <AddMilestoneDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        date={selectedDateForMilestone}
+        onAdd={addMilestone}
+      />
 
       {/* Divider */}
       <div className="h-px bg-border/50 my-3" />

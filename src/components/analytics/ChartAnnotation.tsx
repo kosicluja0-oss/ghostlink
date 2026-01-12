@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar, X } from 'lucide-react';
+import { Calendar, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export interface Annotation {
@@ -17,6 +17,7 @@ interface ChartAnnotationProps {
   dateIndex: number; // Index of this annotation's date in the data array
   chartLeftMargin: number;
   chartRightMargin: number;
+  onDelete?: (id: string) => void;
 }
 
 export function ChartAnnotation({
@@ -27,6 +28,7 @@ export function ChartAnnotation({
   dateIndex,
   chartLeftMargin,
   chartRightMargin,
+  onDelete,
 }: ChartAnnotationProps) {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -38,6 +40,11 @@ export function ChartAnnotation({
   if (dateIndex < 0 || !isFinite(xPosition)) return null;
 
   const formattedDate = format(new Date(annotation.date), 'MMM d, yyyy');
+
+  const handleDelete = () => {
+    onDelete?.(annotation.id);
+    setIsOpen(false);
+  };
 
   return (
     <div
@@ -79,7 +86,7 @@ export function ChartAnnotation({
             <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '2s' }} />
             
             {/* Main bubble */}
-            <div className="relative w-5 h-5 rounded-full border-2 border-primary bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110 hover:bg-primary/20 shadow-lg shadow-primary/20">
+            <div className="relative w-5 h-5 rounded-full border-2 border-primary bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-125 hover:bg-primary/20 shadow-lg shadow-primary/20">
               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
             </div>
           </button>
@@ -92,10 +99,21 @@ export function ChartAnnotation({
           className="w-auto max-w-[200px] p-0 bg-card/95 backdrop-blur-md border-primary/30 shadow-xl shadow-primary/10"
         >
           <div className="p-3">
-            {/* Header with date */}
-            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-border/50">
-              <Calendar className="w-3 h-3 text-primary" />
-              <span className="text-[10px] font-medium text-muted-foreground">{formattedDate}</span>
+            {/* Header with date and delete button */}
+            <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border/50">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3 h-3 text-primary" />
+                <span className="text-[10px] font-medium text-muted-foreground">{formattedDate}</span>
+              </div>
+              {onDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                  title="Delete milestone"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              )}
             </div>
             
             {/* Milestone label */}
