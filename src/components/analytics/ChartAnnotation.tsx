@@ -2,16 +2,19 @@ import { useState, useRef, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { Calendar, Trash2, GripVertical } from 'lucide-react';
+import { Calendar, Trash2, GripVertical, Settings, Check } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export type MilestoneColor = 'teal' | 'yellow' | 'red' | 'green' | 'purple' | 'pink' | 'orange' | 'white';
+export type MilestoneSize = 'small' | 'medium' | 'large';
 
 export interface Annotation {
   id: string;
   date: string; // ISO date string
   label: string;
   color?: MilestoneColor;
+  size?: MilestoneSize;
   yOffset?: number; // 0-100 percentage from top
 }
 
@@ -27,6 +30,13 @@ export const MILESTONE_COLORS: Record<MilestoneColor, { bg: string; border: stri
   white: { bg: 'hsl(0 0% 98%)', border: 'hsl(0 0% 98%)', line: 'hsl(0 0% 80%)' },
 };
 
+// Size multipliers
+const SIZE_CONFIG: Record<MilestoneSize, { bubble: number; inner: number; label: string }> = {
+  small: { bubble: 0.67, inner: 0.67, label: 'S' },
+  medium: { bubble: 1, inner: 1, label: 'M' },
+  large: { bubble: 1.33, inner: 1.33, label: 'L' },
+};
+
 interface ChartAnnotationProps {
   annotation: Annotation;
   chartWidth: number;
@@ -37,6 +47,8 @@ interface ChartAnnotationProps {
   chartRightMargin: number;
   onDelete?: (id: string) => void;
   onUpdateYOffset?: (id: string, yOffset: number) => void;
+  onUpdateColor?: (id: string, color: MilestoneColor) => void;
+  onUpdateSize?: (id: string, size: MilestoneSize) => void;
 }
 
 export function ChartAnnotation({
@@ -49,14 +61,25 @@ export function ChartAnnotation({
   chartRightMargin,
   onDelete,
   onUpdateYOffset,
+  onUpdateColor,
+  onUpdateSize,
 }: ChartAnnotationProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
   const color = annotation.color || 'teal';
+  const size = annotation.size || 'medium';
   const colorConfig = MILESTONE_COLORS[color];
+  const sizeConfig = SIZE_CONFIG[size];
   const yOffset = annotation.yOffset ?? 0;
+  
+  // Base bubble size
+  const baseBubbleSize = 20; // 5 * 4 = 20px (w-5)
+  const baseInnerSize = 6; // 1.5 * 4 = 6px (w-1.5)
+  const bubbleSize = Math.round(baseBubbleSize * sizeConfig.bubble);
+  const innerSize = Math.round(baseInnerSize * sizeConfig.inner);
   
   // Calculate X position based on data index
   const usableWidth = chartWidth - chartLeftMargin - chartRightMargin;
@@ -78,6 +101,14 @@ export function ChartAnnotation({
 
   const handleSliderChange = (value: number[]) => {
     onUpdateYOffset?.(annotation.id, value[0]);
+  };
+
+  const handleColorSelect = (newColor: MilestoneColor) => {
+    onUpdateColor?.(annotation.id, newColor);
+  };
+
+  const handleSizeSelect = (newSize: MilestoneSize) => {
+    onUpdateSize?.(annotation.id, newSize);
   };
 
   // Handle drag
@@ -115,6 +146,13 @@ export function ChartAnnotation({
     };
   }, [isDragging, annotation.id, onUpdateYOffset, usableHeight]);
 
+  // Reset settings view when popover closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowSettings(false);
+    }
+  }, [isOpen]);
+
   return (
     <div
       ref={containerRef}
@@ -135,7 +173,7 @@ export function ChartAnnotation({
       >
         <line
           x1="1"
-          y1="12"
+          y1={bubbleSize / 2 + 2}
           x2="1"
           y2={chartHeight - 30 - yPosition - 10}
           stroke={colorConfig.line}
@@ -160,21 +198,29 @@ export function ChartAnnotation({
               style={{ 
                 backgroundColor: colorConfig.bg,
                 opacity: 0.3,
-                animationDuration: '2s' 
+                animationDuration: '2s',
+                width: bubbleSize,
+                height: bubbleSize,
               }} 
             />
             
             {/* Main bubble */}
             <div 
-              className="relative w-5 h-5 rounded-full border-2 bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-125 shadow-lg"
+              className="relative rounded-full border-2 bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-125 shadow-lg"
               style={{ 
                 borderColor: colorConfig.border,
-                boxShadow: `0 4px 12px ${colorConfig.bg}33`
+                boxShadow: `0 4px 12px ${colorConfig.bg}33`,
+                width: bubbleSize,
+                height: bubbleSize,
               }}
             >
               <div 
-                className="w-1.5 h-1.5 rounded-full" 
-                style={{ backgroundColor: colorConfig.bg }}
+                className="rounded-full" 
+                style={{ 
+                  backgroundColor: colorConfig.bg,
+                  width: innerSize,
+                  height: innerSize,
+                }}
               />
             </div>
             
@@ -189,54 +235,129 @@ export function ChartAnnotation({
           side="top"
           align="center"
           sideOffset={8}
-          className="w-auto min-w-[200px] max-w-[240px] p-0 bg-card/95 backdrop-blur-md shadow-xl"
+          className="w-auto min-w-[220px] max-w-[280px] p-0 bg-card/95 backdrop-blur-md shadow-xl"
           style={{ borderColor: `${colorConfig.border}50` }}
         >
           <div className="p-3 space-y-3">
-            {/* Header with date and delete button */}
+            {/* Header with date, settings, and delete */}
             <div className="flex items-center justify-between gap-2 pb-2 border-b border-border/50">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3 h-3" style={{ color: colorConfig.bg }} />
                 <span className="text-[10px] font-medium text-muted-foreground">{formattedDate}</span>
               </div>
-              {onDelete && (
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={handleDelete}
-                  className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
-                  title="Delete milestone"
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={cn(
+                    "p-1 rounded transition-colors",
+                    showSettings 
+                      ? "bg-primary/20 text-primary" 
+                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Settings"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Settings className="w-3 h-3" />
                 </button>
-              )}
+                {onDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
+                    title="Delete milestone"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
             </div>
             
-            {/* Milestone label */}
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: colorConfig.bg }}>
-                Milestone
-              </span>
-              <p className="text-sm text-foreground font-medium leading-tight">{annotation.label}</p>
-            </div>
-            
-            {/* Height adjustment slider */}
-            {onUpdateYOffset && (
-              <div className="space-y-2 pt-2 border-t border-border/50">
-                <Label className="text-[10px] text-muted-foreground">Adjust Height</Label>
-                <Slider
-                  value={[yOffset]}
-                  onValueChange={handleSliderChange}
-                  min={0}
-                  max={100}
-                  step={5}
-                  className="w-full"
-                />
+            {/* Primary view: Milestone label */}
+            {!showSettings && (
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: colorConfig.bg }}>
+                  Milestone
+                </span>
+                <p className="text-sm text-foreground font-medium leading-tight">{annotation.label}</p>
+              </div>
+            )}
+
+            {/* Settings panel */}
+            {showSettings && (
+              <div className="space-y-4">
+                {/* Color palette */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Color</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                {(Object.keys(MILESTONE_COLORS) as MilestoneColor[]).map((c) => {
+                      const isWhite = c === 'white';
+                      const isSelected = color === c;
+                      return (
+                        <button
+                          key={c}
+                          onClick={() => handleColorSelect(c)}
+                          className={cn(
+                            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all hover:scale-110",
+                            isSelected && "ring-2 ring-offset-1 ring-offset-card"
+                          )}
+                          style={{ 
+                            backgroundColor: MILESTONE_COLORS[c].bg,
+                            borderColor: isWhite ? 'hsl(0 0% 70%)' : 'transparent',
+                            ...(isSelected && { '--tw-ring-color': MILESTONE_COLORS[c].bg } as React.CSSProperties),
+                          }}
+                          title={c.charAt(0).toUpperCase() + c.slice(1)}
+                        >
+                          {isSelected && (
+                            <Check className={cn("w-3 h-3", isWhite || c === 'yellow' ? "text-gray-800" : "text-white")} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Size selector */}
+                <div className="space-y-2">
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Size</Label>
+                  <div className="flex gap-1">
+                    {(Object.keys(SIZE_CONFIG) as MilestoneSize[]).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => handleSizeSelect(s)}
+                        className={cn(
+                          "flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                          size === s
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        {SIZE_CONFIG[s].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Height adjustment slider */}
+                {onUpdateYOffset && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Height Position</Label>
+                    <Slider
+                      value={[yOffset]}
+                      onValueChange={handleSliderChange}
+                      min={0}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
           
           {/* Close hint */}
           <div className="px-3 py-1.5 bg-muted/30 border-t border-border/30">
-            <span className="text-[9px] text-muted-foreground">Drag bubble to reposition • Click outside to close</span>
+            <span className="text-[9px] text-muted-foreground">
+              {showSettings ? 'Click gear to return • ' : ''}Drag bubble to reposition
+            </span>
           </div>
         </PopoverContent>
       </Popover>
