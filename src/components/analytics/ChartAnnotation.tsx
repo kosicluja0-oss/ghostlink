@@ -1,23 +1,42 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar, Trash2 } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+import { Calendar, Trash2, GripVertical } from 'lucide-react';
 import { format } from 'date-fns';
+
+export type MilestoneColor = 'teal' | 'yellow' | 'red' | 'green' | 'purple' | 'pink' | 'orange' | 'white';
 
 export interface Annotation {
   id: string;
   date: string; // ISO date string
   label: string;
+  color?: MilestoneColor;
+  yOffset?: number; // 0-100 percentage from top
 }
+
+// Color palette with HSL values
+export const MILESTONE_COLORS: Record<MilestoneColor, { bg: string; border: string; line: string }> = {
+  teal: { bg: 'hsl(var(--primary))', border: 'hsl(var(--primary))', line: 'hsl(var(--primary))' },
+  yellow: { bg: 'hsl(45 93% 47%)', border: 'hsl(45 93% 47%)', line: 'hsl(45 93% 47%)' },
+  red: { bg: 'hsl(0 84% 60%)', border: 'hsl(0 84% 60%)', line: 'hsl(0 84% 60%)' },
+  green: { bg: 'hsl(142 71% 45%)', border: 'hsl(142 71% 45%)', line: 'hsl(142 71% 45%)' },
+  purple: { bg: 'hsl(270 70% 60%)', border: 'hsl(270 70% 60%)', line: 'hsl(270 70% 60%)' },
+  pink: { bg: 'hsl(330 80% 65%)', border: 'hsl(330 80% 65%)', line: 'hsl(330 80% 65%)' },
+  orange: { bg: 'hsl(25 95% 53%)', border: 'hsl(25 95% 53%)', line: 'hsl(25 95% 53%)' },
+  white: { bg: 'hsl(0 0% 98%)', border: 'hsl(0 0% 98%)', line: 'hsl(0 0% 80%)' },
+};
 
 interface ChartAnnotationProps {
   annotation: Annotation;
   chartWidth: number;
   chartHeight: number;
   dataLength: number;
-  dateIndex: number; // Index of this annotation's date in the data array
+  dateIndex: number;
   chartLeftMargin: number;
   chartRightMargin: number;
   onDelete?: (id: string) => void;
+  onUpdateYOffset?: (id: string, yOffset: number) => void;
 }
 
 export function ChartAnnotation({
@@ -29,12 +48,23 @@ export function ChartAnnotation({
   chartLeftMargin,
   chartRightMargin,
   onDelete,
+  onUpdateYOffset,
 }: ChartAnnotationProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const color = annotation.color || 'teal';
+  const colorConfig = MILESTONE_COLORS[color];
+  const yOffset = annotation.yOffset ?? 0;
   
   // Calculate X position based on data index
   const usableWidth = chartWidth - chartLeftMargin - chartRightMargin;
   const xPosition = chartLeftMargin + (dateIndex / Math.max(1, dataLength - 1)) * usableWidth;
+  
+  // Calculate Y position based on offset (0 = top, 100 = near bottom)
+  const usableHeight = chartHeight - 50; // Leave space for axis
+  const yPosition = 5 + (yOffset / 100) * (usableHeight - 30);
   
   // Don't render if position is invalid
   if (dateIndex < 0 || !isFinite(xPosition)) return null;
@@ -46,8 +76,48 @@ export function ChartAnnotation({
     setIsOpen(false);
   };
 
+  const handleSliderChange = (value: number[]) => {
+    onUpdateYOffset?.(annotation.id, value[0]);
+  };
+
+  // Handle drag
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only left click
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const parent = containerRef.current.parentElement;
+      if (!parent) return;
+
+      const rect = parent.getBoundingClientRect();
+      const relativeY = e.clientY - rect.top - 5;
+      const maxY = usableHeight - 30;
+      const newOffset = Math.max(0, Math.min(100, (relativeY / maxY) * 100));
+      onUpdateYOffset?.(annotation.id, Math.round(newOffset));
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, annotation.id, onUpdateYOffset, usableHeight]);
+
   return (
     <div
+      ref={containerRef}
       className="absolute pointer-events-none"
       style={{
         left: xPosition,
@@ -56,38 +126,61 @@ export function ChartAnnotation({
         transform: 'translateX(-50%)',
       }}
     >
-      {/* Dashed vertical line */}
+      {/* Dashed vertical line - from bubble to bottom */}
       <svg
-        className="absolute top-0 left-1/2 -translate-x-1/2"
+        className="absolute left-1/2 -translate-x-1/2"
         width="2"
         height="100%"
-        style={{ overflow: 'visible' }}
+        style={{ overflow: 'visible', top: yPosition }}
       >
         <line
           x1="1"
           y1="12"
           x2="1"
-          y2="100%"
-          stroke="hsl(var(--primary))"
+          y2={chartHeight - 30 - yPosition - 10}
+          stroke={colorConfig.line}
           strokeWidth="1.5"
           strokeDasharray="4 3"
           strokeOpacity="0.5"
         />
       </svg>
 
-      {/* Interactive bubble at top */}
+      {/* Interactive bubble - positioned by yOffset */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
-            className="pointer-events-auto absolute left-1/2 -translate-x-1/2 -top-1 group"
-            onClick={() => setIsOpen(!isOpen)}
+            className={`pointer-events-auto absolute left-1/2 -translate-x-1/2 group ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            style={{ top: yPosition }}
+            onClick={() => !isDragging && setIsOpen(!isOpen)}
+            onMouseDown={handleMouseDown}
           >
             {/* Pulse ring animation */}
-            <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '2s' }} />
+            <div 
+              className="absolute inset-0 rounded-full animate-ping" 
+              style={{ 
+                backgroundColor: colorConfig.bg,
+                opacity: 0.3,
+                animationDuration: '2s' 
+              }} 
+            />
             
             {/* Main bubble */}
-            <div className="relative w-5 h-5 rounded-full border-2 border-primary bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-125 hover:bg-primary/20 shadow-lg shadow-primary/20">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <div 
+              className="relative w-5 h-5 rounded-full border-2 bg-card/90 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-125 shadow-lg"
+              style={{ 
+                borderColor: colorConfig.border,
+                boxShadow: `0 4px 12px ${colorConfig.bg}33`
+              }}
+            >
+              <div 
+                className="w-1.5 h-1.5 rounded-full" 
+                style={{ backgroundColor: colorConfig.bg }}
+              />
+            </div>
+            
+            {/* Drag handle indicator on hover */}
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-70 transition-opacity">
+              <GripVertical className="w-3 h-3 text-muted-foreground" />
             </div>
           </button>
         </PopoverTrigger>
@@ -96,13 +189,14 @@ export function ChartAnnotation({
           side="top"
           align="center"
           sideOffset={8}
-          className="w-auto max-w-[200px] p-0 bg-card/95 backdrop-blur-md border-primary/30 shadow-xl shadow-primary/10"
+          className="w-auto min-w-[200px] max-w-[240px] p-0 bg-card/95 backdrop-blur-md shadow-xl"
+          style={{ borderColor: `${colorConfig.border}50` }}
         >
-          <div className="p-3">
+          <div className="p-3 space-y-3">
             {/* Header with date and delete button */}
-            <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-border/50">
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-border/50">
               <div className="flex items-center gap-1.5">
-                <Calendar className="w-3 h-3 text-primary" />
+                <Calendar className="w-3 h-3" style={{ color: colorConfig.bg }} />
                 <span className="text-[10px] font-medium text-muted-foreground">{formattedDate}</span>
               </div>
               {onDelete && (
@@ -118,14 +212,31 @@ export function ChartAnnotation({
             
             {/* Milestone label */}
             <div className="space-y-1">
-              <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">Milestone</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: colorConfig.bg }}>
+                Milestone
+              </span>
               <p className="text-sm text-foreground font-medium leading-tight">{annotation.label}</p>
             </div>
+            
+            {/* Height adjustment slider */}
+            {onUpdateYOffset && (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <Label className="text-[10px] text-muted-foreground">Adjust Height</Label>
+                <Slider
+                  value={[yOffset]}
+                  onValueChange={handleSliderChange}
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
           
           {/* Close hint */}
           <div className="px-3 py-1.5 bg-muted/30 border-t border-border/30">
-            <span className="text-[9px] text-muted-foreground">Click outside to close</span>
+            <span className="text-[9px] text-muted-foreground">Drag bubble to reposition • Click outside to close</span>
           </div>
         </PopoverContent>
       </Popover>

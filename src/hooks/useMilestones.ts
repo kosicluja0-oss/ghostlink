@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Annotation } from '@/components/analytics/ChartAnnotation';
+import { Annotation, MilestoneColor } from '@/components/analytics/ChartAnnotation';
 import { USE_MOCK_DATA, getMockAnnotations } from '@/lib/mockData';
 
 const STORAGE_KEY = 'ghost-link-milestones';
@@ -41,7 +41,7 @@ export function useMilestones() {
     }
   }, [milestones, isLoaded]);
 
-  const addMilestone = useCallback((date: string, label: string) => {
+  const addMilestone = useCallback((date: string, label: string, color: MilestoneColor = 'teal') => {
     const trimmedLabel = label.trim().slice(0, 200); // Limit to 200 chars
     if (!trimmedLabel) return;
 
@@ -49,6 +49,8 @@ export function useMilestones() {
       id: `milestone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       date,
       label: trimmedLabel,
+      color,
+      yOffset: 0, // Default to top
     };
 
     setMilestones(prev => [...prev, newMilestone]);
@@ -67,6 +69,18 @@ export function useMilestones() {
     );
   }, []);
 
+  const updateMilestoneYOffset = useCallback((id: string, yOffset: number) => {
+    setMilestones(prev => 
+      prev.map(m => m.id === id ? { ...m, yOffset: Math.max(0, Math.min(100, yOffset)) } : m)
+    );
+  }, []);
+
+  const updateMilestoneColor = useCallback((id: string, color: MilestoneColor) => {
+    setMilestones(prev => 
+      prev.map(m => m.id === id ? { ...m, color } : m)
+    );
+  }, []);
+
   const clearAllMilestones = useCallback(() => {
     setMilestones([]);
   }, []);
@@ -76,6 +90,8 @@ export function useMilestones() {
     addMilestone,
     deleteMilestone,
     updateMilestone,
+    updateMilestoneYOffset,
+    updateMilestoneColor,
     clearAllMilestones,
     isLoaded,
   };
