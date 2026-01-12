@@ -123,6 +123,7 @@ interface AnalyticsChartProps {
   activeLinkId?: string | null;
   selectedLinkAlias?: string;
   onClearSelection?: () => void;
+  links?: import('@/types').GhostLink[];
 }
 
 type MetricKey = 'clicks' | 'leads' | 'sales';
@@ -327,6 +328,7 @@ export function AnalyticsChart({
   activeLinkId,
   selectedLinkAlias,
   onClearSelection,
+  links = [],
 }: AnalyticsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
@@ -337,7 +339,7 @@ export function AnalyticsChart({
   const [milestonesVisible, setMilestonesVisible] = useState(true);
   
   // Milestones hook for CRUD operations with localStorage persistence
-  const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize } = useMilestones();
+  const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize, toggleMilestoneLinkedLink } = useMilestones();
   
   // Add milestone dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -458,34 +460,47 @@ export function AnalyticsChart({
   }, [chartData]);
 
   // Calculate annotation positions within displayData
+  // Also filter by activeLinkId - hide milestones that are linked to other links
   const visibleAnnotations = useMemo(() => {
     if (!milestonesVisible) return [];
     
-    return milestones.map(annotation => {
-      const annotationDate = new Date(annotation.date);
-      
-      // Find the matching data point in displayData
-      const dateIndex = displayData.findIndex(dataPoint => {
-        const dataDate = new Date(dataPoint.date);
-        
-        // Match based on time range granularity
-        switch (timeRange) {
-          case '30m':
-          case '6h':
-          case '1d':
-            return isSameHour(annotationDate, dataDate) && 
-                   annotationDate.getMinutes() === dataDate.getMinutes();
-          default:
-            return isSameDay(annotationDate, dataDate);
+    return milestones
+      .filter(annotation => {
+        const linkedIds = annotation.linkedLinkIds || [];
+        // Global milestones (empty array) are always visible
+        if (linkedIds.length === 0) return true;
+        // If filtering by a specific link, only show milestones linked to that link (or global)
+        if (activeLinkId) {
+          return linkedIds.includes(activeLinkId);
         }
-      });
-      
-      return {
-        annotation,
-        dateIndex,
-      };
-    }).filter(a => a.dateIndex >= 0);
-  }, [milestones, displayData, timeRange, milestonesVisible]);
+        // No filter active - show all milestones
+        return true;
+      })
+      .map(annotation => {
+        const annotationDate = new Date(annotation.date);
+        
+        // Find the matching data point in displayData
+        const dateIndex = displayData.findIndex(dataPoint => {
+          const dataDate = new Date(dataPoint.date);
+          
+          // Match based on time range granularity
+          switch (timeRange) {
+            case '30m':
+            case '6h':
+            case '1d':
+              return isSameHour(annotationDate, dataDate) && 
+                     annotationDate.getMinutes() === dataDate.getMinutes();
+            default:
+              return isSameDay(annotationDate, dataDate);
+          }
+        });
+        
+        return {
+          annotation,
+          dateIndex,
+        };
+      }).filter(a => a.dateIndex >= 0);
+  }, [milestones, displayData, timeRange, milestonesVisible, activeLinkId]);
   
   // Handle right-click on chart to add milestone
   const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
@@ -691,10 +706,12 @@ export function AnalyticsChart({
                 dateIndex={dateIndex}
                 chartLeftMargin={50}
                 chartRightMargin={20}
+                links={links}
                 onDelete={deleteMilestone}
                 onUpdateYOffset={updateMilestoneYOffset}
                 onUpdateColor={updateMilestoneColor}
                 onUpdateSize={updateMilestoneSize}
+                onToggleLinkedLink={toggleMilestoneLinkedLink}
               />
             ))}
             
