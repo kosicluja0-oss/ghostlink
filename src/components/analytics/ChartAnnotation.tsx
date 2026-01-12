@@ -203,7 +203,7 @@ export function ChartAnnotation({
   return (
     <div
       ref={containerRef}
-      className="absolute pointer-events-none"
+      className="absolute pointer-events-none animate-fade-in"
       style={{
         left: xPosition,
         top: 5,
