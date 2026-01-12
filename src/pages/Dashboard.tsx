@@ -183,6 +183,7 @@ const Dashboard = () => {
                   activeLinkId={activeLinkId}
                   selectedLinkAlias={selectedLink?.alias}
                   onClearSelection={handleClearSelection}
+                  links={links}
                 />
               </section>
 
