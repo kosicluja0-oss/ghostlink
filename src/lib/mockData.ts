@@ -114,6 +114,43 @@ const LINK_PROFILES: LinkProfile[] = [
 ];
 
 // ============================================================================
+// MOCK ANNOTATIONS DATA
+// ============================================================================
+
+export interface MockAnnotation {
+  id: string;
+  date: string;
+  label: string;
+}
+
+/**
+ * Generate mock annotations for the chart
+ * These represent key events/milestones on the timeline
+ */
+export const getMockAnnotations = (): MockAnnotation[] => {
+  const now = new Date();
+  
+  // Create annotations at specific points in the mock data timeline
+  return [
+    {
+      id: 'annotation-1',
+      date: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString(), // 20 days ago
+      label: 'Started New Campaign',
+    },
+    {
+      id: 'annotation-2',
+      date: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+      label: 'Changed Ad Strategy',
+    },
+    {
+      id: 'annotation-3',
+      date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+      label: 'New YT Video Published',
+    },
+  ];
+};
+
+// ============================================================================
 // DAILY HISTORY GENERATION (Bottom-Up Approach)
 // ============================================================================
 

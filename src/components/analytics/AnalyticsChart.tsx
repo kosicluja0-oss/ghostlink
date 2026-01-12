@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
 import {
   XAxis,
   YAxis,
@@ -9,6 +9,7 @@ import {
   AreaChart,
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
+import { ChartAnnotation, type Annotation } from './ChartAnnotation';
 import type { AnalyticsData } from '@/types';
 import { 
   format, 
@@ -28,8 +29,11 @@ import {
   startOfDay,
   startOfWeek,
   startOfMonth,
+  isSameDay,
+  isSameHour,
 } from 'date-fns';
 import { Ghost } from 'lucide-react';
+import { USE_MOCK_DATA, getMockAnnotations } from '@/lib/mockData';
 
 // Generate all time points in a range for continuous timeline
 function generateTimePoints(range: TimeRange): Date[] {
@@ -114,6 +118,7 @@ interface AnalyticsChartProps {
   activeLinkId?: string | null;
   selectedLinkAlias?: string;
   onClearSelection?: () => void;
+  annotations?: Annotation[];
 }
 
 type MetricKey = 'clicks' | 'leads' | 'sales';
@@ -317,7 +322,8 @@ export function AnalyticsChart({
   onTimeRangeChange,
   activeLinkId,
   selectedLinkAlias,
-  onClearSelection
+  onClearSelection,
+  annotations: externalAnnotations,
 }: AnalyticsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
@@ -325,6 +331,30 @@ export function AnalyticsChart({
     leads: true,
     sales: true,
   });
+  
+  // Chart container ref for measuring dimensions
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 240 });
+  
+  // Annotations - use external if provided, otherwise use mock data
+  const annotations = useMemo(() => {
+    if (externalAnnotations) return externalAnnotations;
+    return USE_MOCK_DATA ? getMockAnnotations() : [];
+  }, [externalAnnotations]);
+  
+  // Measure chart container
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (chartContainerRef.current) {
+        const { width } = chartContainerRef.current.getBoundingClientRect();
+        setChartDimensions({ width, height: 240 });
+      }
+    };
+    
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
   
   // Fixed range slider state - always has a selection
   const [rangeStart, setRangeStart] = useState(0);
@@ -418,6 +448,34 @@ export function AnalyticsChart({
     const step = Math.max(1, Math.floor(chartData.length / 100));
     return chartData.filter((_, i) => i % step === 0);
   }, [chartData]);
+
+  // Calculate annotation positions within displayData
+  const visibleAnnotations = useMemo(() => {
+    return annotations.map(annotation => {
+      const annotationDate = new Date(annotation.date);
+      
+      // Find the matching data point in displayData
+      const dateIndex = displayData.findIndex(dataPoint => {
+        const dataDate = new Date(dataPoint.date);
+        
+        // Match based on time range granularity
+        switch (timeRange) {
+          case '30m':
+          case '6h':
+          case '1d':
+            return isSameHour(annotationDate, dataDate) && 
+                   annotationDate.getMinutes() === dataDate.getMinutes();
+          default:
+            return isSameDay(annotationDate, dataDate);
+        }
+      });
+      
+      return {
+        annotation,
+        dateIndex,
+      };
+    }).filter(a => a.dateIndex >= 0);
+  }, [annotations, displayData, timeRange]);
 
   const toggleMetric = useCallback((metric: MetricKey) => {
     setVisibleMetrics(prev => ({
@@ -552,13 +610,28 @@ export function AnalyticsChart({
       </div>
 
       {/* Main Chart */}
-      <div className="h-[240px] w-full relative">
+      <div ref={chartContainerRef} className="h-[240px] w-full relative">
         <MainChart 
           displayData={displayData} 
           visibleMetrics={visibleMetrics} 
           showConversions={showConversions}
           tickInterval={tickInterval}
         />
+        
+        {/* Annotations Layer */}
+        {visibleAnnotations.map(({ annotation, dateIndex }) => (
+          <ChartAnnotation
+            key={annotation.id}
+            annotation={annotation}
+            chartWidth={chartDimensions.width}
+            chartHeight={chartDimensions.height}
+            dataLength={displayData.length}
+            dateIndex={dateIndex}
+            chartLeftMargin={50} // Match XAxis left offset
+            chartRightMargin={20} // Match XAxis right padding
+          />
+        ))}
+        
         <Watermark />
       </div>
 
