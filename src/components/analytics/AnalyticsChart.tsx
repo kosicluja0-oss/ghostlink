@@ -9,8 +9,9 @@ import {
   AreaChart,
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
-import { ChartAnnotation, type Annotation } from './ChartAnnotation';
+import { ChartAnnotation, type Annotation, type MilestoneColor } from './ChartAnnotation';
 import { AddMilestoneDialog } from './AddMilestoneDialog';
+import { MilestoneFilterPopover } from './MilestoneFilterPopover';
 import { useMilestones } from '@/hooks/useMilestones';
 import {
   ContextMenu,
@@ -39,6 +40,8 @@ import {
   isSameHour,
 } from 'date-fns';
 import { Ghost, Flag, Plus } from 'lucide-react';
+
+const ALL_MILESTONE_COLORS: MilestoneColor[] = ['teal', 'yellow', 'red', 'green', 'purple', 'pink', 'orange', 'white'];
 
 // Generate all time points in a range for continuous timeline
 function generateTimePoints(range: TimeRange): Date[] {
@@ -338,12 +341,69 @@ export function AnalyticsChart({
   });
   const [milestonesVisible, setMilestonesVisible] = useState(true);
   
+  // Milestone filter state
+  const [colorFilters, setColorFilters] = useState<Set<MilestoneColor>>(new Set(ALL_MILESTONE_COLORS));
+  const [linkFilters, setLinkFilters] = useState<Set<string | 'global'>>(new Set(['global', ...links.map(l => l.id)]));
+  
+  // Update link filters when links change (new links should be visible by default)
+  useEffect(() => {
+    setLinkFilters(prev => {
+      const newSet = new Set(prev);
+      links.forEach(l => {
+        if (!newSet.has(l.id)) {
+          newSet.add(l.id);
+        }
+      });
+      return newSet;
+    });
+  }, [links]);
+  
   // Milestones hook for CRUD operations with localStorage persistence
   const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize, toggleMilestoneLinkedLink } = useMilestones();
   
   // Add milestone dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedDateForMilestone, setSelectedDateForMilestone] = useState<string | null>(null);
+  
+  // Check if any filter is active (not all selected)
+  const isMilestoneFilterActive = useMemo(() => {
+    const allColorsSelected = ALL_MILESTONE_COLORS.every(c => colorFilters.has(c));
+    const allLinksSelected = linkFilters.has('global') && links.every(l => linkFilters.has(l.id));
+    return !allColorsSelected || !allLinksSelected;
+  }, [colorFilters, linkFilters, links]);
+  
+  // Filter handlers
+  const handleToggleColorFilter = useCallback((color: MilestoneColor) => {
+    setColorFilters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(color)) {
+        newSet.delete(color);
+      } else {
+        newSet.add(color);
+      }
+      return newSet;
+    });
+  }, []);
+  
+  const handleToggleLinkFilter = useCallback((linkId: string | 'global') => {
+    setLinkFilters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(linkId)) {
+        newSet.delete(linkId);
+      } else {
+        newSet.add(linkId);
+      }
+      return newSet;
+    });
+  }, []);
+  
+  const handleSelectAllColors = useCallback(() => {
+    setColorFilters(new Set(ALL_MILESTONE_COLORS));
+  }, []);
+  
+  const handleClearAllColors = useCallback(() => {
+    setColorFilters(new Set());
+  }, []);
   
   // Track right-click position to determine date
   const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
@@ -460,20 +520,35 @@ export function AnalyticsChart({
   }, [chartData]);
 
   // Calculate annotation positions within displayData
-  // Also filter by activeLinkId - hide milestones that are linked to other links
+  // Also filter by activeLinkId, color filters, and link filters
   const visibleAnnotations = useMemo(() => {
     if (!milestonesVisible) return [];
     
     return milestones
       .filter(annotation => {
+        // Color filter
+        const color = annotation.color || 'teal';
+        if (!colorFilters.has(color)) return false;
+        
+        // Link filter (manual refinement)
         const linkedIds = annotation.linkedLinkIds || [];
-        // Global milestones (empty array) are always visible
-        if (linkedIds.length === 0) return true;
-        // If filtering by a specific link, only show milestones linked to that link (or global)
+        if (linkedIds.length === 0) {
+          // Global milestone - check if 'global' is in filter
+          if (!linkFilters.has('global')) return false;
+        } else {
+          // Check if any of the linked links are in the filter
+          const hasMatchingLink = linkedIds.some(id => linkFilters.has(id));
+          if (!hasMatchingLink) return false;
+        }
+        
+        // Dashboard-level filter (activeLinkId)
         if (activeLinkId) {
+          // Global milestones are always visible when filtering by link
+          if (linkedIds.length === 0) return true;
+          // Only show milestones linked to the active link
           return linkedIds.includes(activeLinkId);
         }
-        // No filter active - show all milestones
+        
         return true;
       })
       .map(annotation => {
@@ -500,7 +575,7 @@ export function AnalyticsChart({
           dateIndex,
         };
       }).filter(a => a.dateIndex >= 0);
-  }, [milestones, displayData, timeRange, milestonesVisible, activeLinkId]);
+  }, [milestones, displayData, timeRange, milestonesVisible, activeLinkId, colorFilters, linkFilters]);
   
   // Handle right-click on chart to add milestone
   const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
@@ -623,23 +698,40 @@ export function AnalyticsChart({
           </button>
         ))}
         
-        {/* Milestones Toggle */}
-        <button
-          onClick={() => setMilestonesVisible(!milestonesVisible)}
-          className={`flex items-center gap-2 text-sm transition-opacity cursor-pointer hover:opacity-80 ${
-            !milestonesVisible ? 'opacity-40' : ''
-          }`}
-        >
-          <div className={`w-3 h-3 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
-            milestonesVisible ? 'bg-primary/20' : 'bg-transparent opacity-30'
-          }`}>
-            <Flag className="w-1.5 h-1.5 text-primary" />
-          </div>
-          <span className="text-muted-foreground">Milestones</span>
-          {milestones.length > 0 && (
-            <span className="text-[10px] text-muted-foreground/60">({milestones.length})</span>
+        {/* Milestones Toggle with Filter */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setMilestonesVisible(!milestonesVisible)}
+            className={`flex items-center gap-2 text-sm transition-opacity cursor-pointer hover:opacity-80 ${
+              !milestonesVisible ? 'opacity-40' : ''
+            }`}
+          >
+            <div className={`w-3 h-3 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
+              milestonesVisible ? 'bg-primary/20' : 'bg-transparent opacity-30'
+            }`}>
+              <Flag className="w-1.5 h-1.5 text-primary" />
+            </div>
+            <span className="text-muted-foreground">Milestones</span>
+            {milestones.length > 0 && (
+              <span className="text-[10px] text-muted-foreground/60">({visibleAnnotations.length}/{milestones.length})</span>
+            )}
+          </button>
+          
+          {/* Filter Popover */}
+          {milestones.length > 0 && milestonesVisible && (
+            <MilestoneFilterPopover
+              milestones={milestones}
+              links={links}
+              colorFilters={colorFilters}
+              linkFilters={linkFilters}
+              onToggleColorFilter={handleToggleColorFilter}
+              onToggleLinkFilter={handleToggleLinkFilter}
+              onSelectAllColors={handleSelectAllColors}
+              onClearAllColors={handleClearAllColors}
+              isFilterActive={isMilestoneFilterActive}
+            />
           )}
-        </button>
+        </div>
       </div>
     );
   };
