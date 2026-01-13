@@ -1,4 +1,4 @@
-import { Ghost, LayoutDashboard, Puzzle, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Ghost, LayoutDashboard, Puzzle, Database, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -45,6 +45,12 @@ export function AppSidebar({
       icon: LayoutDashboard,
       onClick: () => navigate('/dashboard'),
       isActive: location.pathname === '/dashboard',
+    },
+    {
+      title: 'Data & Leads',
+      icon: Database,
+      onClick: () => navigate('/transactions'),
+      isActive: location.pathname === '/transactions',
     },
     {
       title: 'Integrations',
