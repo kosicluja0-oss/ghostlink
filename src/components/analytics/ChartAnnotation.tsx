@@ -4,8 +4,6 @@ import { Label } from '@/components/ui/label';
 import { Calendar, Trash2, GripVertical, Settings, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { LinkSelector } from './LinkSelector';
-import type { GhostLink } from '@/types';
 
 // Movement threshold to distinguish click from drag (in pixels)
 const DRAG_THRESHOLD = 5;
@@ -20,7 +18,6 @@ export interface Annotation {
   color?: MilestoneColor;
   size?: MilestoneSize;
   yOffset?: number; // 0-100 percentage from top
-  linkedLinkIds?: string[]; // Empty = global, otherwise linked to specific links
 }
 
 // Color palette with HSL values
@@ -51,12 +48,10 @@ interface ChartAnnotationProps {
   exactPosition: number; // 0-1 fractional position based on timestamp interpolation
   chartLeftMargin: number;
   chartRightMargin: number;
-  links: GhostLink[];
   onDelete?: (id: string) => void;
   onUpdateYOffset?: (id: string, yOffset: number) => void;
   onUpdateColor?: (id: string, color: MilestoneColor) => void;
   onUpdateSize?: (id: string, size: MilestoneSize) => void;
-  onToggleLinkedLink?: (id: string, linkId: string) => void;
 }
 
 export function ChartAnnotation({
@@ -68,12 +63,10 @@ export function ChartAnnotation({
   exactPosition,
   chartLeftMargin,
   chartRightMargin,
-  links,
   onDelete,
   onUpdateYOffset,
   onUpdateColor,
   onUpdateSize,
-  onToggleLinkedLink,
 }: ChartAnnotationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -122,10 +115,6 @@ export function ChartAnnotation({
 
   const handleSizeSelect = (newSize: MilestoneSize) => {
     onUpdateSize?.(annotation.id, newSize);
-  };
-
-  const handleToggleLink = (linkId: string) => {
-    onToggleLinkedLink?.(annotation.id, linkId);
   };
 
   // Handle drag start
@@ -330,16 +319,6 @@ export function ChartAnnotation({
                   Note
                 </span>
                 <p className="text-sm text-foreground font-medium leading-tight">{annotation.label}</p>
-
-                {/* Link associations */}
-                <div className="pt-2 border-t border-border/30 mt-2">
-                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5 block">Applies to</Label>
-                  <LinkSelector
-                    links={links}
-                    selectedLinkIds={annotation.linkedLinkIds || []}
-                    onToggleLink={handleToggleLink}
-                  />
-                </div>
               </div>
             )}
 

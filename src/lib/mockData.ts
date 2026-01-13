@@ -127,7 +127,6 @@ export interface MockAnnotation {
   color?: MilestoneColor;
   size?: MilestoneSize;
   yOffset?: number;
-  linkedLinkIds?: string[];
 }
 
 /**
@@ -146,7 +145,6 @@ export const getMockAnnotations = (): MockAnnotation[] => {
       color: 'green',
       size: 'large',
       yOffset: 0,
-      linkedLinkIds: [], // Global
     },
     {
       id: 'annotation-2',
@@ -155,7 +153,6 @@ export const getMockAnnotations = (): MockAnnotation[] => {
       color: 'yellow',
       size: 'medium',
       yOffset: 25,
-      linkedLinkIds: ['link-yt'], // Linked to YouTube only
     },
     {
       id: 'annotation-3',
@@ -164,7 +161,6 @@ export const getMockAnnotations = (): MockAnnotation[] => {
       color: 'red',
       size: 'small',
       yOffset: 50,
-      linkedLinkIds: ['link-yt'], // Linked to YouTube only
     },
   ];
 };

@@ -52,7 +52,6 @@ export function useMilestones() {
       color,
       size,
       yOffset: 0, // Default to top
-      linkedLinkIds: [], // Default to global (all links)
     };
 
     setMilestones(prev => [...prev, newMilestone]);
@@ -89,22 +88,6 @@ export function useMilestones() {
     );
   }, []);
 
-  const toggleMilestoneLinkedLink = useCallback((id: string, linkId: string) => {
-    setMilestones(prev => 
-      prev.map(m => {
-        if (m.id !== id) return m;
-        const currentLinks = m.linkedLinkIds || [];
-        const isLinked = currentLinks.includes(linkId);
-        return {
-          ...m,
-          linkedLinkIds: isLinked 
-            ? currentLinks.filter(l => l !== linkId) 
-            : [...currentLinks, linkId]
-        };
-      })
-    );
-  }, []);
-
   const clearAllMilestones = useCallback(() => {
     setMilestones([]);
   }, []);
@@ -117,7 +100,6 @@ export function useMilestones() {
     updateMilestoneYOffset,
     updateMilestoneColor,
     updateMilestoneSize,
-    toggleMilestoneLinkedLink,
     clearAllMilestones,
     isLoaded,
   };
