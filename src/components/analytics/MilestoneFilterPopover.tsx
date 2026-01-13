@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Filter, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MILESTONE_COLORS, SIZE_CONFIG, type MilestoneColor, type MilestoneSize, type Annotation } from './ChartAnnotation';
@@ -32,8 +32,9 @@ export function MilestoneFilterPopover({
   onClearAllSizes,
   isFilterActive,
 }: MilestoneFilterPopoverProps) {
-  // Controlled open state to prevent auto-close
   const [isOpen, setIsOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   // Get colors that are actually used in milestones
   const usedColors = useMemo(() => {
@@ -52,11 +53,57 @@ export function MilestoneFilterPopover({
   const allColorsSelected = ALL_COLORS.every(c => colorFilters.has(c));
   const allSizesSelected = ALL_SIZES.every(s => sizeFilters.has(s));
 
+  // Handle click outside to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      
+      // Check if click is inside content or trigger
+      if (contentRef.current?.contains(target)) return;
+      if (triggerRef.current?.contains(target)) return;
+      
+      // Click is outside, close the popover
+      setIsOpen(false);
+    };
+
+    // Use timeout to avoid immediate close on open click
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 10);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Handle Escape key to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
+  const handleTriggerClick = () => {
+    setIsOpen(prev => !prev);
+  };
+
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
+    <Popover open={isOpen} modal={false}>
       <PopoverTrigger asChild>
         <button
+          ref={triggerRef}
           type="button"
+          onClick={handleTriggerClick}
           className={cn(
             "relative flex items-center justify-center p-1 rounded transition-colors",
             isFilterActive
@@ -73,14 +120,21 @@ export function MilestoneFilterPopover({
       </PopoverTrigger>
       
       <PopoverContent
+        ref={contentRef}
         side="top"
         align="center"
         sideOffset={8}
         className="w-[220px] p-0 bg-card/95 backdrop-blur-md border-border/80"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
+        onFocusOutside={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="p-3 space-y-4">
+        <div 
+          className="p-3 space-y-4"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           {/* Filter by Color */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -89,7 +143,6 @@ export function MilestoneFilterPopover({
               </span>
               <button
                 type="button"
-                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   allColorsSelected ? onClearAllColors() : onSelectAllColors();
                 }}
@@ -109,7 +162,6 @@ export function MilestoneFilterPopover({
                   <button
                     type="button"
                     key={color}
-                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => onToggleColorFilter(color)}
                     disabled={!isUsed}
                     className={cn(
@@ -142,7 +194,6 @@ export function MilestoneFilterPopover({
               </span>
               <button
                 type="button"
-                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   allSizesSelected ? onClearAllSizes() : onSelectAllSizes();
                 }}
@@ -161,7 +212,6 @@ export function MilestoneFilterPopover({
                   <button
                     type="button"
                     key={size}
-                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => onToggleSizeFilter(size)}
                     disabled={!isUsed}
                     className={cn(
