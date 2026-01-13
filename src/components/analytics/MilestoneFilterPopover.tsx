@@ -77,11 +77,7 @@ export function MilestoneFilterPopover({
         align="center"
         sideOffset={8}
         className="w-[220px] p-0 bg-card/95 backdrop-blur-md border-border/80"
-        onPointerDownOutside={(e) => {
-          e.preventDefault();
-          setIsOpen(false);
-        }}
-        onEscapeKeyDown={() => setIsOpen(false)}
+        onInteractOutside={(e) => e.preventDefault()}
       >
         <div className="p-3 space-y-4">
           {/* Filter by Color */}
