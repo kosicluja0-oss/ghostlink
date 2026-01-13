@@ -9,7 +9,7 @@ import {
   AreaChart,
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
-import { ChartAnnotation, type Annotation, type MilestoneColor } from './ChartAnnotation';
+import { ChartAnnotation, type Annotation, type MilestoneColor, type MilestoneSize } from './ChartAnnotation';
 import { AddMilestoneDialog } from './AddMilestoneDialog';
 import { MilestoneFilterPopover } from './MilestoneFilterPopover';
 import { useMilestones } from '@/hooks/useMilestones';
@@ -42,6 +42,7 @@ import {
 import { Ghost, Flag, Plus } from 'lucide-react';
 
 const ALL_MILESTONE_COLORS: MilestoneColor[] = ['teal', 'yellow', 'red', 'green', 'purple', 'pink', 'orange', 'white'];
+const ALL_MILESTONE_SIZES: MilestoneSize[] = ['small', 'medium', 'large'];
 
 // Generate all time points in a range for continuous timeline
 function generateTimePoints(range: TimeRange): Date[] {
@@ -341,8 +342,9 @@ export function AnalyticsChart({
   });
   const [milestonesVisible, setMilestonesVisible] = useState(true);
   
-  // Milestone filter state (color only)
+  // Milestone filter state (color and size)
   const [colorFilters, setColorFilters] = useState<Set<MilestoneColor>>(new Set(ALL_MILESTONE_COLORS));
+  const [sizeFilters, setSizeFilters] = useState<Set<MilestoneSize>>(new Set(ALL_MILESTONE_SIZES));
   
   // Milestones hook for CRUD operations with localStorage persistence
   const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize } = useMilestones();
@@ -351,11 +353,12 @@ export function AnalyticsChart({
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedDateForMilestone, setSelectedDateForMilestone] = useState<string | null>(null);
   
-  // Check if any color filter is active (not all selected)
+  // Check if any filter is active (not all selected)
   const isMilestoneFilterActive = useMemo(() => {
     const allColorsSelected = ALL_MILESTONE_COLORS.every(c => colorFilters.has(c));
-    return !allColorsSelected;
-  }, [colorFilters]);
+    const allSizesSelected = ALL_MILESTONE_SIZES.every(s => sizeFilters.has(s));
+    return !allColorsSelected || !allSizesSelected;
+  }, [colorFilters, sizeFilters]);
   
   // Filter handlers
   const handleToggleColorFilter = useCallback((color: MilestoneColor) => {
@@ -376,6 +379,26 @@ export function AnalyticsChart({
   
   const handleClearAllColors = useCallback(() => {
     setColorFilters(new Set());
+  }, []);
+
+  const handleToggleSizeFilter = useCallback((size: MilestoneSize) => {
+    setSizeFilters(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(size)) {
+        newSet.delete(size);
+      } else {
+        newSet.add(size);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleSelectAllSizes = useCallback(() => {
+    setSizeFilters(new Set(ALL_MILESTONE_SIZES));
+  }, []);
+
+  const handleClearAllSizes = useCallback(() => {
+    setSizeFilters(new Set());
   }, []);
   
   // Track right-click position to determine date
@@ -512,6 +535,10 @@ export function AnalyticsChart({
         const color = annotation.color || 'teal';
         if (!colorFilters.has(color)) return false;
         
+        // Size filter
+        const size = annotation.size || 'medium';
+        if (!sizeFilters.has(size)) return false;
+        
         return true;
       })
       .map(annotation => {
@@ -548,7 +575,7 @@ export function AnalyticsChart({
           exactPosition: Math.max(0, Math.min(1, exactPosition)), // Clamp to 0-1
         };
       }).filter(a => a.dateIndex >= 0);
-  }, [milestones, displayData, milestonesVisible, colorFilters]);
+  }, [milestones, displayData, milestonesVisible, colorFilters, sizeFilters]);
   
   // Handle right-click on chart to add milestone
   const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
@@ -695,9 +722,13 @@ export function AnalyticsChart({
             <MilestoneFilterPopover
               milestones={milestones}
               colorFilters={colorFilters}
+              sizeFilters={sizeFilters}
               onToggleColorFilter={handleToggleColorFilter}
+              onToggleSizeFilter={handleToggleSizeFilter}
               onSelectAllColors={handleSelectAllColors}
               onClearAllColors={handleClearAllColors}
+              onSelectAllSizes={handleSelectAllSizes}
+              onClearAllSizes={handleClearAllSizes}
               isFilterActive={isMilestoneFilterActive}
             />
           )}

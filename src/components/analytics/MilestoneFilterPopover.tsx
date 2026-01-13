@@ -1,28 +1,40 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Filter, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MILESTONE_COLORS, type MilestoneColor, type Annotation } from './ChartAnnotation';
+import { MILESTONE_COLORS, SIZE_CONFIG, type MilestoneColor, type MilestoneSize, type Annotation } from './ChartAnnotation';
 import { cn } from '@/lib/utils';
 
 interface MilestoneFilterPopoverProps {
   milestones: Annotation[];
   colorFilters: Set<MilestoneColor>;
+  sizeFilters: Set<MilestoneSize>;
   onToggleColorFilter: (color: MilestoneColor) => void;
+  onToggleSizeFilter: (size: MilestoneSize) => void;
   onSelectAllColors: () => void;
   onClearAllColors: () => void;
+  onSelectAllSizes: () => void;
+  onClearAllSizes: () => void;
   isFilterActive: boolean;
 }
 
 const ALL_COLORS: MilestoneColor[] = ['teal', 'yellow', 'red', 'green', 'purple', 'pink', 'orange', 'white'];
+const ALL_SIZES: MilestoneSize[] = ['small', 'medium', 'large'];
 
 export function MilestoneFilterPopover({
   milestones,
   colorFilters,
+  sizeFilters,
   onToggleColorFilter,
+  onToggleSizeFilter,
   onSelectAllColors,
   onClearAllColors,
+  onSelectAllSizes,
+  onClearAllSizes,
   isFilterActive,
 }: MilestoneFilterPopoverProps) {
+  // Controlled open state to prevent auto-close
+  const [isOpen, setIsOpen] = useState(false);
+
   // Get colors that are actually used in milestones
   const usedColors = useMemo(() => {
     const colors = new Set<MilestoneColor>();
@@ -30,10 +42,18 @@ export function MilestoneFilterPopover({
     return colors;
   }, [milestones]);
 
+  // Get sizes that are actually used in milestones
+  const usedSizes = useMemo(() => {
+    const sizes = new Set<MilestoneSize>();
+    milestones.forEach(m => sizes.add(m.size || 'medium'));
+    return sizes;
+  }, [milestones]);
+
   const allColorsSelected = ALL_COLORS.every(c => colorFilters.has(c));
+  const allSizesSelected = ALL_SIZES.every(s => sizeFilters.has(s));
 
   return (
-    <Popover modal={false}>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -56,6 +76,9 @@ export function MilestoneFilterPopover({
         align="center"
         sideOffset={8}
         className="w-[220px] p-0 bg-card/95 backdrop-blur-md border-border/80"
+        onPointerDownOutside={() => setIsOpen(false)}
+        onEscapeKeyDown={() => setIsOpen(false)}
+        onInteractOutside={() => setIsOpen(false)}
       >
         <div className="p-3 space-y-4">
           {/* Filter by Color */}
@@ -65,7 +88,11 @@ export function MilestoneFilterPopover({
                 By Color
               </span>
               <button
-                onClick={allColorsSelected ? onClearAllColors : onSelectAllColors}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  allColorsSelected ? onClearAllColors() : onSelectAllColors();
+                }}
                 className="text-[10px] text-primary hover:text-primary/80 transition-colors"
               >
                 {allColorsSelected ? 'Clear' : 'Select All'}
@@ -103,6 +130,55 @@ export function MilestoneFilterPopover({
                     {isSelected && isUsed && (
                       <Check className={cn("w-3 h-3", isWhite || color === 'yellow' ? "text-gray-800" : "text-white")} />
                     )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Filter by Size */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+                By Size
+              </span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  allSizesSelected ? onClearAllSizes() : onSelectAllSizes();
+                }}
+                className="text-[10px] text-primary hover:text-primary/80 transition-colors"
+              >
+                {allSizesSelected ? 'Clear' : 'Select All'}
+              </button>
+            </div>
+            
+            <div className="flex gap-1.5">
+              {ALL_SIZES.map((size) => {
+                const isSelected = sizeFilters.has(size);
+                const isUsed = usedSizes.has(size);
+                
+                return (
+                  <button
+                    key={size}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleSizeFilter(size);
+                    }}
+                    disabled={!isUsed}
+                    className={cn(
+                      "flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all border",
+                      isSelected && isUsed
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/30 text-muted-foreground border-border/50",
+                      !isUsed && "opacity-30 cursor-not-allowed",
+                      isUsed && !isSelected && "hover:bg-muted/50 hover:text-foreground hover:border-border"
+                    )}
+                    title={`${SIZE_CONFIG[size].label}${!isUsed ? ' (not used)' : ''}`}
+                  >
+                    {SIZE_CONFIG[size].label}
                   </button>
                 );
               })}
