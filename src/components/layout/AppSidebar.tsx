@@ -44,25 +44,25 @@ export function AppSidebar({
       title: 'Dashboard',
       icon: LayoutDashboard,
       onClick: () => navigate('/dashboard'),
-      isActive: location.pathname === '/dashboard',
+      path: '/dashboard',
     },
     {
       title: 'Data & Leads',
       icon: Database,
       onClick: () => navigate('/transactions'),
-      isActive: location.pathname === '/transactions',
+      path: '/transactions',
     },
     {
       title: 'Integrations',
       icon: Puzzle,
       onClick: () => navigate('/integrations'),
-      isActive: location.pathname === '/integrations',
+      path: '/integrations',
     },
     {
       title: 'Settings',
       icon: Settings,
-      onClick: onOpenSettings,
-      isActive: false,
+      onClick: () => navigate('/settings'),
+      path: '/settings',
     },
   ];
 
@@ -115,35 +115,44 @@ export function AppSidebar({
       {/* Main Navigation */}
       <SidebarContent className="px-2 py-3">
         <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SidebarMenuButton
-                    onClick={item.onClick}
-                    isActive={item.isActive}
-                    className={cn(
-                      "transition-ghost",
-                      item.isActive && "bg-primary/10 text-primary"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    <span className={cn(
-                      "transition-opacity duration-0",
-                      isCollapsed ? "hidden" : "block"
-                    )}>
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <SidebarMenuItem key={item.title}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarMenuButton
+                      onClick={item.onClick}
+                      isActive={isActive}
+                      className={cn(
+                        "transition-ghost relative",
+                        isActive && "bg-primary/10 text-primary font-medium"
+                      )}
+                    >
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r" />
+                      )}
+                      <item.icon className={cn(
+                        "h-4 w-4 flex-shrink-0",
+                        isActive && "text-primary"
+                      )} />
+                      <span className={cn(
+                        "transition-opacity duration-0",
+                        isCollapsed ? "hidden" : "block"
+                      )}>
+                        {item.title}
+                      </span>
+                    </SidebarMenuButton>
+                  </TooltipTrigger>
+                  {isCollapsed && (
+                    <TooltipContent side="right">
                       {item.title}
-                    </span>
-                  </SidebarMenuButton>
-                </TooltipTrigger>
-                {isCollapsed && (
-                  <TooltipContent side="right">
-                    {item.title}
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </SidebarMenuItem>
-          ))}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
 
