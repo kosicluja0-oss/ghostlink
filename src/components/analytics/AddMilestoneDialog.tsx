@@ -41,7 +41,10 @@ export function AddMilestoneDialog({ open, onOpenChange, date, onAdd }: AddMiles
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (date && label.trim()) {
-      onAdd(date, label.trim(), selectedColor, selectedSize);
+      // Normalize the date to ensure consistent UTC timestamp storage
+      // This ensures the note stays aligned regardless of timezone
+      const normalizedDate = new Date(date).toISOString();
+      onAdd(normalizedDate, label.trim(), selectedColor, selectedSize);
       setLabel('');
       setSelectedColor('teal');
       setSelectedSize('medium');

@@ -449,6 +449,7 @@ export function AnalyticsChart({
 
   // Continuous timeline data with gap-filling
   // Generates all time points in range and merges actual data
+  // CRITICAL: Each data point includes its Unix timestamp for precise note alignment
   const chartData = useMemo(() => {
     const startDate = getDateRangeStart(timeRange);
     
@@ -483,12 +484,14 @@ export function AnalyticsChart({
     const timePoints = generateTimePoints(timeRange);
     
     // Merge time points with actual data (fill gaps with zeros)
+    // Include Unix timestamp for precise note positioning
     return timePoints.map(date => {
       const key = getTimeKey(date, timeRange);
       const existingData = dataMap.get(key);
       
       return {
         date: date.toISOString(),
+        timestamp: date.getTime(), // Unix timestamp in milliseconds for precise alignment
         clicks: existingData?.clicks ?? 0,
         leads: existingData?.leads ?? 0,
         sales: existingData?.sales ?? 0,
@@ -520,9 +523,15 @@ export function AnalyticsChart({
   }, [chartData]);
 
   // Calculate annotation positions within displayData
-  // Also filter by activeLinkId, color filters, and link filters
+  // Uses precise Unix timestamp matching for zero-offset alignment
   const visibleAnnotations = useMemo(() => {
     if (!milestonesVisible) return [];
+    if (displayData.length === 0) return [];
+    
+    // Get the time range boundaries from displayData
+    const firstTimestamp = displayData[0].timestamp;
+    const lastTimestamp = displayData[displayData.length - 1].timestamp;
+    const timeSpan = lastTimestamp - firstTimestamp;
     
     return milestones
       .filter(annotation => {
@@ -533,7 +542,7 @@ export function AnalyticsChart({
         // Link filter (manual refinement)
         const linkedIds = annotation.linkedLinkIds || [];
         if (linkedIds.length === 0) {
-          // Global milestone - check if 'global' is in filter
+          // Global note - check if 'global' is in filter
           if (!linkFilters.has('global')) return false;
         } else {
           // Check if any of the linked links are in the filter
@@ -543,9 +552,9 @@ export function AnalyticsChart({
         
         // Dashboard-level filter (activeLinkId)
         if (activeLinkId) {
-          // Global milestones are always visible when filtering by link
+          // Global notes are always visible when filtering by link
           if (linkedIds.length === 0) return true;
-          // Only show milestones linked to the active link
+          // Only show notes linked to the active link
           return linkedIds.includes(activeLinkId);
         }
         
@@ -554,35 +563,26 @@ export function AnalyticsChart({
       .map(annotation => {
         const annotationTimestamp = new Date(annotation.date).getTime();
         
-        // Find the closest matching data point by timestamp
-        let closestIndex = -1;
+        // Check if note falls within the visible time range
+        // Allow small buffer for edge cases (half a data point interval)
+        const intervalSize = timeSpan / Math.max(1, displayData.length - 1);
+        const buffer = intervalSize / 2;
+        
+        if (annotationTimestamp < firstTimestamp - buffer || annotationTimestamp > lastTimestamp + buffer) {
+          return { annotation, dateIndex: -1, exactPosition: 0 };
+        }
+        
+        // Calculate exact fractional position using timestamp interpolation
+        // This gives us pixel-perfect positioning regardless of time range granularity
+        const exactPosition = (annotationTimestamp - firstTimestamp) / Math.max(1, timeSpan);
+        
+        // Find closest data point index for snapping reference (used for context)
+        let closestIndex = 0;
         let closestDiff = Infinity;
         
         displayData.forEach((dataPoint, index) => {
-          const dataTimestamp = new Date(dataPoint.date).getTime();
-          const diff = Math.abs(annotationTimestamp - dataTimestamp);
-          
-          // Use tolerance based on time range granularity
-          let tolerance: number;
-          switch (timeRange) {
-            case '30m':
-              tolerance = 30 * 1000; // 30 seconds
-              break;
-            case '6h':
-              tolerance = 2.5 * 60 * 1000; // 2.5 minutes
-              break;
-            case '1d':
-              tolerance = 7.5 * 60 * 1000; // 7.5 minutes
-              break;
-            case '1w':
-            case '1m':
-              tolerance = 12 * 60 * 60 * 1000; // 12 hours
-              break;
-            default:
-              tolerance = 24 * 60 * 60 * 1000; // 1 day
-          }
-          
-          if (diff < closestDiff && diff <= tolerance) {
+          const diff = Math.abs(annotationTimestamp - dataPoint.timestamp);
+          if (diff < closestDiff) {
             closestDiff = diff;
             closestIndex = index;
           }
@@ -591,9 +591,10 @@ export function AnalyticsChart({
         return {
           annotation,
           dateIndex: closestIndex,
+          exactPosition: Math.max(0, Math.min(1, exactPosition)), // Clamp to 0-1
         };
       }).filter(a => a.dateIndex >= 0);
-  }, [milestones, displayData, timeRange, milestonesVisible, activeLinkId, colorFilters, linkFilters]);
+  }, [milestones, displayData, milestonesVisible, activeLinkId, colorFilters, linkFilters]);
   
   // Handle right-click on chart to add milestone
   const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
@@ -806,7 +807,7 @@ export function AnalyticsChart({
             />
             
             {/* Annotations Layer */}
-            {visibleAnnotations.map(({ annotation, dateIndex }) => (
+            {visibleAnnotations.map(({ annotation, dateIndex, exactPosition }) => (
               <ChartAnnotation
                 key={annotation.id}
                 annotation={annotation}
@@ -814,6 +815,7 @@ export function AnalyticsChart({
                 chartHeight={chartDimensions.height}
                 dataLength={displayData.length}
                 dateIndex={dateIndex}
+                exactPosition={exactPosition}
                 chartLeftMargin={50}
                 chartRightMargin={20}
                 links={links}
