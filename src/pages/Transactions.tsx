@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Database, Filter, CalendarDays, ShoppingCart, UserPlus, MousePointerClick, Package } from 'lucide-react';
+import { 
+  Database, Filter, CalendarDays, ShoppingCart, UserPlus, MousePointerClick, 
+  Package, Sparkles, Monitor, Smartphone, Globe
+} from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -38,9 +41,197 @@ interface Transaction {
   description: string;
   amount: number | null;
   source: string;
+  sourceIcon: string;
   linkId: string;
   linkAlias: string;
+  location?: string;
+  locationFlag?: string;
+  device?: 'desktop' | 'mobile';
+  platform?: string;
 }
+
+// Flag emoji mapping for countries
+const FLAGS: Record<string, string> = {
+  US: '🇺🇸', UK: '🇬🇧', DE: '🇩🇪', FR: '🇫🇷', CA: '🇨🇦', AU: '🇦🇺', 
+  JP: '🇯🇵', BR: '🇧🇷', ES: '🇪🇸', IT: '🇮🇹', NL: '🇳🇱', CZ: '🇨🇿'
+};
+
+// Platform icons mapping
+const PLATFORMS: Record<string, string> = {
+  youtube: 'YT',
+  instagram: 'IG',
+  twitter: 'X',
+  tiktok: 'TT',
+  direct: '🔗',
+};
+
+// Sample mock data generator
+const generateSampleData = (): Transaction[] => {
+  const links = ['Summer Promo', 'E-book Launch', 'Newsletter Signup', 'Course Link'];
+  const sources = [
+    { name: 'Gumroad', icon: 'gumroad' },
+    { name: 'Stripe', icon: 'stripe' },
+    { name: 'Direct Link', icon: 'direct' },
+    { name: 'Lemon Squeezy', icon: 'lemon' },
+  ];
+  const countries = Object.keys(FLAGS);
+  const platforms = Object.keys(PLATFORMS);
+
+  const sampleTransactions: Transaction[] = [
+    {
+      id: 'sample-1',
+      date: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+      type: 'sale',
+      description: 'Purchase: Summer E-book',
+      amount: 49.00,
+      source: 'Gumroad',
+      sourceIcon: 'gumroad',
+      linkId: '1',
+      linkAlias: 'Summer Promo',
+      location: 'US',
+      locationFlag: FLAGS.US,
+      device: 'desktop',
+      platform: 'youtube',
+    },
+    {
+      id: 'sample-2',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      type: 'lead',
+      description: 'New Subscriber',
+      amount: null,
+      source: 'Direct Link',
+      sourceIcon: 'direct',
+      linkId: '2',
+      linkAlias: 'Newsletter Signup',
+      location: 'DE',
+      locationFlag: FLAGS.DE,
+      device: 'mobile',
+      platform: 'instagram',
+    },
+    {
+      id: 'sample-3',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 3),
+      type: 'sale',
+      description: 'Premium Course',
+      amount: 199.00,
+      source: 'Stripe',
+      sourceIcon: 'stripe',
+      linkId: '3',
+      linkAlias: 'Course Link',
+      location: 'UK',
+      locationFlag: FLAGS.UK,
+      device: 'desktop',
+      platform: 'twitter',
+    },
+    {
+      id: 'sample-4',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 5),
+      type: 'click',
+      description: 'Link clicked',
+      amount: null,
+      source: 'Direct Link',
+      sourceIcon: 'direct',
+      linkId: '1',
+      linkAlias: 'Summer Promo',
+      location: 'FR',
+      locationFlag: FLAGS.FR,
+      device: 'mobile',
+      platform: 'tiktok',
+    },
+    {
+      id: 'sample-5',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 8),
+      type: 'sale',
+      description: 'E-book Bundle',
+      amount: 79.00,
+      source: 'Lemon Squeezy',
+      sourceIcon: 'lemon',
+      linkId: '2',
+      linkAlias: 'E-book Launch',
+      location: 'CA',
+      locationFlag: FLAGS.CA,
+      device: 'desktop',
+      platform: 'youtube',
+    },
+    {
+      id: 'sample-6',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 12),
+      type: 'lead',
+      description: 'joh***@gmail.com',
+      amount: null,
+      source: 'Direct Link',
+      sourceIcon: 'direct',
+      linkId: '3',
+      linkAlias: 'Newsletter Signup',
+      location: 'AU',
+      locationFlag: FLAGS.AU,
+      device: 'mobile',
+      platform: 'instagram',
+    },
+    {
+      id: 'sample-7',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 18),
+      type: 'click',
+      description: 'Link clicked',
+      amount: null,
+      source: 'Direct Link',
+      sourceIcon: 'direct',
+      linkId: '1',
+      linkAlias: 'Summer Promo',
+      location: 'JP',
+      locationFlag: FLAGS.JP,
+      device: 'desktop',
+      platform: 'direct',
+    },
+    {
+      id: 'sample-8',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 24),
+      type: 'sale',
+      description: 'Annual Membership',
+      amount: 299.00,
+      source: 'Stripe',
+      sourceIcon: 'stripe',
+      linkId: '4',
+      linkAlias: 'Course Link',
+      location: 'BR',
+      locationFlag: FLAGS.BR,
+      device: 'mobile',
+      platform: 'youtube',
+    },
+    {
+      id: 'sample-9',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 36),
+      type: 'lead',
+      description: 'sar***@outlook.com',
+      amount: null,
+      source: 'Gumroad',
+      sourceIcon: 'gumroad',
+      linkId: '2',
+      linkAlias: 'E-book Launch',
+      location: 'ES',
+      locationFlag: FLAGS.ES,
+      device: 'desktop',
+      platform: 'twitter',
+    },
+    {
+      id: 'sample-10',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 48),
+      type: 'sale',
+      description: 'Digital Workshop',
+      amount: 149.00,
+      source: 'Gumroad',
+      sourceIcon: 'gumroad',
+      linkId: '1',
+      linkAlias: 'Summer Promo',
+      location: 'NL',
+      locationFlag: FLAGS.NL,
+      device: 'mobile',
+      platform: 'instagram',
+    },
+  ];
+
+  return sampleTransactions;
+};
 
 const Transactions = () => {
   const navigate = useNavigate();
@@ -52,6 +243,7 @@ const Transactions = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
   const [dateRange, setDateRange] = useState<DateRange>('7d');
+  const [showSampleData, setShowSampleData] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -61,7 +253,7 @@ const Transactions = () => {
   }, [authLoading, session, navigate]);
 
   // Build transactions from clicks and conversions
-  const transactions: Transaction[] = useMemo(() => {
+  const realTransactions: Transaction[] = useMemo(() => {
     const result: Transaction[] = [];
     
     // Map link IDs to aliases
@@ -77,6 +269,7 @@ const Transactions = () => {
         description: 'Link clicked',
         amount: null,
         source: 'Direct Link',
+        sourceIcon: 'direct',
         linkId: click.link_id,
         linkAlias: alias,
       });
@@ -92,6 +285,7 @@ const Transactions = () => {
         description: conv.type === 'sale' ? 'Purchase completed' : 'New subscriber',
         amount: conv.type === 'sale' ? Number(conv.value) : null,
         source: 'Webhook',
+        sourceIcon: 'direct',
         linkId: conv.link_id || '',
         linkAlias: alias,
       });
@@ -100,6 +294,14 @@ const Transactions = () => {
     // Sort by date descending
     return result.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [clicks, conversions, links]);
+
+  // Combine real data with sample data if enabled
+  const transactions = useMemo(() => {
+    if (showSampleData && realTransactions.length === 0) {
+      return generateSampleData();
+    }
+    return realTransactions;
+  }, [realTransactions, showSampleData]);
 
   // Apply filters
   const filteredTransactions = useMemo(() => {
@@ -176,9 +378,18 @@ const Transactions = () => {
     }
   };
 
-  const getSourceIcon = (source: string) => {
-    // Could be extended with actual integration icons
-    return <Package className="w-4 h-4 text-muted-foreground" />;
+  const getSourceIcon = (source: string, sourceIcon: string) => {
+    // Return colored badges for known sources
+    switch (sourceIcon) {
+      case 'gumroad':
+        return <div className="w-5 h-5 rounded bg-pink-500/20 text-pink-400 flex items-center justify-center text-[10px] font-bold">G</div>;
+      case 'stripe':
+        return <div className="w-5 h-5 rounded bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-bold">S</div>;
+      case 'lemon':
+        return <div className="w-5 h-5 rounded bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-[10px] font-bold">L</div>;
+      default:
+        return <Package className="w-4 h-4 text-muted-foreground" />;
+    }
   };
 
   const salesCount = filteredTransactions.filter(t => t.type === 'sale').length;
@@ -187,6 +398,8 @@ const Transactions = () => {
     .filter(t => t.type === 'sale' && t.amount)
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
+  const hasRealData = realTransactions.length > 0;
+
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
@@ -194,13 +407,13 @@ const Transactions = () => {
           <AppSidebar
             userEmail={user?.email}
             userTier={userTier}
-            onOpenSettings={() => setSettingsOpen(true)}
+            onOpenSettings={() => navigate('/settings')}
             onOpenDataIntegration={() => navigate('/integrations')}
             onSignOut={signOut}
           />
           
           <SidebarInset className="flex-1">
-            <main className="p-4 lg:p-6 max-w-6xl mx-auto">
+            <main className="p-4 lg:p-6 max-w-7xl mx-auto">
               {/* Header */}
               <section className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
@@ -284,7 +497,7 @@ const Transactions = () => {
               </section>
 
               {/* Data Table or Empty State */}
-              {filteredTransactions.length === 0 ? (
+              {filteredTransactions.length === 0 && !showSampleData ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4 bg-card border border-border rounded-xl">
                   <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
                     <Database className="w-10 h-10 text-muted-foreground" />
@@ -293,62 +506,120 @@ const Transactions = () => {
                   <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
                     Share your tracking links to start seeing clicks, leads, and sales here!
                   </p>
-                  <Button onClick={() => navigate('/dashboard')}>
-                    Go to Dashboard
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button onClick={() => navigate('/dashboard')}>
+                      Go to Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowSampleData(true)}
+                      className="gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Show Sample Data
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="bg-card border border-border rounded-xl overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableHead className="w-[140px]">Date</TableHead>
-                        <TableHead className="w-[100px]">Type</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="w-[100px] text-right">Amount</TableHead>
-                        <TableHead className="w-[100px]">Source</TableHead>
-                        <TableHead className="w-[140px]">Link</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTransactions.map((transaction) => (
-                        <TableRow key={transaction.id} className="group">
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(transaction.date, 'MMM d, HH:mm')}
-                          </TableCell>
-                          <TableCell>
-                            {getTypeBadge(transaction.type)}
-                          </TableCell>
-                          <TableCell className="text-sm text-foreground">
-                            {transaction.description}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {transaction.amount !== null ? (
-                              <span className="text-sm font-medium text-success">
-                                + ${transaction.amount.toFixed(2)}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              {getSourceIcon(transaction.source)}
-                              <span className="text-xs text-muted-foreground">
-                                {transaction.source}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm font-medium text-primary truncate max-w-[120px] block">
-                              {transaction.linkAlias}
-                            </span>
-                          </TableCell>
+                <>
+                  {showSampleData && !hasRealData && (
+                    <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Viewing sample data to preview the experience</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto text-primary hover:text-primary/80"
+                        onClick={() => setShowSampleData(false)}
+                      >
+                        Hide
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="bg-card border border-border rounded-xl overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50 hover:bg-muted/50">
+                          <TableHead className="w-[130px]">Date</TableHead>
+                          <TableHead className="w-[90px]">Type</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="w-[90px] text-right">Amount</TableHead>
+                          <TableHead className="w-[100px]">Source</TableHead>
+                          <TableHead className="w-[70px]">Location</TableHead>
+                          <TableHead className="w-[70px]">Device</TableHead>
+                          <TableHead className="w-[60px]">Via</TableHead>
+                          <TableHead className="w-[120px]">Link</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredTransactions.map((transaction) => (
+                          <TableRow key={transaction.id} className="group">
+                            <TableCell className="text-sm text-muted-foreground">
+                              {format(transaction.date, 'MMM d, HH:mm')}
+                            </TableCell>
+                            <TableCell>
+                              {getTypeBadge(transaction.type)}
+                            </TableCell>
+                            <TableCell className="text-sm text-foreground">
+                              {transaction.description}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {transaction.amount !== null ? (
+                                <span className="text-sm font-medium text-success">
+                                  + ${transaction.amount.toFixed(2)}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getSourceIcon(transaction.source, transaction.sourceIcon)}
+                                <span className="text-xs text-muted-foreground">
+                                  {transaction.source}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {transaction.locationFlag ? (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-base">{transaction.locationFlag}</span>
+                                  <span className="text-xs text-muted-foreground">{transaction.location}</span>
+                                </div>
+                              ) : (
+                                <Globe className="w-4 h-4 text-muted-foreground/50" />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {transaction.device === 'mobile' ? (
+                                <Smartphone className="w-4 h-4 text-muted-foreground" />
+                              ) : transaction.device === 'desktop' ? (
+                                <Monitor className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <span className="text-muted-foreground/50">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {transaction.platform && PLATFORMS[transaction.platform] ? (
+                                <span className="text-xs font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                  {PLATFORMS[transaction.platform]}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/50">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm font-medium text-primary truncate max-w-[100px] block">
+                                {transaction.linkAlias}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
 
               {/* Footer stats */}
