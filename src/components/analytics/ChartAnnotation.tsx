@@ -48,6 +48,7 @@ interface ChartAnnotationProps {
   chartHeight: number;
   dataLength: number;
   dateIndex: number;
+  exactPosition: number; // 0-1 fractional position based on timestamp interpolation
   chartLeftMargin: number;
   chartRightMargin: number;
   links: GhostLink[];
@@ -64,6 +65,7 @@ export function ChartAnnotation({
   chartHeight,
   dataLength,
   dateIndex,
+  exactPosition,
   chartLeftMargin,
   chartRightMargin,
   links,
@@ -93,9 +95,10 @@ export function ChartAnnotation({
   const bubbleSize = Math.round(baseBubbleSize * sizeConfig.bubble);
   const innerSize = Math.round(baseInnerSize * sizeConfig.inner);
   
-  // Calculate X position based on data index
+  // Calculate X position using exactPosition for pixel-perfect timestamp alignment
+  // This uses the precise fractional position calculated from Unix timestamps
   const usableWidth = chartWidth - chartLeftMargin - chartRightMargin;
-  const xPosition = chartLeftMargin + (dateIndex / Math.max(1, dataLength - 1)) * usableWidth;
+  const xPosition = chartLeftMargin + exactPosition * usableWidth;
   
   // Calculate Y position based on offset (0 = top, 100 = near bottom)
   // Use pending offset during drag for immediate visual feedback
