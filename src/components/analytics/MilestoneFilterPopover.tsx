@@ -53,9 +53,10 @@ export function MilestoneFilterPopover({
   const allSizesSelected = ALL_SIZES.every(s => sizeFilters.has(s));
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <PopoverTrigger asChild>
         <button
+          type="button"
           className={cn(
             "relative flex items-center justify-center p-1 rounded transition-colors",
             isFilterActive
@@ -76,9 +77,11 @@ export function MilestoneFilterPopover({
         align="center"
         sideOffset={8}
         className="w-[220px] p-0 bg-card/95 backdrop-blur-md border-border/80"
-        onPointerDownOutside={() => setIsOpen(false)}
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          setIsOpen(false);
+        }}
         onEscapeKeyDown={() => setIsOpen(false)}
-        onInteractOutside={() => setIsOpen(false)}
       >
         <div className="p-3 space-y-4">
           {/* Filter by Color */}
@@ -88,9 +91,8 @@ export function MilestoneFilterPopover({
                 By Color
               </span>
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                type="button"
+                onClick={() => {
                   allColorsSelected ? onClearAllColors() : onSelectAllColors();
                 }}
                 className="text-[10px] text-primary hover:text-primary/80 transition-colors"
@@ -107,12 +109,9 @@ export function MilestoneFilterPopover({
                 
                 return (
                   <button
+                    type="button"
                     key={color}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onToggleColorFilter(color);
-                    }}
+                    onClick={() => onToggleColorFilter(color)}
                     disabled={!isUsed}
                     className={cn(
                       "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
@@ -143,9 +142,8 @@ export function MilestoneFilterPopover({
                 By Size
               </span>
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                type="button"
+                onClick={() => {
                   allSizesSelected ? onClearAllSizes() : onSelectAllSizes();
                 }}
                 className="text-[10px] text-primary hover:text-primary/80 transition-colors"
@@ -161,12 +159,9 @@ export function MilestoneFilterPopover({
                 
                 return (
                   <button
+                    type="button"
                     key={size}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onToggleSizeFilter(size);
-                    }}
+                    onClick={() => onToggleSizeFilter(size)}
                     disabled={!isUsed}
                     className={cn(
                       "flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-all border",
