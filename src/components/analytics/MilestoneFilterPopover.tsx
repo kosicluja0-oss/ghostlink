@@ -77,6 +77,7 @@ export function MilestoneFilterPopover({
         align="center"
         sideOffset={8}
         className="w-[220px] p-0 bg-card/95 backdrop-blur-md border-border/80"
+        onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
         <div className="p-3 space-y-4">
@@ -88,6 +89,7 @@ export function MilestoneFilterPopover({
               </span>
               <button
                 type="button"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   allColorsSelected ? onClearAllColors() : onSelectAllColors();
                 }}
@@ -107,6 +109,7 @@ export function MilestoneFilterPopover({
                   <button
                     type="button"
                     key={color}
+                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => onToggleColorFilter(color)}
                     disabled={!isUsed}
                     className={cn(
@@ -139,6 +142,7 @@ export function MilestoneFilterPopover({
               </span>
               <button
                 type="button"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   allSizesSelected ? onClearAllSizes() : onSelectAllSizes();
                 }}
@@ -157,6 +161,7 @@ export function MilestoneFilterPopover({
                   <button
                     type="button"
                     key={size}
+                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => onToggleSizeFilter(size)}
                     disabled={!isUsed}
                     className={cn(
