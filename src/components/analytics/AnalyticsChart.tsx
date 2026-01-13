@@ -341,36 +341,21 @@ export function AnalyticsChart({
   });
   const [milestonesVisible, setMilestonesVisible] = useState(true);
   
-  // Milestone filter state
+  // Milestone filter state (color only)
   const [colorFilters, setColorFilters] = useState<Set<MilestoneColor>>(new Set(ALL_MILESTONE_COLORS));
-  const [linkFilters, setLinkFilters] = useState<Set<string | 'global'>>(new Set(['global', ...links.map(l => l.id)]));
-  
-  // Update link filters when links change (new links should be visible by default)
-  useEffect(() => {
-    setLinkFilters(prev => {
-      const newSet = new Set(prev);
-      links.forEach(l => {
-        if (!newSet.has(l.id)) {
-          newSet.add(l.id);
-        }
-      });
-      return newSet;
-    });
-  }, [links]);
   
   // Milestones hook for CRUD operations with localStorage persistence
-  const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize, toggleMilestoneLinkedLink } = useMilestones();
+  const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize } = useMilestones();
   
   // Add milestone dialog state
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedDateForMilestone, setSelectedDateForMilestone] = useState<string | null>(null);
   
-  // Check if any filter is active (not all selected)
+  // Check if any color filter is active (not all selected)
   const isMilestoneFilterActive = useMemo(() => {
     const allColorsSelected = ALL_MILESTONE_COLORS.every(c => colorFilters.has(c));
-    const allLinksSelected = linkFilters.has('global') && links.every(l => linkFilters.has(l.id));
-    return !allColorsSelected || !allLinksSelected;
-  }, [colorFilters, linkFilters, links]);
+    return !allColorsSelected;
+  }, [colorFilters]);
   
   // Filter handlers
   const handleToggleColorFilter = useCallback((color: MilestoneColor) => {
@@ -380,18 +365,6 @@ export function AnalyticsChart({
         newSet.delete(color);
       } else {
         newSet.add(color);
-      }
-      return newSet;
-    });
-  }, []);
-  
-  const handleToggleLinkFilter = useCallback((linkId: string | 'global') => {
-    setLinkFilters(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(linkId)) {
-        newSet.delete(linkId);
-      } else {
-        newSet.add(linkId);
       }
       return newSet;
     });
@@ -539,25 +512,6 @@ export function AnalyticsChart({
         const color = annotation.color || 'teal';
         if (!colorFilters.has(color)) return false;
         
-        // Link filter (manual refinement)
-        const linkedIds = annotation.linkedLinkIds || [];
-        if (linkedIds.length === 0) {
-          // Global note - check if 'global' is in filter
-          if (!linkFilters.has('global')) return false;
-        } else {
-          // Check if any of the linked links are in the filter
-          const hasMatchingLink = linkedIds.some(id => linkFilters.has(id));
-          if (!hasMatchingLink) return false;
-        }
-        
-        // Dashboard-level filter (activeLinkId)
-        if (activeLinkId) {
-          // Global notes are always visible when filtering by link
-          if (linkedIds.length === 0) return true;
-          // Only show notes linked to the active link
-          return linkedIds.includes(activeLinkId);
-        }
-        
         return true;
       })
       .map(annotation => {
@@ -594,7 +548,7 @@ export function AnalyticsChart({
           exactPosition: Math.max(0, Math.min(1, exactPosition)), // Clamp to 0-1
         };
       }).filter(a => a.dateIndex >= 0);
-  }, [milestones, displayData, milestonesVisible, activeLinkId, colorFilters, linkFilters]);
+  }, [milestones, displayData, milestonesVisible, colorFilters]);
   
   // Handle right-click on chart to add milestone
   const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
@@ -740,11 +694,8 @@ export function AnalyticsChart({
           {milestones.length > 0 && milestonesVisible && (
             <MilestoneFilterPopover
               milestones={milestones}
-              links={links}
               colorFilters={colorFilters}
-              linkFilters={linkFilters}
               onToggleColorFilter={handleToggleColorFilter}
-              onToggleLinkFilter={handleToggleLinkFilter}
               onSelectAllColors={handleSelectAllColors}
               onClearAllColors={handleClearAllColors}
               isFilterActive={isMilestoneFilterActive}
@@ -818,12 +769,10 @@ export function AnalyticsChart({
                 exactPosition={exactPosition}
                 chartLeftMargin={50}
                 chartRightMargin={20}
-                links={links}
                 onDelete={deleteMilestone}
                 onUpdateYOffset={updateMilestoneYOffset}
                 onUpdateColor={updateMilestoneColor}
                 onUpdateSize={updateMilestoneSize}
-                onToggleLinkedLink={toggleMilestoneLinkedLink}
               />
             ))}
             

@@ -3,15 +3,11 @@ import { Filter, Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MILESTONE_COLORS, type MilestoneColor, type Annotation } from './ChartAnnotation';
 import { cn } from '@/lib/utils';
-import type { GhostLink } from '@/types';
 
 interface MilestoneFilterPopoverProps {
   milestones: Annotation[];
-  links: GhostLink[];
   colorFilters: Set<MilestoneColor>;
-  linkFilters: Set<string | 'global'>;
   onToggleColorFilter: (color: MilestoneColor) => void;
-  onToggleLinkFilter: (linkId: string | 'global') => void;
   onSelectAllColors: () => void;
   onClearAllColors: () => void;
   isFilterActive: boolean;
@@ -21,34 +17,12 @@ const ALL_COLORS: MilestoneColor[] = ['teal', 'yellow', 'red', 'green', 'purple'
 
 export function MilestoneFilterPopover({
   milestones,
-  links,
   colorFilters,
-  linkFilters,
   onToggleColorFilter,
-  onToggleLinkFilter,
   onSelectAllColors,
   onClearAllColors,
   isFilterActive,
 }: MilestoneFilterPopoverProps) {
-  // Get unique links that have milestones assigned
-  const linksWithMilestones = useMemo(() => {
-    const linkIdsWithMilestones = new Set<string>();
-    let hasGlobalMilestones = false;
-
-    milestones.forEach(m => {
-      const linkedIds = m.linkedLinkIds || [];
-      if (linkedIds.length === 0) {
-        hasGlobalMilestones = true;
-      } else {
-        linkedIds.forEach(id => linkIdsWithMilestones.add(id));
-      }
-    });
-
-    const associatedLinks = links.filter(l => linkIdsWithMilestones.has(l.id));
-    
-    return { associatedLinks, hasGlobalMilestones };
-  }, [milestones, links]);
-
   // Get colors that are actually used in milestones
   const usedColors = useMemo(() => {
     const colors = new Set<MilestoneColor>();
@@ -59,7 +33,7 @@ export function MilestoneFilterPopover({
   const allColorsSelected = ALL_COLORS.every(c => colorFilters.has(c));
 
   return (
-<Popover modal={false}>
+    <Popover modal={false}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -134,72 +108,6 @@ export function MilestoneFilterPopover({
               })}
             </div>
           </div>
-
-          {/* Filter by Link */}
-          {(linksWithMilestones.associatedLinks.length > 0 || linksWithMilestones.hasGlobalMilestones) && (
-            <div className="space-y-2">
-              <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
-                By Link
-              </span>
-              
-              <div className="max-h-[140px] overflow-y-auto space-y-0.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-                {/* Global / Unassigned option */}
-                {linksWithMilestones.hasGlobalMilestones && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onToggleLinkFilter('global');
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors text-left",
-                      linkFilters.has('global')
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0",
-                      linkFilters.has('global')
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/40"
-                    )}>
-                      {linkFilters.has('global') && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
-                    </div>
-                    <span className="truncate italic">Global (Unassigned)</span>
-                  </button>
-                )}
-                
-                {/* Links with notes */}
-                {linksWithMilestones.associatedLinks.map((link) => (
-                  <button
-                    key={link.id}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onToggleLinkFilter(link.id);
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors text-left",
-                      linkFilters.has(link.id)
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-3.5 h-3.5 rounded border-2 flex items-center justify-center flex-shrink-0",
-                      linkFilters.has(link.id)
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/40"
-                    )}>
-                      {linkFilters.has(link.id) && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
-                    </div>
-                    <span className="truncate">{link.alias}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
         
         <div className="px-3 py-1.5 bg-muted/30 border-t border-border/30">
