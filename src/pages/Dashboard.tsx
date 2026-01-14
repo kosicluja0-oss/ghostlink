@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent, Plus } from 'lucide-react';
+import { GetStartedCard } from '@/components/onboarding/GetStartedCard';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -124,6 +125,11 @@ const Dashboard = () => {
           
           <SidebarInset className="flex-1">
             <main className="p-4 lg:p-6">
+              {/* Get Started Onboarding */}
+              <section className="mb-5">
+                <GetStartedCard onCreateLink={() => setCreateModalOpen(true)} />
+              </section>
+
               {/* Stats Banner - Compact */}
               <section className="mb-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
