@@ -60,12 +60,14 @@ const Dashboard = () => {
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
     const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
     
+    // Calculate earnings from links data
+    const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
+    
     let conversionRate = 0;
     let earningsPerClick = 0;
     
     if (totalClicks > 0) {
       conversionRate = ((totalLeads + totalSales) / totalClicks) * 100;
-      const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
       earningsPerClick = totalEarnings / totalClicks;
     }
     
@@ -73,6 +75,7 @@ const Dashboard = () => {
       totalClicks,
       totalLeads,
       totalSales,
+      totalEarnings,
       conversionRate,
       earningsPerClick,
     };

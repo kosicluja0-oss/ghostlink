@@ -65,6 +65,7 @@ export interface DashboardStats {
   totalClicks: number;
   totalLeads: number;
   totalSales: number;
+  totalEarnings: number;
   conversionRate: number;
   earningsPerClick: number;
 }
