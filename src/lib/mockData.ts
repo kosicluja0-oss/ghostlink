@@ -3,7 +3,7 @@
  * ========================
  * Set USE_MOCK_DATA to `false` to disable all mock data and use real database values.
  */
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 import type { GhostLink, AnalyticsData, DashboardStats } from '@/types';
 
@@ -309,6 +309,7 @@ const aggregateStatsFromLinks = (links: GhostLink[]): DashboardStats => {
     totalClicks,
     totalLeads,
     totalSales,
+    totalEarnings,
     conversionRate,
     earningsPerClick,
   };

@@ -248,7 +248,9 @@ export function useClicksRealtime() {
     const totalClicks = clicks.length;
     const totalLeads = conversions.filter((c) => c.type === 'lead').length;
     const totalSales = conversions.filter((c) => c.type === 'sale').length;
-    const totalEarnings = conversions.reduce((sum, c) => sum + c.value, 0);
+    const totalEarnings = conversions
+      .filter((c) => c.type === 'sale')
+      .reduce((sum, c) => sum + c.value, 0);
 
     const conversionRate = totalClicks > 0 ? ((totalLeads + totalSales) / totalClicks) * 100 : 0;
     const earningsPerClick = totalClicks > 0 ? totalEarnings / totalClicks : 0;
@@ -257,6 +259,7 @@ export function useClicksRealtime() {
       totalClicks,
       totalLeads,
       totalSales,
+      totalEarnings,
       conversionRate,
       earningsPerClick,
     };

@@ -148,17 +148,19 @@ export function useAnalytics() {
     return () => clearTimeout(timer);
   }, []);
 
+  const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
+  
   const stats: DashboardStats = {
     totalClicks: analyticsData.reduce((sum, d) => sum + d.clicks, 0),
     totalLeads: analyticsData.reduce((sum, d) => sum + d.leads, 0),
     totalSales: analyticsData.reduce((sum, d) => sum + d.sales, 0),
+    totalEarnings,
     conversionRate: 0,
     earningsPerClick: 0,
   };
 
   if (stats.totalClicks > 0) {
     stats.conversionRate = ((stats.totalLeads + stats.totalSales) / stats.totalClicks) * 100;
-    const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
     stats.earningsPerClick = totalEarnings / stats.totalClicks;
   }
 

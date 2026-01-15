@@ -49,13 +49,45 @@ export function useLinks() {
         return;
       }
 
-      // Get click counts for each link
+      // Get click counts and conversions for each link
       const linksWithStats = await Promise.all(
         linksData.map(async (link) => {
-          const { count } = await supabase
+          // Get click count
+          const { count: clickCount } = await supabase
             .from('clicks')
             .select('*', { count: 'exact', head: true })
             .eq('link_id', link.id);
+
+          // Get clicks IDs for this link to find conversions
+          const { data: clickIds } = await supabase
+            .from('clicks')
+            .select('id')
+            .eq('link_id', link.id);
+
+          let leads = 0;
+          let sales = 0;
+          let earnings = 0;
+
+          if (clickIds && clickIds.length > 0) {
+            const ids = clickIds.map(c => c.id);
+            
+            // Get conversions for these clicks
+            const { data: conversions } = await supabase
+              .from('conversions')
+              .select('type, value')
+              .in('click_id', ids);
+
+            if (conversions) {
+              conversions.forEach((conv) => {
+                if (conv.type === 'lead') {
+                  leads++;
+                } else if (conv.type === 'sale') {
+                  sales++;
+                  earnings += Number(conv.value) || 0;
+                }
+              });
+            }
+          }
 
           const bridgeConfig = link.bridge_page_config as unknown as BridgePageConfig | null;
 
@@ -65,10 +97,10 @@ export function useLinks() {
             targetUrl: link.target_url,
             hasBridgePage: link.has_bridge_page ?? false,
             bridgePageConfig: bridgeConfig ?? undefined,
-            clicks: count ?? 0,
-            leads: 0, // Will be implemented later
-            sales: 0, // Will be implemented later
-            earnings: 0, // Will be implemented later
+            clicks: clickCount ?? 0,
+            leads,
+            sales,
+            earnings,
             status: 'active' as const,
             createdAt: new Date(link.created_at),
           };
