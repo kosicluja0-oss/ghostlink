@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent, Plus } from 'lucide-react';
 import { GetStartedCard } from '@/components/onboarding/GetStartedCard';
@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, session, isLoading: authLoading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -31,19 +31,12 @@ const Dashboard = () => {
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
   // Use real data hooks
-  const { links, addLink, archiveLink, restoreLink, isLoading: linksLoading } = useLinks();
-  const { analyticsData, stats, isLoading: clicksLoading } = useClicksRealtime();
+  const { links, addLink, archiveLink, restoreLink } = useLinks();
+  const { analyticsData, stats } = useClicksRealtime();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
   const activeLinksCount = links.filter(l => l.status === 'active').length;
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate('/auth');
-    }
-  }, [authLoading, session, navigate]);
 
   // Get the currently selected link
   const selectedLink = useMemo(() => {
@@ -96,20 +89,6 @@ const Dashboard = () => {
       minimumFractionDigits: 2,
     }).format(value);
   };
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!session) {
-    return null;
-  }
 
   return (
     <TooltipProvider>
