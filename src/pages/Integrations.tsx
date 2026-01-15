@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Puzzle, Sparkles } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -50,7 +50,7 @@ const INTEGRATIONS: Integration[] = [
 
 const Integrations = () => {
   const navigate = useNavigate();
-  const { user, session, isLoading: authLoading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { links } = useLinks();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
@@ -58,13 +58,6 @@ const Integrations = () => {
   const [integrations, setIntegrations] = useState<Integration[]>(INTEGRATIONS);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate('/auth');
-    }
-  }, [authLoading, session, navigate]);
 
   // Prepare links for dropdown
   const linkOptions = useMemo(() => 
@@ -91,20 +84,6 @@ const Integrations = () => {
       )
     );
   };
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!session) {
-    return null;
-  }
 
   const connectedCount = integrations.filter(i => i.status === 'connected').length;
   const pendingCount = integrations.filter(i => i.status === 'pending').length;

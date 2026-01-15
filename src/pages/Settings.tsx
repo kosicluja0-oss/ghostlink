@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings as SettingsIcon, User, CreditCard, Globe, Camera, 
-  Check, Crown, Mail, Shield
+  Check, Crown, Mail, Shield, Loader2
 } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import type { TierType } from '@/types';
 import { TIERS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -28,45 +29,30 @@ import { toast } from 'sonner';
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { user, session, isLoading: authLoading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const { profile, isLoading: profileLoading, updateProfile, isUpdating } = useProfile();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
-  const [avatarUrl, setAvatarUrl] = useState('');
 
-  // Redirect if not authenticated
+  // Sync local state with profile data
   useEffect(() => {
-    if (!authLoading && !session) {
-      navigate('/auth');
+    if (profile) {
+      setDisplayName(profile.display_name || '');
+      setCurrency(profile.currency || 'usd');
     }
-  }, [authLoading, session, navigate]);
+  }, [profile]);
 
-  useEffect(() => {
-    if (user?.email) {
-      setDisplayName(user.email.split('@')[0]);
-    }
-  }, [user]);
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!session) {
-    return null;
-  }
-
-  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+  const userInitial = displayName ? displayName.charAt(0).toUpperCase() : 
+                      user?.email ? user.email.charAt(0).toUpperCase() : 'U';
   const currentTierData = TIERS[userTier];
 
   const handleSaveProfile = () => {
-    toast.success('Profile updated successfully');
+    updateProfile({
+      display_name: displayName,
+      currency,
+    });
   };
 
   const handleManageSubscription = () => {
@@ -115,65 +101,84 @@ const Settings = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Avatar */}
-                    <div className="flex items-center gap-4">
-                      <div className="relative group">
-                        <Avatar className="h-20 w-20 border-2 border-border">
-                          {avatarUrl ? (
-                            <AvatarImage src={avatarUrl} alt="Profile" />
-                          ) : (
-                            <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
-                              {userInitial}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                        <button 
-                          className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => toast.info('Avatar upload coming soon')}
-                        >
-                          <Camera className="w-6 h-6 text-white" />
-                        </button>
+                    {profileLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-foreground">Profile Photo</p>
-                        <p className="text-xs text-muted-foreground">
-                          Click to upload a new avatar
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Name & Email */}
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="displayName">Display Name</Label>
-                        <Input
-                          id="displayName"
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          placeholder="Your name"
-                          className="bg-input"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <div className="relative">
-                          <Input
-                            id="email"
-                            value={user?.email || ''}
-                            disabled
-                            className="bg-muted text-muted-foreground pr-10"
-                          />
-                          <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    ) : (
+                      <>
+                        {/* Avatar */}
+                        <div className="flex items-center gap-4">
+                          <div className="relative group">
+                            <Avatar className="h-20 w-20 border-2 border-border">
+                              {profile?.avatar_url ? (
+                                <AvatarImage src={profile.avatar_url} alt="Profile" />
+                              ) : (
+                                <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
+                                  {userInitial}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                            <button 
+                              className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => toast.info('Avatar upload coming soon')}
+                            >
+                              <Camera className="w-6 h-6 text-white" />
+                            </button>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                            <p className="text-xs text-muted-foreground">
+                              Click to upload a new avatar
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Email cannot be changed
-                        </p>
-                      </div>
-                    </div>
 
-                    <Button onClick={handleSaveProfile} className="w-full sm:w-auto">
-                      Save Changes
-                    </Button>
+                        {/* Name & Email */}
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="displayName">Display Name</Label>
+                            <Input
+                              id="displayName"
+                              value={displayName}
+                              onChange={(e) => setDisplayName(e.target.value)}
+                              placeholder="Your name"
+                              className="bg-input"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <div className="relative">
+                              <Input
+                                id="email"
+                                value={user?.email || ''}
+                                disabled
+                                className="bg-muted text-muted-foreground pr-10"
+                              />
+                              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Email cannot be changed
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={handleSaveProfile} 
+                          className="w-full sm:w-auto"
+                          disabled={isUpdating}
+                        >
+                          {isUpdating ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            'Save Changes'
+                          )}
+                        </Button>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -207,7 +212,7 @@ const Settings = () => {
                       <div className="space-y-2">
                         <Label>Timezone</Label>
                         <div className="px-3 py-2 rounded-md bg-muted text-muted-foreground text-sm">
-                          {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                          {profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
                         </div>
                       </div>
                     </div>

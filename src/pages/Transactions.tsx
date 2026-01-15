@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
@@ -67,20 +67,10 @@ const PLATFORMS: Record<string, string> = {
 
 // Sample mock data generator
 const generateSampleData = (): Transaction[] => {
-  const links = ['Summer Promo', 'E-book Launch', 'Newsletter Signup', 'Course Link'];
-  const sources = [
-    { name: 'Gumroad', icon: 'gumroad' },
-    { name: 'Stripe', icon: 'stripe' },
-    { name: 'Direct Link', icon: 'direct' },
-    { name: 'Lemon Squeezy', icon: 'lemon' },
-  ];
-  const countries = Object.keys(FLAGS);
-  const platforms = Object.keys(PLATFORMS);
-
   const sampleTransactions: Transaction[] = [
     {
       id: 'sample-1',
-      date: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+      date: new Date(Date.now() - 1000 * 60 * 30),
       type: 'sale',
       description: 'Purchase: Summer E-book',
       amount: 49.00,
@@ -95,7 +85,7 @@ const generateSampleData = (): Transaction[] => {
     },
     {
       id: 'sample-2',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      date: new Date(Date.now() - 1000 * 60 * 60 * 2),
       type: 'lead',
       description: 'New Subscriber',
       amount: null,
@@ -235,7 +225,7 @@ const generateSampleData = (): Transaction[] => {
 
 const Transactions = () => {
   const navigate = useNavigate();
-  const { user, session, isLoading: authLoading, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { links } = useLinks();
   const { clicks, conversions } = useClicksRealtime();
   
@@ -244,13 +234,6 @@ const Transactions = () => {
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
   const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [showSampleData, setShowSampleData] = useState(false);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !session) {
-      navigate('/auth');
-    }
-  }, [authLoading, session, navigate]);
 
   // Build transactions from clicks and conversions
   const realTransactions: Transaction[] = useMemo(() => {
@@ -338,20 +321,6 @@ const Transactions = () => {
     return filtered;
   }, [transactions, typeFilter, dateRange]);
 
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  // Don't render if not authenticated
-  if (!session) {
-    return null;
-  }
-
   const getTypeBadge = (type: TransactionType) => {
     switch (type) {
       case 'sale':
@@ -379,7 +348,6 @@ const Transactions = () => {
   };
 
   const getSourceIcon = (source: string, sourceIcon: string) => {
-    // Return colored badges for known sources
     switch (sourceIcon) {
       case 'gumroad':
         return <div className="w-5 h-5 rounded bg-pink-500/20 text-pink-400 flex items-center justify-center text-[10px] font-bold">G</div>;
@@ -498,141 +466,115 @@ const Transactions = () => {
 
               {/* Data Table or Empty State */}
               {filteredTransactions.length === 0 && !showSampleData ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 bg-card border border-border rounded-xl">
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <Database className="w-10 h-10 text-muted-foreground" />
+                <div className="flex flex-col items-center justify-center py-16 px-4 border border-dashed border-border rounded-xl bg-card/50">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <Database className="w-8 h-8 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-1">No activity yet</h3>
-                  <p className="text-sm text-muted-foreground text-center max-w-sm mb-4">
-                    Share your tracking links to start seeing clicks, leads, and sales here!
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No transactions yet</h3>
+                  <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
+                    Once you start getting clicks and conversions, they'll appear here in real-time.
                   </p>
-                  <div className="flex gap-3">
-                    <Button onClick={() => navigate('/dashboard')}>
-                      Go to Dashboard
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowSampleData(true)}
-                      className="gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      Show Sample Data
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowSampleData(true)}
+                    className="gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Show Sample Data
+                  </Button>
                 </div>
               ) : (
-                <>
-                  {showSampleData && !hasRealData && (
-                    <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm">
-                      <Sparkles className="w-4 h-4" />
-                      <span>Viewing sample data to preview the experience</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="ml-auto text-primary hover:text-primary/80"
-                        onClick={() => setShowSampleData(false)}
-                      >
-                        Hide
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <div className="bg-card border border-border rounded-xl overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50 hover:bg-muted/50">
-                          <TableHead className="w-[130px]">Date</TableHead>
-                          <TableHead className="w-[90px]">Type</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead className="w-[90px] text-right">Amount</TableHead>
-                          <TableHead className="w-[100px]">Source</TableHead>
-                          <TableHead className="w-[70px]">Location</TableHead>
-                          <TableHead className="w-[70px]">Device</TableHead>
-                          <TableHead className="w-[60px]">Via</TableHead>
-                          <TableHead className="w-[120px]">Link</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredTransactions.map((transaction) => (
-                          <TableRow key={transaction.id} className="group">
-                            <TableCell className="text-sm text-muted-foreground">
-                              {format(transaction.date, 'MMM d, HH:mm')}
-                            </TableCell>
-                            <TableCell>
-                              {getTypeBadge(transaction.type)}
-                            </TableCell>
-                            <TableCell className="text-sm text-foreground">
-                              {transaction.description}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {transaction.amount !== null ? (
-                                <span className="text-sm font-medium text-success">
-                                  + ${transaction.amount.toFixed(2)}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-muted-foreground">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {getSourceIcon(transaction.source, transaction.sourceIcon)}
-                                <span className="text-xs text-muted-foreground">
-                                  {transaction.source}
-                                </span>
+                <div className="border border-border rounded-xl overflow-hidden bg-card">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-border">
+                        <TableHead className="text-muted-foreground font-medium">Time</TableHead>
+                        <TableHead className="text-muted-foreground font-medium">Type</TableHead>
+                        <TableHead className="text-muted-foreground font-medium">Description</TableHead>
+                        <TableHead className="text-muted-foreground font-medium">Link</TableHead>
+                        <TableHead className="text-muted-foreground font-medium">Source</TableHead>
+                        <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Location</TableHead>
+                        <TableHead className="text-muted-foreground font-medium hidden lg:table-cell">Device</TableHead>
+                        <TableHead className="text-muted-foreground font-medium text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.map((tx) => (
+                        <TableRow key={tx.id} className="border-border hover:bg-muted/50">
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                            {format(tx.date, 'MMM d, HH:mm')}
+                          </TableCell>
+                          <TableCell>{getTypeBadge(tx.type)}</TableCell>
+                          <TableCell className="text-sm text-foreground max-w-[200px] truncate">
+                            {tx.description}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {tx.linkAlias}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getSourceIcon(tx.source, tx.sourceIcon)}
+                              <span className="text-sm text-muted-foreground">{tx.source}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {tx.location && (
+                              <div className="flex items-center gap-1.5">
+                                <span>{tx.locationFlag}</span>
+                                <span className="text-sm text-muted-foreground">{tx.location}</span>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              {transaction.locationFlag ? (
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-base">{transaction.locationFlag}</span>
-                                  <span className="text-xs text-muted-foreground">{transaction.location}</span>
-                                </div>
-                              ) : (
-                                <Globe className="w-4 h-4 text-muted-foreground/50" />
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {transaction.device === 'mobile' ? (
-                                <Smartphone className="w-4 h-4 text-muted-foreground" />
-                              ) : transaction.device === 'desktop' ? (
-                                <Monitor className="w-4 h-4 text-muted-foreground" />
-                              ) : (
-                                <span className="text-muted-foreground/50">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {transaction.platform && PLATFORMS[transaction.platform] ? (
-                                <span className="text-xs font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                                  {PLATFORMS[transaction.platform]}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground/50">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-sm font-medium text-primary truncate max-w-[100px] block">
-                                {transaction.linkAlias}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {tx.device && (
+                              <div className="flex items-center gap-1.5">
+                                {tx.device === 'desktop' ? (
+                                  <Monitor className="w-4 h-4 text-muted-foreground" />
+                                ) : (
+                                  <Smartphone className="w-4 h-4 text-muted-foreground" />
+                                )}
+                                {tx.platform && (
+                                  <span className="text-xs text-muted-foreground uppercase">
+                                    {PLATFORMS[tx.platform] || tx.platform}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {tx.amount !== null ? (
+                              <span className="text-success">${tx.amount.toFixed(2)}</span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
 
-              {/* Footer stats */}
-              {filteredTransactions.length > 0 && (
-                <div className="mt-3 text-xs text-muted-foreground">
-                  Showing {filteredTransactions.length} transactions
+              {/* Sample Data Toggle */}
+              {showSampleData && !hasRealData && (
+                <div className="mt-4 flex items-center justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSampleData(false)}
+                    className="text-muted-foreground"
+                  >
+                    Hide Sample Data
+                  </Button>
                 </div>
               )}
             </main>
           </SidebarInset>
         </div>
 
-        {/* Settings Drawer */}
+        {/* Modals */}
         <SettingsDrawer
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
