@@ -53,31 +53,7 @@ export function MilestoneFilterPopover({
   const allColorsSelected = ALL_COLORS.every(c => colorFilters.has(c));
   const allSizesSelected = ALL_SIZES.every(s => sizeFilters.has(s));
 
-  // Handle click outside to close
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      
-      // Check if click is inside content or trigger
-      if (contentRef.current?.contains(target)) return;
-      if (triggerRef.current?.contains(target)) return;
-      
-      // Click is outside, close the popover
-      setIsOpen(false);
-    };
-
-    // Use timeout to avoid immediate close on open click
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-    }, 10);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  // Close popover when clicking outside - handled via onOpenChange
 
   // Handle Escape key to close
   useEffect(() => {

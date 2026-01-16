@@ -553,11 +553,7 @@ export function AnalyticsChart({
           return { annotation, dateIndex: -1, exactPosition: 0 };
         }
         
-        // Calculate exact fractional position using timestamp interpolation
-        // This gives us pixel-perfect positioning regardless of time range granularity
-        const exactPosition = (annotationTimestamp - firstTimestamp) / Math.max(1, timeSpan);
-        
-        // Find closest data point index for snapping reference (used for context)
+        // Find closest data point index for snapping
         let closestIndex = 0;
         let closestDiff = Infinity;
         
@@ -568,6 +564,10 @@ export function AnalyticsChart({
             closestIndex = index;
           }
         });
+        
+        // Use index-based positioning instead of timestamp interpolation
+        // This ensures notes align exactly with their data points on the categorical X-axis
+        const exactPosition = closestIndex / Math.max(1, displayData.length - 1);
         
         return {
           annotation,
