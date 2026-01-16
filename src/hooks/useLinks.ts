@@ -225,32 +225,33 @@ export function useLinks() {
     []
   );
 
-  // Archive a link (for now, just remove from local state - could be soft delete)
-  const archiveLink = useCallback(async (id: string) => {
-    setLinks((prev) =>
-      prev.map((link) =>
-        link.id === id ? { ...link, status: 'archived' as const } : link
-      )
-    );
-    toast.success('Link archived');
-  }, []);
+  // Delete a link permanently
+  const deleteLink = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('links')
+        .delete()
+        .eq('id', id);
 
-  // Restore a link
-  const restoreLink = useCallback(async (id: string) => {
-    setLinks((prev) =>
-      prev.map((link) =>
-        link.id === id ? { ...link, status: 'active' as const } : link
-      )
-    );
-    toast.success('Link restored');
+      if (error) {
+        console.error('Error deleting link:', error);
+        toast.error('Failed to delete link');
+        return;
+      }
+
+      setLinks((prev) => prev.filter((link) => link.id !== id));
+      toast.success('Link deleted permanently');
+    } catch (error) {
+      console.error('Error in deleteLink:', error);
+      toast.error('Failed to delete link');
+    }
   }, []);
 
   return {
     links,
     isLoading,
     addLink,
-    archiveLink,
-    restoreLink,
+    deleteLink,
     refetch: fetchLinks,
   };
 }

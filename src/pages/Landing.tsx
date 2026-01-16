@@ -127,9 +127,9 @@ const pricingPlans: Record<string, PricingPlan> = {
     monthlyPrice: 0,
     priceIds: { monthly: null, yearly: null },
     features: [
-      '5 active links',
-      'Click tracking only',
-      'Basic analytics',
+      '25 active links',
+      'Click tracking',
+      'Basic dashboard',
       'Community support',
     ],
     highlighted: false,
@@ -140,11 +140,11 @@ const pricingPlans: Record<string, PricingPlan> = {
     monthlyPrice: 10,
     priceIds: { monthly: 'price_pro_monthly_placeholder', yearly: 'price_pro_yearly_placeholder' },
     features: [
-      '25 active links',
-      'Full analytics suite',
+      '100 active links',
+      'Leads & Sales tracking',
+      'Full analytics',
       'Bridge pages',
       'Priority support',
-      'Export data',
     ],
     highlighted: false,
   },
@@ -155,12 +155,11 @@ const pricingPlans: Record<string, PricingPlan> = {
     priceIds: { monthly: 'price_business_monthly_placeholder', yearly: 'price_business_yearly_placeholder' },
     badge: 'Most Popular',
     features: [
-      '100 active links',
+      '175 active links',
       'All Pro features',
-      'API access',
-      'Custom branding',
-      'Dedicated support',
       'Team collaboration',
+      'API access',
+      'Dedicated support',
     ],
     highlighted: true,
   },
@@ -269,9 +268,7 @@ export default function Landing() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-                <Ghost className="h-5 w-5 text-primary" />
-              </div>
+              <Ghost className="h-6 w-6 text-white" />
               <span className="text-lg font-bold text-foreground tracking-tight">Ghost Link</span>
             </Link>
 

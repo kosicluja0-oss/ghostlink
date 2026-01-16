@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ExternalLink, Archive, RotateCcw, Copy, Pencil, Search, MoreHorizontal, BarChart3 } from 'lucide-react';
+import { ExternalLink, Copy, Pencil, Search, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,6 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Tooltip,
   TooltipContent,
@@ -23,8 +33,7 @@ import { toast } from 'sonner';
 interface LinkTableProps {
   links: GhostLink[];
   userTier: TierType;
-  onArchive: (id: string) => void;
-  onRestore: (id: string) => void;
+  onDeleteLink: (id: string) => void;
   activeLinkId?: string | null;
   onLinkSelect?: (linkId: string) => void;
 }
@@ -32,8 +41,7 @@ interface LinkTableProps {
 interface LinkRowProps {
   link: GhostLink;
   userTier: TierType;
-  onArchive: (id: string) => void;
-  onRestore: (id: string) => void;
+  onDelete: (id: string) => void;
   isSelected?: boolean;
   onSelect?: (linkId: string) => void;
 }
@@ -101,14 +109,14 @@ function Favicon({ url }: { url: string }) {
 function LinkRow({ 
   link, 
   userTier, 
-  onArchive, 
-  onRestore,
+  onDelete,
   isSelected = false,
   onSelect
 }: LinkRowProps) {
   const isFreeTier = userTier === 'free';
   const displayUrl = getDisplayUrl(link.alias);
   const trackingUrl = getTrackingUrl(link.alias);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   // Generate mock sparkline data (last 24 hours trend)
   const sparklineData = useMemo(() => {
@@ -123,6 +131,11 @@ function LinkRow({
     e.stopPropagation();
     navigator.clipboard.writeText(trackingUrl);
     toast.success('Tracking URL copied to clipboard');
+  };
+
+  const handleDeleteConfirm = () => {
+    onDelete(link.id);
+    setDeleteDialogOpen(false);
   };
 
   return (
@@ -233,37 +246,42 @@ function LinkRow({
                   Open Target
                 </a>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                <BarChart3 className="h-3.5 w-3.5 mr-2" />
-                Reset Stats
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {link.status === 'active' ? (
-                <DropdownMenuItem 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onArchive(link.id);
-                  }}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Archive className="h-3.5 w-3.5 mr-2" />
-                  Archive Link
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRestore(link.id);
-                  }}
-                  className="text-success focus:text-success"
-                >
-                  <RotateCcw className="h-3.5 w-3.5 mr-2" />
-                  Restore Link
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-2" />
+                Delete Link
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Link</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <span className="font-semibold text-foreground">{displayUrl}</span>? 
+                This action cannot be undone and all associated click data will be permanently lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteConfirm}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );
@@ -272,13 +290,11 @@ function LinkRow({
 export function LinkTable({ 
   links, 
   userTier, 
-  onArchive, 
-  onRestore,
+  onDeleteLink,
   activeLinkId,
   onLinkSelect
 }: LinkTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [showArchived, setShowArchived] = useState(false);
 
   const filteredLinks = useMemo(() => {
     let filtered = links;
@@ -292,20 +308,14 @@ export function LinkTable({
       );
     }
     
-    // Filter by status
-    if (!showArchived) {
-      filtered = filtered.filter(link => link.status === 'active');
-    }
-    
     return filtered;
-  }, [links, searchQuery, showArchived]);
+  }, [links, searchQuery]);
 
-  const activeCount = links.filter(l => l.status === 'active').length;
-  const archivedCount = links.filter(l => l.status === 'archived').length;
+  const totalCount = links.length;
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      {/* Header with Search - Pinned */}
+      {/* Header with Search */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-3 py-2 border-b border-border bg-card">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -316,30 +326,9 @@ export function LinkTable({
             className="h-7 pl-8 text-[12px] bg-muted/30 border-border/50 focus:bg-background"
           />
         </div>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setShowArchived(false)}
-            className={cn(
-              "text-[11px] px-2 py-1 rounded transition-colors",
-              !showArchived 
-                ? "bg-primary/10 text-primary font-medium" 
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Active ({activeCount})
-          </button>
-          <button
-            onClick={() => setShowArchived(true)}
-            className={cn(
-              "text-[11px] px-2 py-1 rounded transition-colors",
-              showArchived 
-                ? "bg-muted text-foreground font-medium" 
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Archived ({archivedCount})
-          </button>
-        </div>
+        <span className="text-[11px] text-muted-foreground">
+          {totalCount} link{totalCount !== 1 ? 's' : ''}
+        </span>
       </div>
 
       {/* Table Header */}
@@ -362,8 +351,7 @@ export function LinkTable({
               key={link.id}
               link={link}
               userTier={userTier}
-              onArchive={onArchive}
-              onRestore={onRestore}
+              onDelete={onDeleteLink}
               isSelected={activeLinkId === link.id}
               onSelect={onLinkSelect}
             />
@@ -371,7 +359,7 @@ export function LinkTable({
         ) : (
           <div className="text-center py-8">
             <p className="text-[12px] text-muted-foreground">
-              {searchQuery ? 'No links match your search' : showArchived ? 'No archived links' : 'No active links yet'}
+              {searchQuery ? 'No links match your search' : 'No links yet'}
             </p>
           </div>
         )}

@@ -11,21 +11,21 @@ export interface UserTier {
 export const TIERS: Record<TierType, UserTier> = {
   free: {
     type: 'free',
-    maxLinks: 5,
+    maxLinks: 25,
     hasFullAnalytics: false,
     hasBridgePages: false,
     price: null,
   },
   pro: {
     type: 'pro',
-    maxLinks: 25,
+    maxLinks: 100,
     hasFullAnalytics: true,
     hasBridgePages: true,
     price: 9.99,
   },
   business: {
     type: 'business',
-    maxLinks: 100,
+    maxLinks: 175,
     hasFullAnalytics: true,
     hasBridgePages: true,
     price: 14.99,

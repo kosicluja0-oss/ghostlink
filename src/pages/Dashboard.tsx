@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent, Plus } from 'lucide-react';
-import { GetStartedCard } from '@/components/onboarding/GetStartedCard';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -31,12 +30,12 @@ const Dashboard = () => {
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
   // Use real data hooks
-  const { links, addLink, archiveLink, restoreLink } = useLinks();
+  const { links, addLink, deleteLink } = useLinks();
   const { analyticsData, stats } = useClicksRealtime();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
-  const activeLinksCount = links.filter(l => l.status === 'active').length;
+  const activeLinksCount = links.length;
 
   // Get the currently selected link
   const selectedLink = useMemo(() => {
@@ -53,8 +52,34 @@ const Dashboard = () => {
     setActiveLinkId(null);
   }, []);
 
-  // Calculate stats based on filtered data (time range)
+  // Calculate stats based on selected link or filtered data (time range)
   const displayStats = useMemo(() => {
+    // If a link is selected, show its stats directly
+    if (selectedLink) {
+      const totalClicks = selectedLink.clicks;
+      const totalLeads = selectedLink.leads;
+      const totalSales = selectedLink.sales;
+      const totalEarnings = selectedLink.earnings;
+      
+      let conversionRate = 0;
+      let earningsPerClick = 0;
+      
+      if (totalClicks > 0) {
+        conversionRate = ((totalLeads + totalSales) / totalClicks) * 100;
+        earningsPerClick = totalEarnings / totalClicks;
+      }
+      
+      return {
+        totalClicks,
+        totalLeads,
+        totalSales,
+        totalEarnings,
+        conversionRate,
+        earningsPerClick,
+      };
+    }
+    
+    // Otherwise, show global stats from time range data
     const dataToUse = filteredData ?? analyticsData;
     const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
@@ -79,7 +104,7 @@ const Dashboard = () => {
       conversionRate,
       earningsPerClick,
     };
-  }, [filteredData, analyticsData, links]);
+  }, [filteredData, analyticsData, links, selectedLink]);
 
   const handleTimeRangeChange = (range: TimeRange, data: typeof analyticsData) => {
     setFilteredData(data);
@@ -107,11 +132,6 @@ const Dashboard = () => {
           
           <SidebarInset className="flex-1">
             <main className="p-4 lg:p-6">
-              {/* Get Started Onboarding */}
-              <section className="mb-5">
-                <GetStartedCard onCreateLink={() => setCreateModalOpen(true)} />
-              </section>
-
               {/* Stats Banner - Compact */}
               <section className="mb-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -193,8 +213,7 @@ const Dashboard = () => {
                 <LinkTable
                   links={links}
                   userTier={userTier}
-                  onArchive={archiveLink}
-                  onRestore={restoreLink}
+                  onDeleteLink={deleteLink}
                   activeLinkId={activeLinkId}
                   onLinkSelect={handleLinkSelect}
                 />

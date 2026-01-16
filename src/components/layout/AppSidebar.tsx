@@ -78,9 +78,7 @@ export function AppSidebar({
           isCollapsed ? "justify-center" : "justify-between"
         )}>
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 flex-shrink-0">
-              <Ghost className="h-5 w-5 text-primary" />
-            </div>
+            <Ghost className="h-6 w-6 text-white flex-shrink-0" />
             {!isCollapsed && (
               <span className="text-base font-bold text-foreground tracking-tight">
                 Ghost Link
