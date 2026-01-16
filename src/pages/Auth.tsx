@@ -30,6 +30,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Check if already logged in, but handle PASSWORD_RECOVERY specially
   useEffect(() => {
@@ -42,16 +43,29 @@ export default function Auth() {
       if (session) {
         navigate('/dashboard');
       }
+      setIsInitializing(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate('/dashboard');
+      } else {
+        setIsInitializing(false);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Show loading while checking auth state
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-background to-background pointer-events-none" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const validateForm = () => {
     try {
