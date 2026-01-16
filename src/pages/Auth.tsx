@@ -31,9 +31,14 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  // Check if already logged in
+  // Check if already logged in, but handle PASSWORD_RECOVERY specially
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // If user clicked password reset link, redirect to reset page
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/auth/reset-password');
+        return;
+      }
       if (session) {
         navigate('/dashboard');
       }
