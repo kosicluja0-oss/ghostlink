@@ -20,12 +20,12 @@ const Index = () => {
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
   // Use real data hooks
-  const { links, addLink, archiveLink, restoreLink, isLoading: linksLoading } = useLinks();
+  const { links, addLink, deleteLink, isLoading: linksLoading } = useLinks();
   const { analyticsData, stats, isLoading: clicksLoading } = useClicksRealtime();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
-  const activeLinksCount = links.filter(l => l.status === 'active').length;
+  const activeLinksCount = links.length;
 
   // Get the currently selected link
   const selectedLink = useMemo(() => {
@@ -168,8 +168,7 @@ const Index = () => {
           <LinkTable
             links={links}
             userTier={userTier}
-            onArchive={archiveLink}
-            onRestore={restoreLink}
+            onDeleteLink={deleteLink}
             activeLinkId={activeLinkId}
             onLinkSelect={handleLinkSelect}
           />
