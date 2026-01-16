@@ -26,15 +26,31 @@ export default function ResetPassword() {
   const [isValidSession, setIsValidSession] = useState(false);
 
   useEffect(() => {
-    // Check if user came from reset email (will have a session)
+    // Listen for PASSWORD_RECOVERY event (when user clicks reset link)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsValidSession(true);
+      }
+    });
+
+    // Also check for existing session (in case of page refresh)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsValidSession(true);
       } else {
-        toast.error('Invalid or expired reset link');
-        navigate('/auth');
+        // Give a small delay to allow PASSWORD_RECOVERY event to fire
+        setTimeout(() => {
+          supabase.auth.getSession().then(({ data: { session: retrySession } }) => {
+            if (!retrySession) {
+              toast.error('Invalid or expired reset link');
+              navigate('/auth');
+            }
+          });
+        }, 1000);
       }
     });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const validateForm = () => {
