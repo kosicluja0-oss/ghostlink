@@ -299,6 +299,14 @@ const Integrations = () => {
               <section className="mt-10">
                 <DeveloperWebhookCard />
               </section>
+
+              {/* Trademark Disclaimer */}
+              <footer className="mt-12 pt-6 border-t border-border">
+                <p className="text-xs text-muted-foreground/60 text-center">
+                  All product names, logos, and brands are property of their respective owners. 
+                  Ghost Link is not affiliated with or endorsed by any of the above companies.
+                </p>
+              </footer>
             </main>
           </SidebarInset>
         </div>
