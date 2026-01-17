@@ -1,19 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Mock chart component for hero
 function MockDashboardChart() {
-  return (
-    <div className="relative w-full max-w-4xl mx-auto">
+  return <div className="relative w-full max-w-4xl mx-auto">
       <div className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-6 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -24,14 +18,9 @@ function MockDashboardChart() {
             <span className="text-sm font-medium text-foreground">Traffic Overview</span>
           </div>
           <div className="flex gap-2">
-            {['24h', '7d', '30d'].map((period) => (
-              <span 
-                key={period}
-                className={`text-xs px-2 py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}
-              >
+            {['24h', '7d', '30d'].map(period => <span key={period} className={`text-xs px-2 py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
                 {period}
-              </span>
-            ))}
+              </span>)}
           </div>
         </div>
         
@@ -60,16 +49,8 @@ function MockDashboardChart() {
                 <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <path
-              d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30 L400,100 L0,100 Z"
-              fill="url(#chartGradient)"
-            />
-            <path
-              d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30"
-              fill="none"
-              stroke="hsl(var(--primary))"
-              strokeWidth="2"
-            />
+            <path d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30 L400,100 L0,100 Z" fill="url(#chartGradient)" />
+            <path d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
           </svg>
           {/* Live indicator */}
           <div className="absolute top-0 right-0 flex items-center gap-1.5 text-xs text-primary">
@@ -84,85 +65,72 @@ function MockDashboardChart() {
       
       {/* Glow effect */}
       <div className="absolute inset-0 -z-10 bg-primary/10 blur-3xl rounded-full scale-75" />
-    </div>
-  );
+    </div>;
 }
-
-const features = [
-  {
-    icon: Zap,
-    title: 'Real-Time Engine',
-    description: 'Watch traffic as it happens. No delays. Millisecond latency tracking for the data-driven marketer.',
-  },
-  {
-    icon: Target,
-    title: 'Conversion Tracking',
-    description: 'Postback URL support for Leads & Sales. Know exactly which campaigns are printing money.',
-  },
-  {
-    icon: Layers,
-    title: 'Smart Bridge Pages',
-    description: 'Increase conversions with pre-lander overlays. Warm up your audience before the offer.',
-  },
-];
+const features = [{
+  icon: Zap,
+  title: 'Real-Time Engine',
+  description: 'Watch traffic as it happens. No delays. Millisecond latency tracking for the data-driven marketer.'
+}, {
+  icon: Target,
+  title: 'Conversion Tracking',
+  description: 'Postback URL support for Leads & Sales. Know exactly which campaigns are printing money.'
+}, {
+  icon: Layers,
+  title: 'Smart Bridge Pages',
+  description: 'Increase conversions with pre-lander overlays. Warm up your audience before the offer.'
+}];
 
 // Pricing data with Stripe-ready structure
 // Base monthly prices - yearly = monthly * 12 * 0.75 (25% discount = 3 months free)
 const YEARLY_DISCOUNT = 0.75;
-
 type PricingPlan = {
   name: string;
   description: string;
   monthlyPrice: number; // Base monthly price
-  priceIds: { monthly: string | null; yearly: string | null };
+  priceIds: {
+    monthly: string | null;
+    yearly: string | null;
+  };
   features: string[];
   highlighted: boolean;
   badge?: string;
 };
-
 const pricingPlans: Record<string, PricingPlan> = {
   free: {
     name: 'Free',
     description: 'For hobbyists exploring the platform.',
     monthlyPrice: 0,
-    priceIds: { monthly: null, yearly: null },
-    features: [
-      '25 active links',
-      'Click tracking',
-      'Basic dashboard',
-      'Community support',
-    ],
-    highlighted: false,
+    priceIds: {
+      monthly: null,
+      yearly: null
+    },
+    features: ['25 active links', 'Click tracking', 'Basic dashboard', 'Community support'],
+    highlighted: false
   },
   pro: {
     name: 'Pro',
     description: 'For serious marketers scaling up.',
     monthlyPrice: 10,
-    priceIds: { monthly: 'price_pro_monthly_placeholder', yearly: 'price_pro_yearly_placeholder' },
-    features: [
-      '100 active links',
-      'Leads & Sales tracking',
-      'Full analytics',
-      'Bridge pages',
-      'Priority support',
-    ],
-    highlighted: false,
+    priceIds: {
+      monthly: 'price_pro_monthly_placeholder',
+      yearly: 'price_pro_yearly_placeholder'
+    },
+    features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Bridge pages', 'Priority support'],
+    highlighted: false
   },
   business: {
     name: 'Business',
     description: 'For teams and agencies at scale.',
     monthlyPrice: 15,
-    priceIds: { monthly: 'price_business_monthly_placeholder', yearly: 'price_business_yearly_placeholder' },
+    priceIds: {
+      monthly: 'price_business_monthly_placeholder',
+      yearly: 'price_business_yearly_placeholder'
+    },
     badge: 'Most Popular',
-    features: [
-      '175 active links',
-      'All Pro features',
-      'Team collaboration',
-      'API access',
-      'Dedicated support',
-    ],
-    highlighted: true,
-  },
+    features: ['175 active links', 'All Pro features', 'Team collaboration', 'API access', 'Dedicated support'],
+    highlighted: true
+  }
 };
 
 // Helper to calculate prices
@@ -178,40 +146,37 @@ function formatPrice(value: number): string {
   if (value === 0) return '0';
   return value % 1 === 0 ? value.toString() : value.toFixed(2);
 }
-
-const faqs = [
-  {
-    question: 'How accurate is the tracking?',
-    answer: 'Our tracking engine operates with millisecond precision. Every click is logged in real-time with accurate timestamps and metadata. We use edge servers globally to ensure minimal latency.',
-  },
-  {
-    question: 'Is my data private and secure?',
-    answer: 'Absolutely. All data is encrypted at rest and in transit. We never share your tracking data with third parties. Your links, clicks, and conversions remain strictly confidential.',
-  },
-  {
-    question: 'How do I set up conversion tracking?',
-    answer: 'Simply add your Postback URL in the link settings. When a conversion occurs, fire a request to your unique postback endpoint and we\'ll attribute it to the correct link automatically.',
-  },
-  {
-    question: 'Can I migrate from another tracker?',
-    answer: 'Yes! We support CSV imports for your existing links. Your historical data can be imported, and we\'ll help you set up redirects from your old tracking domains.',
-  },
-  {
-    question: 'What are Bridge Pages?',
-    answer: 'Bridge pages are intermediate landing pages that appear before redirecting to your offer. They help warm up cold traffic, improve ad compliance, and increase conversion rates.',
-  },
-];
+const faqs = [{
+  question: 'How accurate is the tracking?',
+  answer: 'Our tracking engine operates with millisecond precision. Every click is logged in real-time with accurate timestamps and metadata. We use edge servers globally to ensure minimal latency.'
+}, {
+  question: 'Is my data private and secure?',
+  answer: 'Absolutely. All data is encrypted at rest and in transit. We never share your tracking data with third parties. Your links, clicks, and conversions remain strictly confidential.'
+}, {
+  question: 'How do I set up conversion tracking?',
+  answer: 'Simply add your Postback URL in the link settings. When a conversion occurs, fire a request to your unique postback endpoint and we\'ll attribute it to the correct link automatically.'
+}, {
+  question: 'Can I migrate from another tracker?',
+  answer: 'Yes! We support CSV imports for your existing links. Your historical data can be imported, and we\'ll help you set up redirects from your old tracking domains.'
+}, {
+  question: 'What are Bridge Pages?',
+  answer: 'Bridge pages are intermediate landing pages that appear before redirecting to your offer. They help warm up cold traffic, improve ad compliance, and increase conversion rates.'
+}];
 
 // Animated price component with count-up effect
-function AnimatedPrice({ value, cycle }: { value: number; cycle: 'monthly' | 'yearly' }) {
+function AnimatedPrice({
+  value,
+  cycle
+}: {
+  value: number;
+  cycle: 'monthly' | 'yearly';
+}) {
   const [displayValue, setDisplayValue] = useState(value);
-  
   useEffect(() => {
     const duration = 400;
     const startTime = Date.now();
     const startValue = displayValue;
     const endValue = value;
-    
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
@@ -219,49 +184,39 @@ function AnimatedPrice({ value, cycle }: { value: number; cycle: 'monthly' | 'ye
       const easeOut = 1 - Math.pow(1 - progress, 3);
       const current = startValue + (endValue - startValue) * easeOut;
       setDisplayValue(current);
-      
       if (progress < 1) {
         requestAnimationFrame(animate);
       }
     };
-    
     requestAnimationFrame(animate);
   }, [value]);
-  
-  return (
-    <span className="tabular-nums">
+  return <span className="tabular-nums">
       ${formatPrice(displayValue)}
-    </span>
-  );
+    </span>;
 }
 
 // Stripe-ready handler function
 function handleSubscription(planId: string, cycle: 'monthly' | 'yearly') {
   const plan = pricingPlans[planId as keyof typeof pricingPlans];
   if (!plan) return;
-  
   const priceId = cycle === 'monthly' ? plan.priceIds.monthly : plan.priceIds.yearly;
   const displayPrice = getDisplayPrice(plan, cycle);
   const totalYearly = cycle === 'yearly' ? parseFloat((plan.monthlyPrice * 12 * YEARLY_DISCOUNT).toFixed(2)) : null;
-  
   console.log('[Stripe Ready] Selected Plan:', {
     planName: plan.name,
     billingCycle: cycle,
     priceId,
     displayedMonthlyPrice: displayPrice,
-    totalYearlyAmount: totalYearly,
+    totalYearlyAmount: totalYearly
   });
-  
+
   // TODO: Integrate with Stripe checkout
   // await stripe.redirectToCheckout({ priceId });
 }
-
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="container mx-auto px-4">
@@ -289,17 +244,13 @@ export default function Landing() {
             </nav>
 
             {/* Mobile menu button */}
-            <button 
-              className="md:hidden p-2 text-muted-foreground"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
+            <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </button>
           </div>
 
           {/* Mobile Nav */}
-          {mobileMenuOpen && (
-            <nav className="md:hidden py-4 border-t border-border/50 space-y-4">
+          {mobileMenuOpen && <nav className="md:hidden py-4 border-t border-border/50 space-y-4">
               <a href="#features" className="block text-sm text-muted-foreground hover:text-foreground">
                 Features
               </a>
@@ -312,8 +263,7 @@ export default function Landing() {
               <Link to="/auth?mode=signup">
                 <Button variant="glow" size="sm" className="w-full">Get Started</Button>
               </Link>
-            </nav>
-          )}
+            </nav>}
         </div>
       </header>
 
@@ -359,18 +309,13 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature) => (
-              <div 
-                key={feature.title}
-                className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors"
-              >
+            {features.map(feature => <div key={feature.title} className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-colors">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -389,25 +334,14 @@ export default function Landing() {
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
             {Object.entries(pricingPlans).map(([planId, plan]) => {
-              const isFree = planId === 'free';
-              const displayPrice = getDisplayPrice(plan, billingCycle);
-              
-              return (
-                <div 
-                  key={planId}
-                  className={`relative bg-card border rounded-xl p-6 flex flex-col ${
-                    plan.highlighted 
-                      ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' 
-                      : 'border-border'
-                  }`}
-                >
-                  {plan.badge && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+            const isFree = planId === 'free';
+            const displayPrice = getDisplayPrice(plan, billingCycle);
+            return <div key={planId} className={`relative bg-card border rounded-xl p-6 flex flex-col ${plan.highlighted ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' : 'border-border'}`}>
+                  {plan.badge && <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
                         {plan.badge}
                       </span>
-                    </div>
-                  )}
+                    </div>}
                   
                   {/* Header Container - Fixed height for alignment */}
                   <div className="min-h-[180px] flex flex-col">
@@ -423,62 +357,40 @@ export default function Landing() {
                         {isFree ? '' : 'per month'}
                       </span>
                     </div>
-                    {isFree && (
-                      <p className="text-xs text-muted-foreground text-center mt-1">
+                    {isFree && <p className="text-xs text-muted-foreground text-center mt-1">
                         Free forever
-                      </p>
-                    )}
+                      </p>}
                     
                     {/* Toggle for Paid Plans */}
-                    {!isFree ? (
-                      <div className="flex items-center justify-center gap-2 mt-4 h-8">
-                        <Switch
-                          checked={billingCycle === 'yearly'}
-                          onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-                          className="data-[state=checked]:bg-primary"
-                        />
+                    {!isFree ? <div className="flex items-center justify-center gap-2 mt-4 h-8">
+                        <Switch checked={billingCycle === 'yearly'} onCheckedChange={checked => setBillingCycle(checked ? 'yearly' : 'monthly')} className="data-[state=checked]:bg-primary" />
                         <span className="text-sm text-muted-foreground">Billed yearly</span>
                         <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
                           3 months free
                         </span>
-                      </div>
-                    ) : (
-                      <div className="h-8 mt-4" /> 
-                    )}
+                      </div> : <div className="h-8 mt-4" />}
                   </div>
                   
                   {/* CTA Button */}
                   <div className="mt-6">
-                    {isFree ? (
-                      <Link to="/auth?mode=signup">
-                        <Button 
-                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
-                        >
+                    {isFree ? <Link to="/auth?mode=signup">
+                        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300">
                           Start free trial
                         </Button>
-                      </Link>
-                    ) : (
-                      <Button 
-                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
-                        onClick={() => handleSubscription(planId, billingCycle)}
-                      >
+                      </Link> : <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300" onClick={() => handleSubscription(planId, billingCycle)}>
                         Get started
-                      </Button>
-                    )}
+                      </Button>}
                   </div>
                   
                   {/* Features List */}
                   <ul className="space-y-3 mt-6 flex-1">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {plan.features.map(feature => <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Check className="h-4 w-4 text-primary flex-shrink-0" />
                         {feature}
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
         </div>
       </section>
@@ -493,16 +405,14 @@ export default function Landing() {
           </div>
           
           <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border-border">
+            {faqs.map((faq, index) => <AccordionItem key={index} value={`item-${index}`} className="border-border">
                 <AccordionTrigger className="text-left text-foreground hover:text-primary">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">
                   {faq.answer}
                 </AccordionContent>
-              </AccordionItem>
-            ))}
+              </AccordionItem>)}
           </Accordion>
         </div>
       </section>
@@ -525,6 +435,5 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 }
