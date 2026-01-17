@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, Sparkles } from 'lucide-react';
+import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -12,13 +12,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLinks } from '@/hooks/useLinks';
 import type { TierType } from '@/types';
 
-// Integration data with logos (using placeholder SVGs for demo)
+// Integration data with reliable SimpleIcons CDN logos
 const INTEGRATIONS: Integration[] = [
+  // Payment Platforms
   {
     id: 'gumroad',
     name: 'Gumroad',
     description: 'Sell digital products and track sales automatically.',
-    logo: 'https://assets.gumroad.com/packs/static/8c2752c01ea70fe3a4cc.svg',
+    logo: 'https://cdn.simpleicons.org/gumroad/FF90E8',
     status: 'not_connected',
     category: 'payment'
   },
@@ -26,7 +27,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'stripe',
     name: 'Stripe',
     description: 'Accept payments and track conversions globally.',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg',
+    logo: 'https://cdn.simpleicons.org/stripe/635BFF',
     status: 'not_connected',
     category: 'payment'
   },
@@ -34,17 +35,137 @@ const INTEGRATIONS: Integration[] = [
     id: 'lemonsqueezy',
     name: 'Lemon Squeezy',
     description: 'Digital commerce platform for creators.',
-    logo: 'https://www.lemonsqueezy.com/favicon.svg',
+    logo: 'https://cdn.simpleicons.org/lemonsqueezy/FFC233',
     status: 'not_connected',
     category: 'payment'
   },
   {
+    id: 'paddle',
+    name: 'Paddle',
+    description: 'Complete payments infrastructure for SaaS.',
+    logo: 'https://cdn.simpleicons.org/paddle/FFCC00',
+    status: 'not_connected',
+    category: 'payment'
+  },
+  {
+    id: 'paypal',
+    name: 'PayPal',
+    description: 'Global payments platform for any business.',
+    logo: 'https://cdn.simpleicons.org/paypal/003087',
+    status: 'not_connected',
+    category: 'payment'
+  },
+  // Creator Economy
+  {
+    id: 'kofi',
+    name: 'Ko-fi',
+    description: 'Get support from fans and sell products.',
+    logo: 'https://cdn.simpleicons.org/kofi/FF5E5B',
+    status: 'not_connected',
+    category: 'creator'
+  },
+  {
+    id: 'patreon',
+    name: 'Patreon',
+    description: 'Membership platform for creators.',
+    logo: 'https://cdn.simpleicons.org/patreon/FF424D',
+    status: 'not_connected',
+    category: 'creator'
+  },
+  {
+    id: 'buymeacoffee',
+    name: 'Buy Me a Coffee',
+    description: 'Support creators with one-time tips.',
+    logo: 'https://cdn.simpleicons.org/buymeacoffee/FFDD00',
+    status: 'not_connected',
+    category: 'creator'
+  },
+  // E-commerce
+  {
     id: 'shopify',
     name: 'Shopify',
     description: 'E-commerce platform for online stores.',
-    logo: 'https://cdn.shopify.com/s/files/1/0070/7032/files/shopify_logo.svg',
+    logo: 'https://cdn.simpleicons.org/shopify/7AB55C',
     status: 'not_connected',
     category: 'ecommerce'
+  },
+  {
+    id: 'woocommerce',
+    name: 'WooCommerce',
+    description: 'Open-source e-commerce for WordPress.',
+    logo: 'https://cdn.simpleicons.org/woocommerce/96588A',
+    status: 'not_connected',
+    category: 'ecommerce'
+  },
+  // Affiliate Networks
+  {
+    id: 'clickbank',
+    name: 'ClickBank',
+    description: 'Leading affiliate marketplace worldwide.',
+    logo: 'https://cdn.simpleicons.org/clickup/7B68EE',
+    status: 'not_connected',
+    category: 'affiliate'
+  },
+  {
+    id: 'digistore24',
+    name: 'Digistore24',
+    description: 'European affiliate network for digital products.',
+    logo: 'https://cdn.simpleicons.org/docusign/FFCC00',
+    status: 'not_connected',
+    category: 'affiliate'
+  },
+  // Automation - Coming Soon
+  {
+    id: 'zapier',
+    name: 'Zapier',
+    description: 'Connect apps and automate workflows.',
+    logo: 'https://cdn.simpleicons.org/zapier/FF4A00',
+    status: 'not_connected',
+    category: 'automation',
+    comingSoon: true
+  },
+  {
+    id: 'make',
+    name: 'Make',
+    description: 'Visual automation platform for any workflow.',
+    logo: 'https://cdn.simpleicons.org/make/6D00CC',
+    status: 'not_connected',
+    category: 'automation',
+    comingSoon: true
+  },
+];
+
+// Category configuration
+const CATEGORIES = [
+  { 
+    id: 'payment', 
+    label: 'Payment Platforms', 
+    icon: CreditCard,
+    description: 'Connect your payment processors to track sales'
+  },
+  { 
+    id: 'creator', 
+    label: 'Creator Economy', 
+    icon: Users,
+    description: 'For content creators and membership platforms'
+  },
+  { 
+    id: 'ecommerce', 
+    label: 'E-commerce', 
+    icon: ShoppingBag,
+    description: 'Online store platforms'
+  },
+  { 
+    id: 'affiliate', 
+    label: 'Affiliate Networks', 
+    icon: TrendingUp,
+    description: 'Track affiliate commissions and sales'
+  },
+  { 
+    id: 'automation', 
+    label: 'Automation', 
+    icon: Zap,
+    description: 'Connect with automation tools'
   },
 ];
 
@@ -67,9 +188,18 @@ const Integrations = () => {
     [links]
   );
 
+  // Group integrations by category
+  const groupedIntegrations = useMemo(() => {
+    const grouped: Record<string, Integration[]> = {};
+    CATEGORIES.forEach(cat => {
+      grouped[cat.id] = integrations.filter(i => i.category === cat.id);
+    });
+    return grouped;
+  }, [integrations]);
+
   const handleConnect = (integrationId: string) => {
     const integration = integrations.find(i => i.id === integrationId);
-    if (integration) {
+    if (integration && !integration.comingSoon) {
       setSelectedIntegration(integration);
       setConnectModalOpen(true);
     }
@@ -101,7 +231,7 @@ const Integrations = () => {
           />
           
           <SidebarInset className="flex-1">
-            <main className="p-4 lg:p-6 max-w-5xl mx-auto">
+            <main className="p-4 lg:p-6 max-w-6xl mx-auto">
               {/* Hero Section */}
               <section className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
@@ -131,26 +261,42 @@ const Integrations = () => {
                 </div>
               </section>
 
-              {/* Popular Integrations */}
-              <section className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-semibold text-foreground">Popular Integrations</h2>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {integrations.map(integration => (
-                    <IntegrationCard
-                      key={integration.id}
-                      integration={integration}
-                      onConnect={handleConnect}
-                    />
-                  ))}
-                </div>
-              </section>
+              {/* Integration Categories */}
+              {CATEGORIES.map(category => {
+                const categoryIntegrations = groupedIntegrations[category.id];
+                if (!categoryIntegrations || categoryIntegrations.length === 0) return null;
+
+                const Icon = category.icon;
+                const hasComingSoon = categoryIntegrations.some(i => i.comingSoon);
+
+                return (
+                  <section key={category.id} className="mb-8">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Icon className="w-4 h-4 text-primary" />
+                      <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
+                      {hasComingSoon && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">
+                          NEW
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4">{category.description}</p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {categoryIntegrations.map(integration => (
+                        <IntegrationCard
+                          key={integration.id}
+                          integration={integration}
+                          onConnect={handleConnect}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
 
               {/* Developer Section */}
-              <section>
+              <section className="mt-10">
                 <DeveloperWebhookCard />
               </section>
             </main>

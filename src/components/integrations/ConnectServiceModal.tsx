@@ -72,6 +72,61 @@ const serviceInstructions: Record<string, {
     settingsPath: 'Settings → Webhooks',
     docsUrl: 'https://docs.lemonsqueezy.com/api/webhooks'
   },
+  paddle: {
+    title: 'Connect Paddle',
+    steps: [
+      'Go to your Paddle Dashboard',
+      'Navigate to Developer Tools → Notifications',
+      'Add a new webhook destination',
+      'Select "transaction.completed" event'
+    ],
+    settingsPath: 'Developer Tools → Notifications',
+    docsUrl: 'https://developer.paddle.com/webhooks/overview'
+  },
+  paypal: {
+    title: 'Connect PayPal',
+    steps: [
+      'Go to PayPal Developer Dashboard',
+      'Navigate to My Apps & Credentials',
+      'Select your app and go to Webhooks',
+      'Add webhook URL for "Payment sale completed"'
+    ],
+    settingsPath: 'My Apps → Webhooks',
+    docsUrl: 'https://developer.paypal.com/api/rest/webhooks/'
+  },
+  kofi: {
+    title: 'Connect Ko-fi',
+    steps: [
+      'Go to your Ko-fi Settings',
+      'Navigate to API tab',
+      'Scroll to Webhooks section',
+      'Paste the webhook URL and save'
+    ],
+    settingsPath: 'Settings → API → Webhooks',
+    docsUrl: 'https://ko-fi.com/manage/webhooks'
+  },
+  patreon: {
+    title: 'Connect Patreon',
+    steps: [
+      'Go to Patreon Platform Dashboard',
+      'Navigate to your app settings',
+      'Add webhook URL in the Webhooks section',
+      'Select "pledge:create" trigger'
+    ],
+    settingsPath: 'Platform → App Settings → Webhooks',
+    docsUrl: 'https://docs.patreon.com/#webhooks'
+  },
+  buymeacoffee: {
+    title: 'Connect Buy Me a Coffee',
+    steps: [
+      'Go to your Buy Me a Coffee Dashboard',
+      'Navigate to Settings → Integrations',
+      'Find the Webhooks section',
+      'Add the webhook URL below'
+    ],
+    settingsPath: 'Settings → Integrations',
+    docsUrl: 'https://www.buymeacoffee.com/developers'
+  },
   shopify: {
     title: 'Connect Shopify',
     steps: [
@@ -82,7 +137,40 @@ const serviceInstructions: Record<string, {
     ],
     settingsPath: 'Settings → Notifications → Webhooks',
     docsUrl: 'https://help.shopify.com/en/manual/orders/notifications/webhooks'
-  }
+  },
+  woocommerce: {
+    title: 'Connect WooCommerce',
+    steps: [
+      'Go to your WordPress Admin',
+      'Navigate to WooCommerce → Settings → Advanced → Webhooks',
+      'Add new webhook with URL below',
+      'Select "Order created" topic'
+    ],
+    settingsPath: 'WooCommerce → Settings → Webhooks',
+    docsUrl: 'https://woocommerce.com/document/webhooks/'
+  },
+  clickbank: {
+    title: 'Connect ClickBank',
+    steps: [
+      'Go to your ClickBank account',
+      'Navigate to Settings → My Site',
+      'Find the Instant Notification URL section',
+      'Paste the webhook URL and save'
+    ],
+    settingsPath: 'Settings → My Site → IPN',
+    docsUrl: 'https://support.clickbank.com/hc/en-us/articles/220364507'
+  },
+  digistore24: {
+    title: 'Connect Digistore24',
+    steps: [
+      'Go to your Digistore24 account',
+      'Navigate to Account → API/IPN',
+      'Add new IPN URL',
+      'Paste the webhook URL below'
+    ],
+    settingsPath: 'Account → API/IPN',
+    docsUrl: 'https://docs.digistore24.com/knowledge-base/ipn/'
+  },
 };
 
 export function ConnectServiceModal({
