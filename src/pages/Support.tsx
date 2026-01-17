@@ -18,67 +18,50 @@ import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { cn } from '@/lib/utils';
-
 export default function Support() {
-  const { ticketId } = useParams();
+  const {
+    ticketId
+  } = useParams();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { profile } = useProfile();
-  const { tickets, isLoadingTickets } = useSupportTickets();
-  const { isAdmin } = useUserRole();
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    profile
+  } = useProfile();
+  const {
+    tickets,
+    isLoadingTickets
+  } = useSupportTickets();
+  const {
+    isAdmin
+  } = useUserRole();
   const openTicketsCount = useOpenTicketsCount();
-  
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [createTicketOpen, setCreateTicketOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-
-  const filteredTickets = statusFilter === 'all' 
-    ? tickets 
-    : tickets.filter(t => t.status === statusFilter);
-
+  const filteredTickets = statusFilter === 'all' ? tickets : tickets.filter(t => t.status === statusFilter);
   const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
   const resolvedTickets = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
-
   if (ticketId) {
-    return (
-      <SidebarProvider defaultOpen>
+    return <SidebarProvider defaultOpen>
         <div className="flex min-h-screen w-full bg-background">
-          <AppSidebar
-            userEmail={user?.email}
-            userTier="free"
-            onOpenSettings={() => setSettingsOpen(true)}
-            onOpenDataIntegration={() => setDataIntegrationOpen(true)}
-            onSignOut={signOut}
-            openTicketsCount={openTicketsCount}
-          />
+          <AppSidebar userEmail={user?.email} userTier="free" onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} openTicketsCount={openTicketsCount} />
           <SidebarInset className="flex-1">
           <main className="flex-1 p-6">
-            <TicketDetail 
-              ticketId={ticketId} 
-              isAdmin={isAdmin}
-              onBack={() => navigate('/support')} 
-            />
+            <TicketDetail ticketId={ticketId} isAdmin={isAdmin} onBack={() => navigate('/support')} />
           </main>
         </SidebarInset>
       </div>
       <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier="free" onChangeTier={() => {}} />
       <DataIntegrationModal open={dataIntegrationOpen} onOpenChange={setDataIntegrationOpen} />
-      </SidebarProvider>
-    );
+      </SidebarProvider>;
   }
-
-  return (
-    <SidebarProvider defaultOpen>
+  return <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar
-          userEmail={user?.email}
-          userTier="free"
-          onOpenSettings={() => setSettingsOpen(true)}
-          onOpenDataIntegration={() => setDataIntegrationOpen(true)}
-          onSignOut={signOut}
-          openTicketsCount={openTicketsCount}
-        />
+        <AppSidebar userEmail={user?.email} userTier="free" onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} openTicketsCount={openTicketsCount} />
         <SidebarInset className="flex-1">
           <main className="flex-1 p-6">
             {/* Header */}
@@ -89,7 +72,7 @@ export default function Support() {
                   Support
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  Máte otázky nebo problémy? Jsme tu pro vás.
+                  ​Do you have questions or problems? We are here for you.
                 </p>
               </div>
               <Button onClick={() => setCreateTicketOpen(true)}>
@@ -151,34 +134,20 @@ export default function Support() {
                 </div>
               </CardHeader>
               <CardContent>
-                {isLoadingTickets ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                {isLoadingTickets ? <div className="text-center py-8 text-muted-foreground">
                     Načítám tickety...
-                  </div>
-                ) : filteredTickets.length === 0 ? (
-                  <div className="text-center py-12">
+                  </div> : filteredTickets.length === 0 ? <div className="text-center py-12">
                     <HelpCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">
-                      {statusFilter === 'all' 
-                        ? 'Zatím nemáte žádné tickety'
-                        : 'Žádné tickety v této kategorii'}
+                      {statusFilter === 'all' ? 'Zatím nemáte žádné tickety' : 'Žádné tickety v této kategorii'}
                     </p>
                     <Button variant="outline" onClick={() => setCreateTicketOpen(true)}>
                       <Plus className="w-4 h-4 mr-2" />
                       Vytvořit první ticket
                     </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredTickets.map((ticket) => (
-                      <TicketCard
-                        key={ticket.id}
-                        ticket={ticket}
-                        onClick={() => navigate(`/support/${ticket.id}`)}
-                      />
-                    ))}
-                  </div>
-                )}
+                  </div> : <div className="space-y-3">
+                    {filteredTickets.map(ticket => <TicketCard key={ticket.id} ticket={ticket} onClick={() => navigate(`/support/${ticket.id}`)} />)}
+                  </div>}
               </CardContent>
             </Card>
           </main>
@@ -188,6 +157,5 @@ export default function Support() {
       <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier="free" onChangeTier={() => {}} />
       <DataIntegrationModal open={dataIntegrationOpen} onOpenChange={setDataIntegrationOpen} />
       <CreateTicketModal open={createTicketOpen} onOpenChange={setCreateTicketOpen} />
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 }
