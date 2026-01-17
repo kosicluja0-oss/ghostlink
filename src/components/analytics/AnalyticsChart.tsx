@@ -582,8 +582,8 @@ export function AnalyticsChart({
     if (!chartContainerRef.current) return;
     
     const rect = chartContainerRef.current.getBoundingClientRect();
-    const chartLeftMargin = 50;
-    const chartRightMargin = 20;
+    const chartLeftMargin = 60;
+    const chartRightMargin = 30;
     const usableWidth = rect.width - chartLeftMargin - chartRightMargin;
     
     // Calculate relative X position within the chart area
@@ -798,8 +798,8 @@ export function AnalyticsChart({
                 dataLength={displayData.length}
                 dateIndex={dateIndex}
                 exactPosition={exactPosition}
-                chartLeftMargin={50}
-                chartRightMargin={20}
+                chartLeftMargin={60}
+                chartRightMargin={30}
                 onDelete={deleteMilestone}
                 onUpdateYOffset={updateMilestoneYOffset}
                 onUpdateColor={updateMilestoneColor}

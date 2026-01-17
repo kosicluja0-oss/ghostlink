@@ -69,17 +69,12 @@ export function MilestoneFilterPopover({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen]);
 
-  const handleTriggerClick = () => {
-    setIsOpen(prev => !prev);
-  };
-
   return (
-    <Popover open={isOpen} modal={false}>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <button
           ref={triggerRef}
           type="button"
-          onClick={handleTriggerClick}
           className={cn(
             "relative flex items-center justify-center p-1 rounded transition-colors",
             isFilterActive
@@ -101,10 +96,6 @@ export function MilestoneFilterPopover({
         align="center"
         sideOffset={8}
         className="w-[220px] p-0 bg-card/95 backdrop-blur-md border-border/80"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onFocusOutside={(e) => e.preventDefault()}
-        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <div 
           className="p-3 space-y-4"
