@@ -15,6 +15,7 @@ import { TicketDetail } from '@/components/support/TicketDetail';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
+import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 
 export default function Support() {
@@ -23,6 +24,7 @@ export default function Support() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { tickets, isLoadingTickets } = useSupportTickets();
+  const { isAdmin } = useUserRole();
   
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
@@ -51,6 +53,7 @@ export default function Support() {
           <main className="flex-1 p-6">
             <TicketDetail 
               ticketId={ticketId} 
+              isAdmin={isAdmin}
               onBack={() => navigate('/support')} 
             />
           </main>
