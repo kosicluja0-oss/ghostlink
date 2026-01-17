@@ -9,16 +9,6 @@ import {
   AreaChart,
 } from 'recharts';
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
-import { ChartAnnotation, type Annotation, type MilestoneColor, type MilestoneSize } from './ChartAnnotation';
-import { AddMilestoneDialog } from './AddMilestoneDialog';
-import { MilestoneFilterPopover } from './MilestoneFilterPopover';
-import { useMilestones } from '@/hooks/useMilestones';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu';
 import type { AnalyticsData } from '@/types';
 import { 
   format, 
@@ -36,13 +26,8 @@ import {
   startOfDay,
   startOfWeek,
   startOfMonth,
-  isSameDay,
-  isSameHour,
 } from 'date-fns';
-import { Ghost, Flag, Plus } from 'lucide-react';
-
-const ALL_MILESTONE_COLORS: MilestoneColor[] = ['teal', 'yellow', 'red', 'green', 'purple', 'pink', 'orange', 'white'];
-const ALL_MILESTONE_SIZES: MilestoneSize[] = ['small', 'medium', 'large'];
+import { Ghost } from 'lucide-react';
 
 // Generate all time points in a range for continuous timeline
 function generateTimePoints(range: TimeRange): Date[] {
@@ -340,87 +325,9 @@ export function AnalyticsChart({
     leads: true,
     sales: true,
   });
-  const [milestonesVisible, setMilestonesVisible] = useState(true);
-  
-  // Milestone filter state (color and size)
-  const [colorFilters, setColorFilters] = useState<Set<MilestoneColor>>(new Set(ALL_MILESTONE_COLORS));
-  const [sizeFilters, setSizeFilters] = useState<Set<MilestoneSize>>(new Set(ALL_MILESTONE_SIZES));
-  
-  // Milestones hook for CRUD operations with localStorage persistence
-  const { milestones, addMilestone, deleteMilestone, updateMilestoneYOffset, updateMilestoneColor, updateMilestoneSize } = useMilestones();
-  
-  // Add milestone dialog state
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedDateForMilestone, setSelectedDateForMilestone] = useState<string | null>(null);
-  
-  // Check if any filter is active (not all selected)
-  const isMilestoneFilterActive = useMemo(() => {
-    const allColorsSelected = ALL_MILESTONE_COLORS.every(c => colorFilters.has(c));
-    const allSizesSelected = ALL_MILESTONE_SIZES.every(s => sizeFilters.has(s));
-    return !allColorsSelected || !allSizesSelected;
-  }, [colorFilters, sizeFilters]);
-  
-  // Filter handlers
-  const handleToggleColorFilter = useCallback((color: MilestoneColor) => {
-    setColorFilters(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(color)) {
-        newSet.delete(color);
-      } else {
-        newSet.add(color);
-      }
-      return newSet;
-    });
-  }, []);
-  
-  const handleSelectAllColors = useCallback(() => {
-    setColorFilters(new Set(ALL_MILESTONE_COLORS));
-  }, []);
-  
-  const handleClearAllColors = useCallback(() => {
-    setColorFilters(new Set());
-  }, []);
-
-  const handleToggleSizeFilter = useCallback((size: MilestoneSize) => {
-    setSizeFilters(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(size)) {
-        newSet.delete(size);
-      } else {
-        newSet.add(size);
-      }
-      return newSet;
-    });
-  }, []);
-
-  const handleSelectAllSizes = useCallback(() => {
-    setSizeFilters(new Set(ALL_MILESTONE_SIZES));
-  }, []);
-
-  const handleClearAllSizes = useCallback(() => {
-    setSizeFilters(new Set());
-  }, []);
-  
-  // Track right-click position to determine date
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
   
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 240 });
-  
-  // Measure chart container
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (chartContainerRef.current) {
-        const { width } = chartContainerRef.current.getBoundingClientRect();
-        setChartDimensions({ width, height: 240 });
-      }
-    };
-    
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
   
   // Fixed range slider state - always has a selection
   const [rangeStart, setRangeStart] = useState(0);
@@ -444,8 +351,6 @@ export function AnalyticsChart({
   }, [data, onTimeRangeChange]);
 
   // Continuous timeline data with gap-filling
-  // Generates all time points in range and merges actual data
-  // CRITICAL: Each data point includes its Unix timestamp for precise note alignment
   const chartData = useMemo(() => {
     const startDate = getDateRangeStart(timeRange);
     
@@ -480,14 +385,13 @@ export function AnalyticsChart({
     const timePoints = generateTimePoints(timeRange);
     
     // Merge time points with actual data (fill gaps with zeros)
-    // Include Unix timestamp for precise note positioning
     return timePoints.map(date => {
       const key = getTimeKey(date, timeRange);
       const existingData = dataMap.get(key);
       
       return {
         date: date.toISOString(),
-        timestamp: date.getTime(), // Unix timestamp in milliseconds for precise alignment
+        timestamp: date.getTime(),
         clicks: existingData?.clicks ?? 0,
         leads: existingData?.leads ?? 0,
         sales: existingData?.sales ?? 0,
@@ -517,93 +421,6 @@ export function AnalyticsChart({
     const step = Math.max(1, Math.floor(chartData.length / 100));
     return chartData.filter((_, i) => i % step === 0);
   }, [chartData]);
-
-  // Calculate annotation positions within displayData
-  // Uses precise Unix timestamp matching for zero-offset alignment
-  const visibleAnnotations = useMemo(() => {
-    if (!milestonesVisible) return [];
-    if (displayData.length === 0) return [];
-    
-    // Get the time range boundaries from displayData
-    const firstTimestamp = displayData[0].timestamp;
-    const lastTimestamp = displayData[displayData.length - 1].timestamp;
-    const timeSpan = lastTimestamp - firstTimestamp;
-    
-    return milestones
-      .filter(annotation => {
-        // Color filter
-        const color = annotation.color || 'teal';
-        if (!colorFilters.has(color)) return false;
-        
-        // Size filter
-        const size = annotation.size || 'medium';
-        if (!sizeFilters.has(size)) return false;
-        
-        return true;
-      })
-      .map(annotation => {
-        const annotationTimestamp = new Date(annotation.date).getTime();
-        
-        // Check if note falls within the visible time range
-        // Allow small buffer for edge cases (half a data point interval)
-        const intervalSize = timeSpan / Math.max(1, displayData.length - 1);
-        const buffer = intervalSize / 2;
-        
-        if (annotationTimestamp < firstTimestamp - buffer || annotationTimestamp > lastTimestamp + buffer) {
-          return { annotation, dateIndex: -1, exactPosition: 0 };
-        }
-        
-        // Find closest data point index for snapping
-        let closestIndex = 0;
-        let closestDiff = Infinity;
-        
-        displayData.forEach((dataPoint, index) => {
-          const diff = Math.abs(annotationTimestamp - dataPoint.timestamp);
-          if (diff < closestDiff) {
-            closestDiff = diff;
-            closestIndex = index;
-          }
-        });
-        
-        // Use index-based positioning instead of timestamp interpolation
-        // This ensures notes align exactly with their data points on the categorical X-axis
-        const exactPosition = closestIndex / Math.max(1, displayData.length - 1);
-        
-        return {
-          annotation,
-          dateIndex: closestIndex,
-          exactPosition: Math.max(0, Math.min(1, exactPosition)), // Clamp to 0-1
-        };
-      }).filter(a => a.dateIndex >= 0);
-  }, [milestones, displayData, milestonesVisible, colorFilters, sizeFilters]);
-  
-  // Handle right-click on chart to add milestone
-  const handleChartContextMenu = useCallback((e: React.MouseEvent) => {
-    if (!chartContainerRef.current) return;
-    
-    const rect = chartContainerRef.current.getBoundingClientRect();
-    const chartLeftMargin = 60;
-    const chartRightMargin = 30;
-    const usableWidth = rect.width - chartLeftMargin - chartRightMargin;
-    
-    // Calculate relative X position within the chart area
-    const relativeX = e.clientX - rect.left - chartLeftMargin;
-    
-    // Calculate which data point this corresponds to
-    if (relativeX >= 0 && relativeX <= usableWidth) {
-      const dataIndex = Math.round((relativeX / usableWidth) * (displayData.length - 1));
-      const clampedIndex = Math.max(0, Math.min(dataIndex, displayData.length - 1));
-      
-      if (displayData[clampedIndex]) {
-        setSelectedDateForMilestone(displayData[clampedIndex].date);
-        setContextMenuPosition({ x: e.clientX, y: e.clientY });
-      }
-    }
-  }, [displayData]);
-
-  const handleAddMilestoneClick = useCallback(() => {
-    setAddDialogOpen(true);
-  }, []);
 
   const toggleMetric = useCallback((metric: MetricKey) => {
     setVisibleMetrics(prev => ({
@@ -697,42 +514,6 @@ export function AnalyticsChart({
             <span className="text-muted-foreground">{label}</span>
           </button>
         ))}
-        
-        {/* Notes Toggle with Filter */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setMilestonesVisible(!milestonesVisible)}
-            className={`flex items-center gap-2 text-sm transition-opacity cursor-pointer hover:opacity-80 ${
-              !milestonesVisible ? 'opacity-40' : ''
-            }`}
-          >
-            <div className={`w-3 h-3 rounded-full border-2 border-primary flex items-center justify-center transition-all ${
-              milestonesVisible ? 'bg-primary/20' : 'bg-transparent opacity-30'
-            }`}>
-              <Flag className="w-1.5 h-1.5 text-primary" />
-            </div>
-            <span className="text-muted-foreground">Notes</span>
-            {milestones.length > 0 && (
-              <span className="text-[10px] text-muted-foreground/60">({visibleAnnotations.length}/{milestones.length})</span>
-            )}
-          </button>
-          
-          {/* Filter Popover */}
-          {milestones.length > 0 && milestonesVisible && (
-            <MilestoneFilterPopover
-              milestones={milestones}
-              colorFilters={colorFilters}
-              sizeFilters={sizeFilters}
-              onToggleColorFilter={handleToggleColorFilter}
-              onToggleSizeFilter={handleToggleSizeFilter}
-              onSelectAllColors={handleSelectAllColors}
-              onClearAllColors={handleClearAllColors}
-              onSelectAllSizes={handleSelectAllSizes}
-              onClearAllSizes={handleClearAllSizes}
-              isFilterActive={isMilestoneFilterActive}
-            />
-          )}
-        </div>
       </div>
     );
   };
@@ -773,61 +554,19 @@ export function AnalyticsChart({
         <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
-      {/* Main Chart with Context Menu */}
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div 
-            ref={chartContainerRef} 
-            className="h-[240px] w-full relative"
-            onContextMenu={handleChartContextMenu}
-          >
-            <MainChart 
-              displayData={displayData} 
-              visibleMetrics={visibleMetrics} 
-              showConversions={showConversions}
-              tickInterval={tickInterval}
-            />
-            
-            {/* Annotations Layer */}
-            {visibleAnnotations.map(({ annotation, dateIndex, exactPosition }) => (
-              <ChartAnnotation
-                key={annotation.id}
-                annotation={annotation}
-                chartWidth={chartDimensions.width}
-                chartHeight={chartDimensions.height}
-                dataLength={displayData.length}
-                dateIndex={dateIndex}
-                exactPosition={exactPosition}
-                chartLeftMargin={60}
-                chartRightMargin={30}
-                onDelete={deleteMilestone}
-                onUpdateYOffset={updateMilestoneYOffset}
-                onUpdateColor={updateMilestoneColor}
-                onUpdateSize={updateMilestoneSize}
-              />
-            ))}
-            
-            <Watermark />
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent className="bg-card/95 backdrop-blur-md border-primary/20 min-w-[180px]">
-          <ContextMenuItem 
-            onClick={handleAddMilestoneClick}
-            className="flex items-center gap-2 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-primary" />
-            <span>Add Note</span>
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-
-      {/* Add Note Dialog */}
-      <AddMilestoneDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        date={selectedDateForMilestone}
-        onAdd={addMilestone}
-      />
+      {/* Main Chart */}
+      <div 
+        ref={chartContainerRef} 
+        className="h-[240px] w-full relative"
+      >
+        <MainChart 
+          displayData={displayData} 
+          visibleMetrics={visibleMetrics} 
+          showConversions={showConversions}
+          tickInterval={tickInterval}
+        />
+        <Watermark />
+      </div>
 
       {/* Divider */}
       <div className="h-px bg-border/50 my-3" />
