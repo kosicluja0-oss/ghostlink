@@ -1,4 +1,4 @@
-import { Ghost, LayoutDashboard, Puzzle, Database, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Ghost, LayoutDashboard, Puzzle, Database, Settings, LogOut, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -57,6 +57,12 @@ export function AppSidebar({
       icon: Puzzle,
       onClick: () => navigate('/integrations'),
       path: '/integrations',
+    },
+    {
+      title: 'Support',
+      icon: HelpCircle,
+      onClick: () => navigate('/support'),
+      path: '/support',
     },
     {
       title: 'Settings',

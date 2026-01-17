@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Integrations from "./pages/Integrations";
 import Transactions from "./pages/Transactions";
 import Settings from "./pages/Settings";
+import Support from "./pages/Support";
+import AdminSupport from "./pages/AdminSupport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +31,9 @@ const App = () => (
           <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
           <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+          <Route path="/support/:ticketId" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+          <Route path="/admin/support" element={<ProtectedRoute><AdminSupport /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
