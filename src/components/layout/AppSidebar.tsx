@@ -23,6 +23,7 @@ interface AppSidebarProps {
   onOpenSettings: () => void;
   onOpenDataIntegration: () => void;
   onSignOut: () => void;
+  openTicketsCount?: number;
 }
 
 export function AppSidebar({
@@ -31,6 +32,7 @@ export function AppSidebar({
   onOpenSettings,
   onOpenDataIntegration,
   onSignOut,
+  openTicketsCount,
 }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,30 +47,35 @@ export function AppSidebar({
       icon: LayoutDashboard,
       onClick: () => navigate('/dashboard'),
       path: '/dashboard',
+      badge: undefined as number | undefined,
     },
     {
       title: 'Data & Leads',
       icon: Database,
       onClick: () => navigate('/transactions'),
       path: '/transactions',
+      badge: undefined as number | undefined,
     },
     {
       title: 'Integrations',
       icon: Puzzle,
       onClick: () => navigate('/integrations'),
       path: '/integrations',
+      badge: undefined as number | undefined,
     },
     {
       title: 'Support',
       icon: HelpCircle,
       onClick: () => navigate('/support'),
       path: '/support',
+      badge: openTicketsCount && openTicketsCount > 0 ? openTicketsCount : undefined,
     },
     {
       title: 'Settings',
       icon: Settings,
       onClick: () => navigate('/settings'),
       path: '/settings',
+      badge: undefined as number | undefined,
     },
   ];
 
@@ -136,16 +143,26 @@ export function AppSidebar({
                       {isActive && (
                         <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r" />
                       )}
-                      <item.icon className={cn(
-                        "h-4 w-4 flex-shrink-0",
-                        isActive && "text-primary"
-                      )} />
+                      <div className="relative">
+                        <item.icon className={cn(
+                          "h-4 w-4 flex-shrink-0",
+                          isActive && "text-primary"
+                        )} />
+                        {isCollapsed && item.badge && (
+                          <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-destructive rounded-full" />
+                        )}
+                      </div>
                       <span className={cn(
-                        "transition-opacity duration-0",
+                        "transition-opacity duration-0 flex-1",
                         isCollapsed ? "hidden" : "block"
                       )}>
                         {item.title}
                       </span>
+                      {!isCollapsed && item.badge && (
+                        <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 font-medium">
+                          {item.badge > 99 ? '99+' : item.badge}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </TooltipTrigger>
                   {isCollapsed && (

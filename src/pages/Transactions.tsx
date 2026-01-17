@@ -29,6 +29,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { useLinks } from '@/hooks/useLinks';
 import { useClicksRealtime } from '@/hooks/useClicksRealtime';
+import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import type { TierType } from '@/types';
 
 type TransactionType = 'click' | 'lead' | 'sale';
@@ -228,6 +229,7 @@ const Transactions = () => {
   const { user, signOut } = useAuth();
   const { links } = useLinks();
   const { clicks, conversions } = useClicksRealtime();
+  const openTicketsCount = useOpenTicketsCount();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -378,6 +380,7 @@ const Transactions = () => {
             onOpenSettings={() => navigate('/settings')}
             onOpenDataIntegration={() => navigate('/integrations')}
             onSignOut={signOut}
+            openTicketsCount={openTicketsCount}
           />
           
           <SidebarInset className="flex-1">
