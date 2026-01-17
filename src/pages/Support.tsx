@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { cn } from '@/lib/utils';
 
 export default function Support() {
@@ -25,6 +26,7 @@ export default function Support() {
   const { profile } = useProfile();
   const { tickets, isLoadingTickets } = useSupportTickets();
   const { isAdmin } = useUserRole();
+  const openTicketsCount = useOpenTicketsCount();
   
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
@@ -48,6 +50,7 @@ export default function Support() {
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenDataIntegration={() => setDataIntegrationOpen(true)}
             onSignOut={signOut}
+            openTicketsCount={openTicketsCount}
           />
           <SidebarInset className="flex-1">
           <main className="flex-1 p-6">
@@ -74,6 +77,7 @@ export default function Support() {
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenDataIntegration={() => setDataIntegrationOpen(true)}
           onSignOut={signOut}
+          openTicketsCount={openTicketsCount}
         />
         <SidebarInset className="flex-1">
           <main className="flex-1 p-6">

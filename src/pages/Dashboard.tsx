@@ -14,6 +14,7 @@ import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { useLinks } from '@/hooks/useLinks';
 import { useClicksRealtime } from '@/hooks/useClicksRealtime';
 import { useAuth } from '@/hooks/useAuth';
+import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,7 @@ const Dashboard = () => {
   // Use real data hooks
   const { links, addLink, deleteLink } = useLinks();
   const { analyticsData, stats } = useClicksRealtime();
+  const openTicketsCount = useOpenTicketsCount();
   
   const tier = TIERS[userTier];
   const isFreeTier = userTier === 'free';
@@ -128,6 +130,7 @@ const Dashboard = () => {
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenDataIntegration={() => setDataIntegrationOpen(true)}
             onSignOut={signOut}
+            openTicketsCount={openTicketsCount}
           />
           
           <SidebarInset className="flex-1">

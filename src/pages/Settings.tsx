@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import type { TierType } from '@/types';
 import { TIERS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile, isUpdating } = useProfile();
+  const openTicketsCount = useOpenTicketsCount();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [displayName, setDisplayName] = useState('');
@@ -69,6 +71,7 @@ const Settings = () => {
             onOpenSettings={() => {}}
             onOpenDataIntegration={() => navigate('/integrations')}
             onSignOut={signOut}
+            openTicketsCount={openTicketsCount}
           />
           
           <SidebarInset className="flex-1">

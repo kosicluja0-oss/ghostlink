@@ -10,6 +10,7 @@ import { ConnectServiceModal } from '@/components/integrations/ConnectServiceMod
 import { DeveloperWebhookCard } from '@/components/integrations/DeveloperWebhookCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useLinks } from '@/hooks/useLinks';
+import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import type { TierType } from '@/types';
 
 // Integration data with reliable SimpleIcons CDN logos
@@ -173,6 +174,7 @@ const Integrations = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { links } = useLinks();
+  const openTicketsCount = useOpenTicketsCount();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -228,6 +230,7 @@ const Integrations = () => {
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenDataIntegration={() => navigate('/integrations')}
             onSignOut={signOut}
+            openTicketsCount={openTicketsCount}
           />
           
           <SidebarInset className="flex-1">
