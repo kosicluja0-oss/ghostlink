@@ -45,7 +45,7 @@ export default function AdminSupport() {
   if (isAuthLoading || isRoleLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="animate-pulse text-muted-foreground">Ověřuji oprávnění...</div>
+        <div className="animate-pulse text-muted-foreground">Verifying permissions...</div>
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function AdminSupport() {
                   Admin Support
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  Správa všech support ticketů
+                  Manage all support tickets
                 </p>
               </div>
               <Badge variant="outline" className="bg-primary/10 text-primary">
@@ -133,7 +133,7 @@ export default function AdminSupport() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{stats.total}</p>
-                    <p className="text-sm text-muted-foreground">Celkem</p>
+                    <p className="text-sm text-muted-foreground">Total</p>
                   </div>
                 </CardContent>
               </Card>
@@ -144,7 +144,7 @@ export default function AdminSupport() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{stats.open}</p>
-                    <p className="text-sm text-muted-foreground">Čekajících</p>
+                    <p className="text-sm text-muted-foreground">Pending</p>
                   </div>
                 </CardContent>
               </Card>
@@ -155,7 +155,7 @@ export default function AdminSupport() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{stats.inProgress}</p>
-                    <p className="text-sm text-muted-foreground">V řešení</p>
+                    <p className="text-sm text-muted-foreground">In Progress</p>
                   </div>
                 </CardContent>
               </Card>
@@ -166,7 +166,7 @@ export default function AdminSupport() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{stats.resolved}</p>
-                    <p className="text-sm text-muted-foreground">Vyřešených</p>
+                    <p className="text-sm text-muted-foreground">Resolved</p>
                   </div>
                 </CardContent>
               </Card>
@@ -176,26 +176,26 @@ export default function AdminSupport() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between flex-wrap gap-4">
-                  <CardTitle className="text-lg">Všechny Tickety</CardTitle>
+                  <CardTitle className="text-lg">All Tickets</CardTitle>
                   <div className="flex items-center gap-3">
                     <Select value={typeFilter} onValueChange={setTypeFilter}>
                       <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Typ" />
+                        <SelectValue placeholder="Type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Všechny typy</SelectItem>
-                        <SelectItem value="question">Otázky</SelectItem>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="question">Questions</SelectItem>
                         <SelectItem value="bug">Bug Reports</SelectItem>
-                        <SelectItem value="feature">Návrhy</SelectItem>
-                        <SelectItem value="integration_request">Integrace</SelectItem>
+                        <SelectItem value="feature">Features</SelectItem>
+                        <SelectItem value="integration_request">Integration</SelectItem>
                       </SelectContent>
                     </Select>
                     <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                       <TabsList>
-                        <TabsTrigger value="all">Všechny</TabsTrigger>
-                        <TabsTrigger value="open">Otevřené</TabsTrigger>
-                        <TabsTrigger value="in_progress">V řešení</TabsTrigger>
-                        <TabsTrigger value="resolved">Vyřešené</TabsTrigger>
+                        <TabsTrigger value="all">All</TabsTrigger>
+                        <TabsTrigger value="open">Open</TabsTrigger>
+                        <TabsTrigger value="in_progress">In Progress</TabsTrigger>
+                        <TabsTrigger value="resolved">Resolved</TabsTrigger>
                       </TabsList>
                     </Tabs>
                   </div>
@@ -204,13 +204,13 @@ export default function AdminSupport() {
               <CardContent>
                 {isLoadingTickets ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Načítám tickety...
+                    Loading tickets...
                   </div>
                 ) : filteredTickets.length === 0 ? (
                   <div className="text-center py-12">
                     <Ticket className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                     <p className="text-muted-foreground">
-                      Žádné tickety v této kategorii
+                      No tickets in this category
                     </p>
                   </div>
                 ) : (
