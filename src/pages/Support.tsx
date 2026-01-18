@@ -17,6 +17,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { cn } from '@/lib/utils';
 export default function Support() {
   const {
@@ -38,6 +39,7 @@ export default function Support() {
     isAdmin
   } = useUserRole();
   const openTicketsCount = useOpenTicketsCount();
+  const { getUnreadCountForTicket } = useUnreadMessages();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [createTicketOpen, setCreateTicketOpen] = useState(false);
@@ -146,7 +148,7 @@ export default function Support() {
                       Vytvořit první ticket
                     </Button>
                   </div> : <div className="space-y-3">
-                    {filteredTickets.map(ticket => <TicketCard key={ticket.id} ticket={ticket} onClick={() => navigate(`/support/${ticket.id}`)} />)}
+                    {filteredTickets.map(ticket => <TicketCard key={ticket.id} ticket={ticket} onClick={() => navigate(`/support/${ticket.id}`)} unreadCount={getUnreadCountForTicket(ticket.id)} />)}
                   </div>}
               </CardContent>
             </Card>

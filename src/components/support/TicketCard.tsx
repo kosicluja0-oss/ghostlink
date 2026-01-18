@@ -9,6 +9,7 @@ import { SupportTicket } from '@/hooks/useSupportTickets';
 interface TicketCardProps {
   ticket: SupportTicket;
   onClick: () => void;
+  unreadCount?: number;
 }
 
 const statusConfig: Record<SupportTicket['status'], { label: string; icon: typeof CheckCircle2; className: string }> = {
@@ -31,7 +32,7 @@ const priorityConfig: Record<SupportTicket['priority'], { label: string; classNa
   high: { label: 'Vysoká', className: 'text-red-500' },
 };
 
-export function TicketCard({ ticket, onClick }: TicketCardProps) {
+export function TicketCard({ ticket, onClick, unreadCount = 0 }: TicketCardProps) {
   const status = statusConfig[ticket.status];
   const type = typeConfig[ticket.type];
   const priority = priorityConfig[ticket.priority];
@@ -39,7 +40,10 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
 
   return (
     <Card 
-      className="cursor-pointer transition-all hover:bg-accent/50 hover:border-primary/30"
+      className={cn(
+        "cursor-pointer transition-all hover:bg-accent/50 hover:border-primary/30",
+        unreadCount > 0 && "border-primary/50 bg-primary/5"
+      )}
       onClick={onClick}
     >
       <CardContent className="p-4">
@@ -56,6 +60,12 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
               {ticket.priority === 'high' && (
                 <Badge variant="outline" className="text-xs bg-red-500/20 text-red-500">
                   Vysoká priorita
+                </Badge>
+              )}
+              {unreadCount > 0 && (
+                <Badge className="bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 min-w-[20px] flex items-center justify-center">
+                  <MessageSquare className="w-3 h-3 mr-1" />
+                  {unreadCount}
                 </Badge>
               )}
             </div>
