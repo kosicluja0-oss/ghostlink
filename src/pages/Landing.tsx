@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp, BarChart } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp, BarChart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-
+import { useAuth } from '@/hooks/useAuth';
+import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
+import { toast } from 'sonner';
 // Mock chart component for hero
 function MockDashboardChart() {
   return <div className="relative w-full max-w-4xl mx-auto">
@@ -195,27 +197,47 @@ function AnimatedPrice({
     </span>;
 }
 
-// Stripe-ready handler function
-function handleSubscription(planId: string, cycle: 'monthly' | 'yearly') {
-  const plan = pricingPlans[planId as keyof typeof pricingPlans];
-  if (!plan) return;
-  const priceId = cycle === 'monthly' ? plan.priceIds.monthly : plan.priceIds.yearly;
-  const displayPrice = getDisplayPrice(plan, cycle);
-  const totalYearly = cycle === 'yearly' ? parseFloat((plan.monthlyPrice * 12 * YEARLY_DISCOUNT).toFixed(2)) : null;
-  console.log('[Stripe Ready] Selected Plan:', {
-    planName: plan.name,
-    billingCycle: cycle,
-    priceId,
-    displayedMonthlyPrice: displayPrice,
-    totalYearlyAmount: totalYearly
-  });
+// Stripe checkout handler
+async function handleSubscription(
+  planId: string, 
+  cycle: BillingCycle, 
+  isAuthenticated: boolean,
+  navigate: ReturnType<typeof useNavigate>,
+  setLoading: (loading: string | null) => void
+) {
+  if (planId === 'free') return;
+  
+  // Require authentication for paid plans
+  if (!isAuthenticated) {
+    toast.info('Please sign in to subscribe');
+    navigate('/auth?mode=signup&redirect=pricing');
+    return;
+  }
 
-  // TODO: Integrate with Stripe checkout
-  // await stripe.redirectToCheckout({ priceId });
+  const stripePlanId = planId as PlanId;
+  if (!STRIPE_PRICES[stripePlanId]) {
+    toast.error('Invalid plan selected');
+    return;
+  }
+
+  setLoading(`${planId}-${cycle}`);
+  
+  try {
+    const url = await createCheckoutSession(stripePlanId, cycle);
+    if (url) {
+      window.open(url, '_blank');
+    }
+  } finally {
+    setLoading(null);
+  }
 }
 export default function Landing() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const isAuthenticated = !!user;
   return <div className="min-h-screen bg-background">
       {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -377,8 +399,19 @@ export default function Landing() {
                         <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300">
                           Start free trial
                         </Button>
-                      </Link> : <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300" onClick={() => handleSubscription(planId, billingCycle)}>
-                        Get started
+                      </Link> : <Button 
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300" 
+                        onClick={() => handleSubscription(planId, billingCycle, isAuthenticated, navigate, setCheckoutLoading)}
+                        disabled={checkoutLoading === `${planId}-${billingCycle}`}
+                      >
+                        {checkoutLoading === `${planId}-${billingCycle}` ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          'Get started'
+                        )}
                       </Button>}
                   </div>
                   

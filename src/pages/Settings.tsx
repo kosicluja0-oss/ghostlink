@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Settings as SettingsIcon, User, CreditCard, Globe, Camera, 
-  Check, Crown, Mail, Shield, Loader2
+  Check, Crown, Mail, Shield, Loader2, ExternalLink
 } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -22,21 +22,39 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
-import type { TierType } from '@/types';
+import { openCustomerPortal, createCheckoutSession } from '@/lib/stripe';
 import { TIERS } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, signOut } = useAuth();
   const { profile, isLoading: profileLoading, updateProfile, isUpdating } = useProfile();
+  const { tier, subscriptionStatus, billingCycle, isSubscribed, isPastDue, isLoading: subscriptionLoading, refetch: refetchSubscription } = useSubscription();
   const openTicketsCount = useOpenTicketsCount();
   
-  const [userTier, setUserTier] = useState<TierType>('pro');
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
+
+  // Handle checkout redirect result
+  useEffect(() => {
+    const checkoutResult = searchParams.get('checkout');
+    if (checkoutResult === 'success') {
+      toast.success('Subscription activated! Welcome to your new plan.');
+      refetchSubscription();
+      // Clean up URL
+      navigate('/settings', { replace: true });
+    } else if (checkoutResult === 'canceled') {
+      toast.info('Checkout was canceled');
+      navigate('/settings', { replace: true });
+    }
+  }, [searchParams, navigate, refetchSubscription]);
 
   // Sync local state with profile data
   useEffect(() => {
@@ -48,7 +66,7 @@ const Settings = () => {
 
   const userInitial = displayName ? displayName.charAt(0).toUpperCase() : 
                       user?.email ? user.email.charAt(0).toUpperCase() : 'U';
-  const currentTierData = TIERS[userTier];
+  const currentTierData = TIERS[tier];
 
   const handleSaveProfile = () => {
     updateProfile({
@@ -57,8 +75,50 @@ const Settings = () => {
     });
   };
 
-  const handleManageSubscription = () => {
-    toast.info('Subscription management coming soon');
+  const handleManageSubscription = async () => {
+    setPortalLoading(true);
+    try {
+      const url = await openCustomerPortal();
+      if (url) {
+        window.open(url, '_blank');
+      }
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
+  const handleUpgrade = async (planId: 'pro' | 'business') => {
+    setUpgradeLoading(planId);
+    try {
+      const url = await createCheckoutSession(planId, 'monthly');
+      if (url) {
+        window.open(url, '_blank');
+      }
+    } finally {
+      setUpgradeLoading(null);
+    }
+  };
+
+  const getStatusBadge = () => {
+    if (isPastDue) {
+      return (
+        <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">
+          Payment Due
+        </Badge>
+      );
+    }
+    if (isSubscribed) {
+      return (
+        <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+          Active
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" className="bg-muted text-muted-foreground">
+        Free Tier
+      </Badge>
+    );
   };
 
   return (
@@ -67,7 +127,7 @@ const Settings = () => {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar
             userEmail={user?.email}
-            userTier={userTier}
+            userTier={tier}
             onOpenSettings={() => {}}
             onOpenDataIntegration={() => navigate('/integrations')}
             onSignOut={signOut}
@@ -234,121 +294,167 @@ const Settings = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Current Plan */}
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-ghost-surface">
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "flex items-center justify-center w-12 h-12 rounded-xl",
-                          userTier === 'free' 
-                            ? "bg-muted" 
-                            : "bg-primary/10"
-                        )}>
-                          {userTier !== 'free' ? (
-                            <Crown className="w-6 h-6 text-primary" />
+                    {subscriptionLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <>
+                        {/* Current Plan */}
+                        <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-ghost-surface">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "flex items-center justify-center w-12 h-12 rounded-xl",
+                              tier === 'free' 
+                                ? "bg-muted" 
+                                : "bg-primary/10"
+                            )}>
+                              {tier !== 'free' ? (
+                                <Crown className="w-6 h-6 text-primary" />
+                              ) : (
+                                <Shield className="w-6 h-6 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-foreground capitalize">
+                                  {tier} Plan
+                                </span>
+                                {getStatusBadge()}
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {currentTierData.price 
+                                  ? `$${currentTierData.price}/month${billingCycle === 'yearly' ? ' (billed yearly)' : ''}`
+                                  : 'No charge'
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          {isSubscribed || isPastDue ? (
+                            <Button 
+                              variant="outline" 
+                              onClick={handleManageSubscription}
+                              disabled={portalLoading}
+                            >
+                              {portalLoading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  Manage
+                                  <ExternalLink className="w-4 h-4 ml-2" />
+                                </>
+                              )}
+                            </Button>
                           ) : (
-                            <Shield className="w-6 h-6 text-muted-foreground" />
+                            <Button 
+                              variant="default" 
+                              onClick={() => handleUpgrade('pro')}
+                              disabled={!!upgradeLoading}
+                            >
+                              {upgradeLoading === 'pro' ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                'Upgrade'
+                              )}
+                            </Button>
                           )}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-foreground capitalize">
-                              {userTier} Plan
-                            </span>
-                            <Badge 
-                              variant="secondary"
-                              className={cn(
-                                userTier !== 'free' 
-                                  ? "bg-success/10 text-success border-success/20" 
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                            >
-                              {userTier !== 'free' ? 'Active' : 'Free Tier'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {currentTierData.price 
-                              ? `$${currentTierData.price}/month`
-                              : 'No charge'
-                            }
-                          </p>
+
+                        {/* Plan Features */}
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-foreground">Your plan includes:</p>
+                          <ul className="grid gap-2 sm:grid-cols-2">
+                            {tier === 'free' && (
+                              <>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> 25 active links
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Click tracking
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Basic dashboard
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Community support
+                                </li>
+                              </>
+                            )}
+                            {tier === 'pro' && (
+                              <>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> 100 active links
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Leads & Sales tracking
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Full analytics
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Bridge pages
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Priority support
+                                </li>
+                              </>
+                            )}
+                            {tier === 'business' && (
+                              <>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> 175 active links
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> All Pro features
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Team collaboration
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> API access
+                                </li>
+                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="w-4 h-4 text-success" /> Dedicated support
+                                </li>
+                              </>
+                            )}
+                          </ul>
                         </div>
-                      </div>
-                      <Button variant="outline" onClick={handleManageSubscription}>
-                        {userTier === 'free' ? 'Upgrade' : 'Manage'}
-                      </Button>
-                    </div>
 
-                    {/* Plan Features */}
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium text-foreground">Your plan includes:</p>
-                      <ul className="grid gap-2 sm:grid-cols-2">
-                        {userTier === 'free' && (
-                          <>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> 5 active links
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> Click tracking only
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> Basic analytics
-                            </li>
-                          </>
+                        {/* Upgrade options for free users */}
+                        {tier === 'free' && (
+                          <div className="pt-4 border-t border-border">
+                            <p className="text-sm font-medium text-foreground mb-3">
+                              Upgrade your plan
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUpgrade('pro')}
+                                disabled={!!upgradeLoading}
+                              >
+                                {upgradeLoading === 'pro' ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : null}
+                                Pro - $10/mo
+                              </Button>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleUpgrade('business')}
+                                disabled={!!upgradeLoading}
+                              >
+                                {upgradeLoading === 'business' ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : null}
+                                Business - $15/mo
+                              </Button>
+                            </div>
+                          </div>
                         )}
-                        {userTier === 'pro' && (
-                          <>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> 25 active links
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> Full analytics
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> Bridge pages
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> Priority support
-                            </li>
-                          </>
-                        )}
-                        {userTier === 'business' && (
-                          <>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> 100 active links
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> All PRO features
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> API access
-                            </li>
-                            <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Check className="w-4 h-4 text-success" /> Custom branding
-                            </li>
-                          </>
-                        )}
-                      </ul>
-                    </div>
-
-                    {/* Plan Selector (for demo) */}
-                    <div className="pt-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Demo: Switch plans to preview different feature sets
-                      </p>
-                      <div className="flex gap-2">
-                        {(['free', 'pro', 'business'] as TierType[]).map((tier) => (
-                          <Button
-                            key={tier}
-                            variant={userTier === tier ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setUserTier(tier)}
-                            className="capitalize"
-                          >
-                            {tier}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </div>
