@@ -13,16 +13,16 @@ interface CreateTicketModalProps {
 }
 
 const ticketTypes: { value: SupportTicket['type']; label: string }[] = [
-  { value: 'question', label: 'Otázka' },
+  { value: 'question', label: 'Question' },
   { value: 'bug', label: 'Bug Report' },
-  { value: 'feature', label: 'Návrh funkce' },
-  { value: 'integration_request', label: 'Žádost o integraci' },
+  { value: 'feature', label: 'Feature Request' },
+  { value: 'integration_request', label: 'Integration Request' },
 ];
 
 const priorityOptions: { value: SupportTicket['priority']; label: string }[] = [
-  { value: 'low', label: 'Nízká' },
-  { value: 'medium', label: 'Střední' },
-  { value: 'high', label: 'Vysoká' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
 ];
 
 export function CreateTicketModal({ open, onOpenChange }: CreateTicketModalProps) {
@@ -66,12 +66,12 @@ export function CreateTicketModal({ open, onOpenChange }: CreateTicketModalProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nový Ticket</DialogTitle>
+          <DialogTitle>New Ticket</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="type">Typ *</Label>
+            <Label htmlFor="type">Type *</Label>
             <Select value={type} onValueChange={(v) => setType(v as SupportTicket['type'])}>
               <SelectTrigger>
                 <SelectValue />
@@ -87,7 +87,7 @@ export function CreateTicketModal({ open, onOpenChange }: CreateTicketModalProps
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="priority">Priorita</Label>
+            <Label htmlFor="priority">Priority</Label>
             <Select value={priority} onValueChange={(v) => setPriority(v as SupportTicket['priority'])}>
               <SelectTrigger>
                 <SelectValue />
@@ -103,23 +103,23 @@ export function CreateTicketModal({ open, onOpenChange }: CreateTicketModalProps
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subject">Předmět *</Label>
+            <Label htmlFor="subject">Subject *</Label>
             <Input
               id="subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Stručný popis problému"
+              placeholder="Brief description of the issue"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Popis *</Label>
+            <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detailní popis vašeho problému nebo požadavku..."
+              placeholder="Detailed description of your issue or request..."
               rows={4}
               required
             />
@@ -128,17 +128,17 @@ export function CreateTicketModal({ open, onOpenChange }: CreateTicketModalProps
           {type === 'integration_request' && (
             <>
               <div className="space-y-2">
-                <Label htmlFor="platformName">Název platformy</Label>
+                <Label htmlFor="platformName">Platform Name</Label>
                 <Input
                   id="platformName"
                   value={platformName}
                   onChange={(e) => setPlatformName(e.target.value)}
-                  placeholder="např. TikTok Ads, Taboola..."
+                  placeholder="e.g. TikTok Ads, Taboola..."
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="platformUrl">URL platformy</Label>
+                <Label htmlFor="platformUrl">Platform URL</Label>
                 <Input
                   id="platformUrl"
                   value={platformUrl}
@@ -152,10 +152,10 @@ export function CreateTicketModal({ open, onOpenChange }: CreateTicketModalProps
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Zrušit
+              Cancel
             </Button>
             <Button type="submit" disabled={isCreatingTicket}>
-              {isCreatingTicket ? 'Odesílám...' : 'Odeslat'}
+              {isCreatingTicket ? 'Submitting...' : 'Submit'}
             </Button>
           </div>
         </form>

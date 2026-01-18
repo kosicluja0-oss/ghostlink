@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow, format } from 'date-fns';
-import { cs } from 'date-fns/locale';
 import { ArrowLeft, Send, Clock, User, Shield, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,17 +22,17 @@ interface TicketDetailProps {
 }
 
 const statusConfig: Record<SupportTicket['status'], { label: string; className: string }> = {
-  open: { label: 'Otevřený', className: 'bg-yellow-500/20 text-yellow-500' },
-  in_progress: { label: 'V řešení', className: 'bg-blue-500/20 text-blue-500' },
-  resolved: { label: 'Vyřešeno', className: 'bg-green-500/20 text-green-500' },
-  closed: { label: 'Uzavřeno', className: 'bg-muted text-muted-foreground' },
+  open: { label: 'Open', className: 'bg-yellow-500/20 text-yellow-500' },
+  in_progress: { label: 'In Progress', className: 'bg-blue-500/20 text-blue-500' },
+  resolved: { label: 'Resolved', className: 'bg-green-500/20 text-green-500' },
+  closed: { label: 'Closed', className: 'bg-muted text-muted-foreground' },
 };
 
 const typeLabels: Record<SupportTicket['type'], string> = {
-  question: 'Otázka',
+  question: 'Question',
   bug: 'Bug Report',
-  feature: 'Návrh funkce',
-  integration_request: 'Žádost o integraci',
+  feature: 'Feature Request',
+  integration_request: 'Integration Request',
 };
 
 export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetailProps) {
@@ -112,7 +111,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
   if (isLoadingTicket) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse text-muted-foreground">Načítám ticket...</div>
+        <div className="animate-pulse text-muted-foreground">Loading ticket...</div>
       </div>
     );
   }
@@ -120,10 +119,10 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
   if (!ticket) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-muted-foreground">Ticket nebyl nalezen</p>
+        <p className="text-muted-foreground">Ticket not found</p>
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Zpět
+          Back
         </Button>
       </div>
     );
@@ -150,7 +149,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
             <span className="text-sm text-muted-foreground">•</span>
             <span className="text-sm text-muted-foreground flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true, locale: cs })}
+              {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
             </span>
           </div>
         </div>
@@ -161,10 +160,10 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="open">Otevřený</SelectItem>
-              <SelectItem value="in_progress">V řešení</SelectItem>
-              <SelectItem value="resolved">Vyřešeno</SelectItem>
-              <SelectItem value="closed">Uzavřeno</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
             </SelectContent>
           </Select>
         )}
@@ -173,7 +172,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
       {/* Ticket Info Card */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Detail ticketu</CardTitle>
+          <CardTitle className="text-sm font-medium">Ticket Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-foreground">{ticket.description}</p>
@@ -184,7 +183,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
               <div className="space-y-2">
                 {ticket.platform_name && (
                   <p className="text-sm">
-                    <span className="text-muted-foreground">Platforma:</span>{' '}
+                    <span className="text-muted-foreground">Platform:</span>{' '}
                     <span className="font-medium">{ticket.platform_name}</span>
                   </p>
                 )}
@@ -210,11 +209,11 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
 
       {/* Messages */}
       <div className="flex-1 flex flex-col min-h-0">
-        <h3 className="text-sm font-medium mb-3">Konverzace</h3>
+        <h3 className="text-sm font-medium mb-3">Conversation</h3>
         
         <ScrollArea className="flex-1 border rounded-lg p-4 mb-4">
           {isLoadingMessages ? (
-            <div className="text-center text-muted-foreground py-4">Načítám zprávy...</div>
+            <div className="text-center text-muted-foreground py-4">Loading messages...</div>
           ) : messages && messages.length > 0 ? (
             <div className="space-y-4">
               {messages.map((message) => (
@@ -246,7 +245,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
                       <p className="text-sm">{message.message}</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(message.created_at), 'dd.MM.yyyy HH:mm', { locale: cs })}
+                      {format(new Date(message.created_at), 'MMM d, yyyy HH:mm')}
                     </p>
                   </div>
                 </div>
@@ -254,7 +253,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
             </div>
           ) : (
             <div className="text-center text-muted-foreground py-8">
-              Zatím žádné zprávy. Napište první zprávu.
+              No messages yet. Write the first message.
             </div>
           )}
         </ScrollArea>
@@ -265,7 +264,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
             <Textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Napište zprávu..."
+              placeholder="Write a message..."
               className="min-h-[80px] resize-none"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.ctrlKey) {

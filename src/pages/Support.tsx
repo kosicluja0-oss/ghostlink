@@ -79,7 +79,7 @@ export default function Support() {
               </div>
               <Button onClick={() => setCreateTicketOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Nový Ticket
+                New Ticket
               </Button>
             </div>
 
@@ -92,7 +92,7 @@ export default function Support() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{tickets.length}</p>
-                    <p className="text-sm text-muted-foreground">Celkem ticketů</p>
+                    <p className="text-sm text-muted-foreground">Total Tickets</p>
                   </div>
                 </CardContent>
               </Card>
@@ -103,7 +103,7 @@ export default function Support() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{openTickets}</p>
-                    <p className="text-sm text-muted-foreground">Otevřených</p>
+                    <p className="text-sm text-muted-foreground">Open</p>
                   </div>
                 </CardContent>
               </Card>
@@ -114,7 +114,7 @@ export default function Support() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{resolvedTickets}</p>
-                    <p className="text-sm text-muted-foreground">Vyřešených</p>
+                    <p className="text-sm text-muted-foreground">Resolved</p>
                   </div>
                 </CardContent>
               </Card>
@@ -124,28 +124,28 @@ export default function Support() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Moje Tickety</CardTitle>
+                  <CardTitle className="text-lg">My Tickets</CardTitle>
                   <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                     <TabsList>
-                      <TabsTrigger value="all">Všechny</TabsTrigger>
-                      <TabsTrigger value="open">Otevřené</TabsTrigger>
-                      <TabsTrigger value="in_progress">V řešení</TabsTrigger>
-                      <TabsTrigger value="resolved">Vyřešené</TabsTrigger>
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="open">Open</TabsTrigger>
+                      <TabsTrigger value="in_progress">In Progress</TabsTrigger>
+                      <TabsTrigger value="resolved">Resolved</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
               </CardHeader>
               <CardContent>
                 {isLoadingTickets ? <div className="text-center py-8 text-muted-foreground">
-                    Načítám tickety...
+                    Loading tickets...
                   </div> : filteredTickets.length === 0 ? <div className="text-center py-12">
                     <HelpCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                     <p className="text-muted-foreground mb-4">
-                      {statusFilter === 'all' ? 'Zatím nemáte žádné tickety' : 'Žádné tickety v této kategorii'}
+                      {statusFilter === 'all' ? "You don't have any tickets yet" : 'No tickets in this category'}
                     </p>
                     <Button variant="outline" onClick={() => setCreateTicketOpen(true)}>
                       <Plus className="w-4 h-4 mr-2" />
-                      Vytvořit první ticket
+                      Create first ticket
                     </Button>
                   </div> : <div className="space-y-3">
                     {filteredTickets.map(ticket => <TicketCard key={ticket.id} ticket={ticket} onClick={() => navigate(`/support/${ticket.id}`)} unreadCount={getUnreadCountForTicket(ticket.id)} />)}
