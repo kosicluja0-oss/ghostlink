@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Settings as SettingsIcon, User, CreditCard, Globe, Camera, 
-  Check, Crown, Mail, Shield, Loader2, ExternalLink, AlertTriangle
+  Check, Crown, Mail, Shield, Loader2, ExternalLink
 } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -512,86 +512,69 @@ const Settings = () => {
                   </CardContent>
                 </Card>
 
-                {/* Danger Zone */}
-                <Card className="bg-card border-destructive/30">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-destructive">
-                      <AlertTriangle className="w-5 h-5" />
-                      Danger Zone
-                    </CardTitle>
-                    <CardDescription>
-                      Irreversible actions that affect your account
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/20 bg-destructive/5">
-                      <div>
-                        <p className="font-medium text-foreground">Delete Account</p>
-                        <p className="text-sm text-muted-foreground">
-                          Permanently delete your account and all associated data
-                        </p>
-                      </div>
-                      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" className="shrink-0">
-                            Delete Account
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2">
-                              <AlertTriangle className="w-5 h-5 text-destructive" />
-                              Delete Account
-                            </AlertDialogTitle>
-                            <AlertDialogDescription asChild>
-                              <div className="space-y-3">
-                                <p>This action is <strong className="text-foreground">permanent and irreversible</strong>.</p>
-                                <p>The following data will be deleted:</p>
-                                <ul className="list-disc list-inside text-sm space-y-1">
-                                  <li>Your profile and preferences</li>
-                                  <li>All tracking links</li>
-                                  <li>Click and conversion history</li>
-                                  <li>Support tickets and messages</li>
-                                </ul>
-                                <div className="pt-2">
-                                  <Label htmlFor="delete-confirm" className="text-foreground">
-                                    Type <strong>DELETE</strong> to confirm:
-                                  </Label>
-                                  <Input
-                                    id="delete-confirm"
-                                    value={deleteConfirmation}
-                                    onChange={(e) => setDeleteConfirmation(e.target.value)}
-                                    placeholder="DELETE"
-                                    className="mt-2"
-                                  />
-                                </div>
-                              </div>
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
-                              Cancel
-                            </AlertDialogCancel>
-                            <Button
-                              variant="destructive"
-                              onClick={handleDeleteAccount}
-                              disabled={deleteConfirmation !== 'DELETE' || isDeleting}
-                            >
-                              {isDeleting ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                  Deleting...
-                                </>
-                              ) : (
-                                'Delete My Account'
-                              )}
-                            </Button>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Delete Account - Subtle placement */}
+                <div className="pt-4 flex justify-center">
+                  <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      >
+                        Delete Account
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Delete Account
+                        </AlertDialogTitle>
+                        <AlertDialogDescription asChild>
+                          <div className="space-y-3">
+                            <p>This action is <strong className="text-foreground">permanent and irreversible</strong>.</p>
+                            <p>The following data will be deleted:</p>
+                            <ul className="list-disc list-inside text-sm space-y-1">
+                              <li>Your profile and preferences</li>
+                              <li>All tracking links</li>
+                              <li>Click and conversion history</li>
+                              <li>Support tickets and messages</li>
+                            </ul>
+                            <div className="pt-2">
+                              <Label htmlFor="delete-confirm" className="text-foreground">
+                                Type <strong>DELETE</strong> to confirm:
+                              </Label>
+                              <Input
+                                id="delete-confirm"
+                                value={deleteConfirmation}
+                                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                placeholder="DELETE"
+                                className="mt-2"
+                              />
+                            </div>
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <Button
+                          variant="secondary"
+                          onClick={handleDeleteAccount}
+                          disabled={deleteConfirmation !== 'DELETE' || isDeleting}
+                        >
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            'Delete My Account'
+                          )}
+                        </Button>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
             </main>
           </SidebarInset>
