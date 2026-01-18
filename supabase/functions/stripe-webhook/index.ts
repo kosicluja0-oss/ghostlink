@@ -12,14 +12,14 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Price ID to tier mapping - UPDATE THESE WITH REAL PRICE IDs
+// Price ID to tier mapping
 const PRICE_TO_TIER: Record<string, { tier: string; cycle: string }> = {
   // Pro plan
-  "price_pro_monthly_placeholder": { tier: "pro", cycle: "monthly" },
-  "price_pro_yearly_placeholder": { tier: "pro", cycle: "yearly" },
+  "price_1SqvwMR7WITbhBZj8cbrc0Zz": { tier: "pro", cycle: "monthly" },
+  "price_1SqvxyR7WITbhBZjcM73F1lN": { tier: "pro", cycle: "yearly" },
   // Business plan
-  "price_business_monthly_placeholder": { tier: "business", cycle: "monthly" },
-  "price_business_yearly_placeholder": { tier: "business", cycle: "yearly" },
+  "price_1Sqw2AR7WITbhBZjvQDRReY6": { tier: "business", cycle: "monthly" },
+  "price_1Sqw2aR7WITbhBZjzBBcN8H3": { tier: "business", cycle: "yearly" },
 };
 
 serve(async (req) => {

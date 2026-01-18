@@ -4,12 +4,12 @@ import { toast } from 'sonner';
 // Stripe Price IDs - UPDATE THESE WITH YOUR REAL STRIPE PRICE IDs
 export const STRIPE_PRICES = {
   pro: {
-    monthly: 'price_pro_monthly_placeholder',
-    yearly: 'price_pro_yearly_placeholder',
+    monthly: 'price_1SqvwMR7WITbhBZj8cbrc0Zz',
+    yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN',
   },
   business: {
-    monthly: 'price_business_monthly_placeholder',
-    yearly: 'price_business_yearly_placeholder',
+    monthly: 'price_1Sqw2AR7WITbhBZjvQDRReY6',
+    yearly: 'price_1Sqw2aR7WITbhBZjzBBcN8H3',
   },
 } as const;
 

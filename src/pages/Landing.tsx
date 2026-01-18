@@ -115,8 +115,8 @@ const pricingPlans: Record<string, PricingPlan> = {
     description: 'For serious marketers scaling up.',
     monthlyPrice: 10,
     priceIds: {
-      monthly: 'price_pro_monthly_placeholder',
-      yearly: 'price_pro_yearly_placeholder'
+      monthly: 'price_1SqvwMR7WITbhBZj8cbrc0Zz',
+      yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN'
     },
     features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Bridge pages', 'Priority support'],
     highlighted: false
@@ -126,8 +126,8 @@ const pricingPlans: Record<string, PricingPlan> = {
     description: 'For teams and agencies at scale.',
     monthlyPrice: 15,
     priceIds: {
-      monthly: 'price_business_monthly_placeholder',
-      yearly: 'price_business_yearly_placeholder'
+      monthly: 'price_1Sqw2AR7WITbhBZjvQDRReY6',
+      yearly: 'price_1Sqw2aR7WITbhBZjzBBcN8H3'
     },
     badge: 'Most Popular',
     features: ['175 active links', 'All Pro features', 'Team collaboration', 'API access', 'Dedicated support'],
