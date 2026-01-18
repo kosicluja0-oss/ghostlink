@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useSupportTickets, SupportTicket, SupportMessage } from '@/hooks/useSupportTickets';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 interface TicketDetailProps {
   ticketId: string;
@@ -39,8 +40,16 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { fetchTicket, fetchMessages, createMessage, isCreatingMessage, updateTicketStatus, isUpdatingStatus } = useSupportTickets(isAdmin);
+  const { markAsRead } = useUnreadMessages();
   
   const [newMessage, setNewMessage] = useState('');
+
+  // Mark messages as read when viewing the ticket
+  useEffect(() => {
+    if (ticketId && user?.id) {
+      markAsRead(ticketId);
+    }
+  }, [ticketId, user?.id, markAsRead]);
 
   // Fetch ticket
   const { data: ticket, isLoading: isLoadingTicket } = useQuery({

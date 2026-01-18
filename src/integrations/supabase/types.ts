@@ -138,6 +138,7 @@ export type Database = {
           id: string
           is_admin: boolean
           message: string
+          read_at: string | null
           ticket_id: string
           user_id: string
         }
@@ -146,6 +147,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           message: string
+          read_at?: string | null
           ticket_id: string
           user_id: string
         }
@@ -154,6 +156,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           message?: string
+          read_at?: string | null
           ticket_id?: string
           user_id?: string
         }
@@ -241,6 +244,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      mark_messages_as_read: {
+        Args: { p_ticket_id: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {

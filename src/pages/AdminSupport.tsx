@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { cn } from '@/lib/utils';
 
 export default function AdminSupport() {
@@ -25,6 +26,7 @@ export default function AdminSupport() {
   const { profile } = useProfile();
   const { isAdmin, isLoading: isRoleLoading } = useUserRole();
   const { tickets, isLoadingTickets } = useSupportTickets(true);
+  const { getUnreadCountForTicket } = useUnreadMessages();
   
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
@@ -218,6 +220,7 @@ export default function AdminSupport() {
                         key={ticket.id}
                         ticket={ticket}
                         onClick={() => setSelectedTicketId(ticket.id)}
+                        unreadCount={getUnreadCountForTicket(ticket.id)}
                       />
                     ))}
                   </div>
