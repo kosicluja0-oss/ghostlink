@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -59,6 +59,31 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Password strength calculation
+  const getPasswordStrength = (password: string): { level: number; label: string; color: string } => {
+    if (!password) return { level: 0, label: '', color: '' };
+    
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (password.length >= 8) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    
+    if (score <= 1) return { level: 1, label: 'Weak', color: 'bg-destructive' };
+    if (score <= 2) return { level: 2, label: 'Fair', color: 'bg-orange-500' };
+    if (score <= 3) return { level: 3, label: 'Good', color: 'bg-yellow-500' };
+    if (score <= 4) return { level: 4, label: 'Strong', color: 'bg-green-500' };
+    return { level: 5, label: 'Very Strong', color: 'bg-green-600' };
+  };
+
+  const passwordStrength = getPasswordStrength(newPassword);
+  const isPasswordValid = newPassword.length >= 6 && newPassword === confirmPassword && currentPassword.length > 0;
 
   // Handle checkout redirect result
   useEffect(() => {
@@ -116,7 +141,7 @@ const Settings = () => {
     }
   };
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       toast.error('Please fill in all password fields');
       return;
     }
@@ -138,12 +163,26 @@ const Settings = () => {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setShowPasswordForm(false);
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     } catch (error: any) {
       console.error('[CHANGE-PASSWORD] Error:', error);
       toast.error(error.message || 'Failed to update password');
     } finally {
       setIsChangingPassword(false);
     }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowPasswordForm(false);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
   };
 
   const handleDeleteAccount = async () => {
@@ -327,45 +366,137 @@ const Settings = () => {
                       Manage your password and account security
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword">New Password</Label>
-                        <Input
-                          id="newPassword"
-                          type="password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Enter new password"
-                          className="bg-input"
-                        />
+                  <CardContent>
+                    {!showPasswordForm ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowPasswordForm(true)}
+                      >
+                        Change Password
+                      </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid gap-4">
+                          {/* Current Password */}
+                          <div className="space-y-2">
+                            <Label htmlFor="currentPassword">Current Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="currentPassword"
+                                type={showCurrentPassword ? 'text' : 'password'}
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                placeholder="Enter current password"
+                                className="bg-input pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* New Password */}
+                          <div className="space-y-2">
+                            <Label htmlFor="newPassword">New Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="newPassword"
+                                type={showNewPassword ? 'text' : 'password'}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Enter new password"
+                                className="bg-input pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            {/* Password Strength Indicator */}
+                            {newPassword && (
+                              <div className="space-y-1.5">
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map((level) => (
+                                    <div
+                                      key={level}
+                                      className={cn(
+                                        "h-1 flex-1 rounded-full transition-colors",
+                                        level <= passwordStrength.level
+                                          ? passwordStrength.color
+                                          : "bg-muted"
+                                      )}
+                                    />
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Password strength: <span className={cn(
+                                    passwordStrength.level <= 1 && "text-destructive",
+                                    passwordStrength.level === 2 && "text-orange-500",
+                                    passwordStrength.level === 3 && "text-yellow-500",
+                                    passwordStrength.level >= 4 && "text-green-500"
+                                  )}>{passwordStrength.label}</span>
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Confirm Password */}
+                          <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                            <div className="relative">
+                              <Input
+                                id="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="Confirm new password"
+                                className="bg-input pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            {confirmPassword && newPassword !== confirmPassword && (
+                              <p className="text-xs text-destructive">Passwords do not match</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleChangePassword}
+                            disabled={isChangingPassword || !isPasswordValid}
+                          >
+                            {isChangingPassword ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Updating...
+                              </>
+                            ) : (
+                              'Update Password'
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={handleCancelPasswordChange}
+                            disabled={isChangingPassword}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Confirm new password"
-                          className="bg-input"
-                        />
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleChangePassword}
-                      disabled={isChangingPassword || !newPassword || !confirmPassword}
-                      className="w-full sm:w-auto"
-                    >
-                      {isChangingPassword ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        'Update Password'
-                      )}
-                    </Button>
+                    )}
                   </CardContent>
                 </Card>
 
