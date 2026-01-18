@@ -105,28 +105,43 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          billing_cycle: string | null
           created_at: string
           currency: string | null
           display_name: string | null
           id: string
+          stripe_customer_id: string | null
+          subscription_id: string | null
+          subscription_status: string | null
+          tier: string | null
           timezone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          billing_cycle?: string | null
           created_at?: string
           currency?: string | null
           display_name?: string | null
           id: string
+          stripe_customer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          tier?: string | null
           timezone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          billing_cycle?: string | null
           created_at?: string
           currency?: string | null
           display_name?: string | null
           id?: string
+          stripe_customer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          tier?: string | null
           timezone?: string | null
           updated_at?: string
         }
