@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
   Database, Filter, CalendarDays, ShoppingCart, UserPlus, MousePointerClick, 
-  Package, Sparkles, Monitor, Smartphone, Globe
+  Package, Sparkles, Monitor, Smartphone, Globe, Search, Download, DollarSign,
+  User, ExternalLink
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -236,6 +238,7 @@ const Transactions = () => {
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
   const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [showSampleData, setShowSampleData] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Build transactions from clicks and conversions
   const realTransactions: Transaction[] = useMemo(() => {
@@ -320,28 +323,64 @@ const Transactions = () => {
       filtered = filtered.filter(t => t.date >= cutoffDate!);
     }
 
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.description.toLowerCase().includes(query) ||
+        t.id.toLowerCase().includes(query) ||
+        t.linkAlias.toLowerCase().includes(query) ||
+        t.source.toLowerCase().includes(query)
+      );
+    }
+
     return filtered;
-  }, [transactions, typeFilter, dateRange]);
+  }, [transactions, typeFilter, dateRange, searchQuery]);
+
+  // Export CSV functionality
+  const handleExportCSV = () => {
+    const headers = ['Time', 'Type', 'Description', 'Link', 'Source', 'Location', 'Amount'];
+    const rows = filteredTransactions.map(tx => [
+      format(tx.date, 'yyyy-MM-dd HH:mm:ss'),
+      tx.type,
+      tx.description,
+      tx.linkAlias,
+      tx.source,
+      tx.location || '',
+      tx.amount !== null ? tx.amount.toFixed(2) : ''
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `transactions-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+  };
 
   const getTypeBadge = (type: TransactionType) => {
     switch (type) {
       case 'sale':
         return (
-          <Badge className="bg-success/10 text-success border-success/20 hover:bg-success/20">
-            <ShoppingCart className="w-3 h-3 mr-1" />
+          <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/25 px-2.5 py-0.5 rounded-full">
+            <DollarSign className="w-3 h-3 mr-1" />
             Sale
           </Badge>
         );
       case 'lead':
         return (
-          <Badge className="bg-warning/10 text-warning border-warning/20 hover:bg-warning/20">
-            <UserPlus className="w-3 h-3 mr-1" />
+          <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-2.5 py-0.5 rounded-full">
+            <User className="w-3 h-3 mr-1" />
             Lead
           </Badge>
         );
       case 'click':
         return (
-          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+          <Badge variant="secondary" className="bg-muted/80 text-muted-foreground border-border px-2.5 py-0.5 rounded-full">
             <MousePointerClick className="w-3 h-3 mr-1" />
             Click
           </Badge>
@@ -364,9 +403,11 @@ const Transactions = () => {
 
   const salesCount = filteredTransactions.filter(t => t.type === 'sale').length;
   const leadsCount = filteredTransactions.filter(t => t.type === 'lead').length;
+  const clicksCount = filteredTransactions.filter(t => t.type === 'click').length;
   const totalRevenue = filteredTransactions
     .filter(t => t.type === 'sale' && t.amount)
     .reduce((sum, t) => sum + (t.amount || 0), 0);
+  const conversionRate = clicksCount > 0 ? ((salesCount / clicksCount) * 100).toFixed(1) : '0.0';
 
   const hasRealData = realTransactions.length > 0;
 
@@ -418,54 +459,104 @@ const Transactions = () => {
                 </div>
               </section>
 
-              {/* Filters */}
+              {/* Enhanced Toolbar */}
               <section className="mb-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-muted-foreground">Filters:</span>
+                <div className="flex items-center gap-3 flex-wrap justify-between">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">Filters:</span>
+                    </div>
+                    
+                    <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
+                      <SelectTrigger className="w-[130px] h-9">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="sale">Sales</SelectItem>
+                        <SelectItem value="lead">Leads</SelectItem>
+                        <SelectItem value="click">Clicks</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
+                      <SelectTrigger className="w-[140px] h-9">
+                        <CalendarDays className="w-4 h-4 mr-2 text-muted-foreground" />
+                        <SelectValue placeholder="Date Range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7d">Last 7 days</SelectItem>
+                        <SelectItem value="30d">Last 30 days</SelectItem>
+                        <SelectItem value="90d">Last 90 days</SelectItem>
+                        <SelectItem value="all">All time</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search email, ID..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9 w-[180px] bg-background"
+                      />
+                    </div>
+
+                    {(typeFilter !== 'all' || dateRange !== '7d' || searchQuery) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setTypeFilter('all');
+                          setDateRange('7d');
+                          setSearchQuery('');
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        Reset
+                      </Button>
+                    )}
                   </div>
-                  
-                  <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
-                    <SelectTrigger className="w-[130px] h-9">
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="sale">Sales</SelectItem>
-                      <SelectItem value="lead">Leads</SelectItem>
-                      <SelectItem value="click">Clicks</SelectItem>
-                    </SelectContent>
-                  </Select>
 
-                  <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
-                    <SelectTrigger className="w-[140px] h-9">
-                      <CalendarDays className="w-4 h-4 mr-2 text-muted-foreground" />
-                      <SelectValue placeholder="Date Range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="7d">Last 7 days</SelectItem>
-                      <SelectItem value="30d">Last 30 days</SelectItem>
-                      <SelectItem value="90d">Last 90 days</SelectItem>
-                      <SelectItem value="all">All time</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {(typeFilter !== 'all' || dateRange !== '7d') && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setTypeFilter('all');
-                        setDateRange('7d');
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      Reset
-                    </Button>
-                  )}
+                  {/* Export Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportCSV}
+                    className="gap-2"
+                    disabled={filteredTransactions.length === 0}
+                  >
+                    <Download className="w-4 h-4" />
+                    Export CSV
+                  </Button>
                 </div>
               </section>
+
+              {/* Summary Strip */}
+              {filteredTransactions.length > 0 && (
+                <section className="mb-4">
+                  <div className="flex items-center gap-6 px-4 py-3 bg-muted/30 rounded-lg border border-border">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-success" />
+                      <span className="text-sm text-muted-foreground">Total Revenue:</span>
+                      <span className="text-sm font-semibold text-success font-mono">${totalRevenue.toFixed(2)}</span>
+                    </div>
+                    <div className="h-4 w-px bg-border" />
+                    <div className="flex items-center gap-2">
+                      <ShoppingCart className="w-4 h-4 text-success" />
+                      <span className="text-sm text-muted-foreground">Total Sales:</span>
+                      <span className="text-sm font-semibold text-foreground font-mono">{salesCount}</span>
+                    </div>
+                    <div className="h-4 w-px bg-border" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Conversion Rate:</span>
+                      <span className="text-sm font-semibold text-primary font-mono">{conversionRate}%</span>
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* Data Table or Empty State */}
               {filteredTransactions.length === 0 && !showSampleData ? (
@@ -490,7 +581,7 @@ const Transactions = () => {
                 <div className="border border-border rounded-xl overflow-hidden bg-card">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent border-border">
+                      <TableRow className="hover:bg-transparent border-border bg-muted/30">
                         <TableHead className="text-muted-foreground font-medium">Time</TableHead>
                         <TableHead className="text-muted-foreground font-medium">Type</TableHead>
                         <TableHead className="text-muted-foreground font-medium">Description</TableHead>
@@ -502,9 +593,12 @@ const Transactions = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTransactions.map((tx) => (
-                        <TableRow key={tx.id} className="border-border hover:bg-muted/50">
-                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                      {filteredTransactions.map((tx, index) => (
+                        <TableRow 
+                          key={tx.id} 
+                          className={`border-border hover:bg-primary/5 transition-colors ${index % 2 === 1 ? 'bg-muted/20' : ''}`}
+                        >
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap font-mono">
                             {format(tx.date, 'MMM d, HH:mm')}
                           </TableCell>
                           <TableCell>{getTypeBadge(tx.type)}</TableCell>
@@ -512,9 +606,13 @@ const Transactions = () => {
                             {tx.description}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="font-mono text-xs">
+                            <button 
+                              className="text-sm text-primary/80 hover:text-primary hover:underline transition-colors cursor-pointer flex items-center gap-1"
+                              onClick={() => navigate('/')}
+                            >
                               {tx.linkAlias}
-                            </Badge>
+                              <ExternalLink className="w-3 h-3 opacity-50" />
+                            </button>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -546,9 +644,9 @@ const Transactions = () => {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="text-right font-medium">
+                          <TableCell className="text-right font-mono">
                             {tx.amount !== null ? (
-                              <span className="text-success">${tx.amount.toFixed(2)}</span>
+                              <span className="text-success font-medium">${tx.amount.toFixed(2)}</span>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
