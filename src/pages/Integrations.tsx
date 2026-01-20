@@ -115,15 +115,14 @@ const INTEGRATIONS: Integration[] = [
     status: 'not_connected',
     category: 'affiliate'
   },
-  // Automation - Coming Soon
+  // Automation
   {
     id: 'zapier',
     name: 'Zapier',
     description: 'Connect apps and automate workflows.',
     logo: 'https://cdn.simpleicons.org/zapier/FF4A00',
     status: 'not_connected',
-    category: 'automation',
-    comingSoon: true
+    category: 'automation'
   },
   {
     id: 'make',
@@ -131,8 +130,7 @@ const INTEGRATIONS: Integration[] = [
     description: 'Visual automation platform for any workflow.',
     logo: 'https://cdn.simpleicons.org/make/6D00CC',
     status: 'not_connected',
-    category: 'automation',
-    comingSoon: true
+    category: 'automation'
   },
 ];
 
