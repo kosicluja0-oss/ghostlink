@@ -215,6 +215,28 @@ const serviceInstructions: Record<string, {
     settingsPath: 'Settings → Integrations → Webhooks',
     docsUrl: 'https://help.samcart.com/en/'
   },
+  zapier: {
+    title: 'Connect Zapier',
+    steps: [
+      'Go to Zapier and create a new Zap',
+      'Choose "Webhooks by Zapier" as trigger',
+      'Select "Catch Hook" event',
+      'Copy your unique Zapier webhook URL and paste below'
+    ],
+    settingsPath: 'Zaps → Create → Webhooks by Zapier',
+    docsUrl: 'https://zapier.com/help/create/code-webhooks/trigger-zaps-from-webhooks'
+  },
+  make: {
+    title: 'Connect Make',
+    steps: [
+      'Go to Make and create a new Scenario',
+      'Add "Webhooks" module as trigger',
+      'Select "Custom webhook" and create new hook',
+      'Copy your Make webhook URL and paste below'
+    ],
+    settingsPath: 'Scenarios → Create → Webhooks',
+    docsUrl: 'https://www.make.com/en/help/tools/webhooks'
+  },
 };
 
 export function ConnectServiceModal({
