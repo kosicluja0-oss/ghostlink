@@ -203,8 +203,9 @@ const Dashboard = () => {
     // Map link IDs to aliases
     const linkMap = new Map(links.map(l => [l.id, l.alias]));
     
-    // Map click IDs to source for conversions
+    // Map click IDs to source and country for conversions
     const clickSourceMap = new Map(clicks.map(c => [c.id, c.source]));
+    const clickCountryMap = new Map(clicks.map(c => [c.id, c.country]));
 
     // Add clicks
     clicks.forEach(click => {
@@ -220,14 +221,16 @@ const Dashboard = () => {
         linkId: click.link_id,
         linkAlias: alias,
         placement: click.source || undefined, // Smart Copy tracking parameter
+        location: click.country || undefined, // Country from IP geolocation
       });
     });
 
     // Add conversions (leads and sales)
     conversions.forEach(conv => {
       const alias = conv.link_id ? linkMap.get(conv.link_id) || 'Unknown' : 'Unknown';
-      // Get source from conversion (if available) or from click
+      // Get source and country from conversion (if available) or from click
       const placementSource = conv.source || clickSourceMap.get(conv.click_id);
+      const country = conv.country || clickCountryMap.get(conv.click_id);
       result.push({
         id: `conv-${conv.id}`,
         date: new Date(conv.created_at),
@@ -239,6 +242,7 @@ const Dashboard = () => {
         linkId: conv.link_id || '',
         linkAlias: alias,
         placement: placementSource || undefined, // Smart Copy tracking parameter
+        location: country || undefined, // Country from IP geolocation
       });
     });
 

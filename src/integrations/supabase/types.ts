@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       clicks: {
         Row: {
+          country: string | null
           created_at: string
           id: string
           link_id: string
           source: string | null
         }
         Insert: {
+          country?: string | null
           created_at?: string
           id?: string
           link_id: string
           source?: string | null
         }
         Update: {
+          country?: string | null
           created_at?: string
           id?: string
           link_id?: string
