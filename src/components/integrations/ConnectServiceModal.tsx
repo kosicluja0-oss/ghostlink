@@ -171,6 +171,50 @@ const serviceInstructions: Record<string, {
     settingsPath: 'Account → API/IPN',
     docsUrl: 'https://docs.digistore24.com/knowledge-base/ipn/'
   },
+  whop: {
+    title: 'Connect Whop',
+    steps: [
+      'Go to your Whop Dashboard',
+      'Navigate to Settings → Webhooks',
+      'Click "Add Webhook" button',
+      'Paste the URL and select "payment.completed" event'
+    ],
+    settingsPath: 'Settings → Webhooks',
+    docsUrl: 'https://dev.whop.com/reference/webhooks'
+  },
+  hotmart: {
+    title: 'Connect Hotmart',
+    steps: [
+      'Go to your Hotmart Dashboard',
+      'Navigate to Tools → Webhooks (Hottok)',
+      'Click "Add New Webhook"',
+      'Paste the URL and select purchase events'
+    ],
+    settingsPath: 'Tools → Webhooks',
+    docsUrl: 'https://developers.hotmart.com/docs/en/webhooks/'
+  },
+  thrivecart: {
+    title: 'Connect ThriveCart',
+    steps: [
+      'Go to your ThriveCart Dashboard',
+      'Navigate to Settings → API & Webhooks',
+      'Add new webhook notification',
+      'Paste URL for "Successful purchase" event'
+    ],
+    settingsPath: 'Settings → API & Webhooks',
+    docsUrl: 'https://thrivecart.com/docs/'
+  },
+  samcart: {
+    title: 'Connect SamCart',
+    steps: [
+      'Go to your SamCart Dashboard',
+      'Navigate to Settings → Integrations → Webhooks',
+      'Click "Add Webhook"',
+      'Paste URL and select "Order completed" trigger'
+    ],
+    settingsPath: 'Settings → Integrations → Webhooks',
+    docsUrl: 'https://help.samcart.com/en/'
+  },
 };
 
 export function ConnectServiceModal({
