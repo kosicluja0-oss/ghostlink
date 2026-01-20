@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap } from 'lucide-react';
+import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -132,6 +132,31 @@ const INTEGRATIONS: Integration[] = [
     status: 'not_connected',
     category: 'automation'
   },
+  // Communication & Alerts
+  {
+    id: 'discord',
+    name: 'Discord',
+    description: 'Get instant sale notifications in your server.',
+    logo: 'https://cdn.simpleicons.org/discord/5865F2',
+    status: 'not_connected',
+    category: 'communication'
+  },
+  {
+    id: 'telegram',
+    name: 'Telegram',
+    description: 'Receive alerts via Telegram bot messages.',
+    logo: 'https://cdn.simpleicons.org/telegram/26A5E4',
+    status: 'not_connected',
+    category: 'communication'
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    description: 'Push notifications to your Slack channels.',
+    logo: 'https://cdn.simpleicons.org/slack/4A154B',
+    status: 'not_connected',
+    category: 'communication'
+  },
 ];
 
 // Category configuration
@@ -165,6 +190,12 @@ const CATEGORIES = [
     label: 'Automation', 
     icon: Zap,
     description: 'Connect with automation tools'
+  },
+  { 
+    id: 'communication', 
+    label: 'Communication & Alerts', 
+    icon: Bell,
+    description: 'Real-time notifications for sales and leads'
   },
 ];
 

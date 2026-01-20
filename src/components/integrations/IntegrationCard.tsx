@@ -8,7 +8,7 @@ export interface Integration {
   description: string;
   logo: string;
   status: 'connected' | 'not_connected' | 'pending';
-  category: 'payment' | 'ecommerce' | 'creator' | 'affiliate' | 'automation' | 'developer';
+  category: 'payment' | 'ecommerce' | 'creator' | 'affiliate' | 'automation' | 'developer' | 'communication';
   comingSoon?: boolean;
 }
 
