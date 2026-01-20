@@ -4,8 +4,9 @@ import { format } from 'date-fns';
 import { 
   MousePointer, Users, DollarSign, TrendingUp, Percent, 
   Filter, CalendarDays, Search, Download, User, ExternalLink,
-  MousePointerClick, Package, Sparkles, Monitor, Smartphone, ShoppingCart
+  MousePointerClick, Sparkles, ShoppingCart, Link2, Globe
 } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -53,24 +54,22 @@ interface Transaction {
   linkId: string;
   linkAlias: string;
   location?: string;
-  locationFlag?: string;
-  device?: 'desktop' | 'mobile';
-  platform?: string;
 }
 
-// Flag emoji mapping for countries
-const FLAGS: Record<string, string> = {
-  US: '🇺🇸', UK: '🇬🇧', DE: '🇩🇪', FR: '🇫🇷', CA: '🇨🇦', AU: '🇦🇺', 
-  JP: '🇯🇵', BR: '🇧🇷', ES: '🇪🇸', IT: '🇮🇹', NL: '🇳🇱', CZ: '🇨🇿'
-};
-
-// Platform icons mapping
-const PLATFORMS: Record<string, string> = {
-  youtube: 'YT',
-  instagram: 'IG',
-  twitter: 'X',
-  tiktok: 'TT',
-  direct: '🔗',
+// Country data with flags and full names
+const COUNTRIES: Record<string, { flag: string; name: string }> = {
+  US: { flag: '🇺🇸', name: 'United States' },
+  UK: { flag: '🇬🇧', name: 'United Kingdom' },
+  DE: { flag: '🇩🇪', name: 'Germany' },
+  FR: { flag: '🇫🇷', name: 'France' },
+  CA: { flag: '🇨🇦', name: 'Canada' },
+  AU: { flag: '🇦🇺', name: 'Australia' },
+  JP: { flag: '🇯🇵', name: 'Japan' },
+  BR: { flag: '🇧🇷', name: 'Brazil' },
+  ES: { flag: '🇪🇸', name: 'Spain' },
+  IT: { flag: '🇮🇹', name: 'Italy' },
+  NL: { flag: '🇳🇱', name: 'Netherlands' },
+  CZ: { flag: '🇨🇿', name: 'Czechia' },
 };
 
 // Sample mock data generator
@@ -80,76 +79,61 @@ const generateSampleData = (): Transaction[] => {
       id: 'sample-1',
       date: new Date(Date.now() - 1000 * 60 * 30),
       type: 'sale',
-      description: 'Purchase: Summer E-book',
+      description: 'Yuki Tanada',
       amount: 49.00,
       source: 'Gumroad',
       sourceIcon: 'gumroad',
       linkId: '1',
-      linkAlias: 'Summer Promo',
-      location: 'US',
-      locationFlag: FLAGS.US,
-      device: 'desktop',
-      platform: 'youtube',
+      linkAlias: 'ebook',
+      location: 'JP',
     },
     {
       id: 'sample-2',
       date: new Date(Date.now() - 1000 * 60 * 60 * 2),
       type: 'lead',
-      description: 'New Subscriber',
+      description: 'newsletter@email.com',
       amount: null,
       source: 'Direct Link',
       sourceIcon: 'direct',
       linkId: '2',
-      linkAlias: 'Newsletter Signup',
+      linkAlias: 'signup',
       location: 'DE',
-      locationFlag: FLAGS.DE,
-      device: 'mobile',
-      platform: 'instagram',
     },
     {
       id: 'sample-3',
       date: new Date(Date.now() - 1000 * 60 * 60 * 3),
       type: 'sale',
-      description: 'Premium Course',
+      description: 'Marcus Chen',
       amount: 199.00,
       source: 'Stripe',
       sourceIcon: 'stripe',
       linkId: '3',
-      linkAlias: 'Course Link',
-      location: 'UK',
-      locationFlag: FLAGS.UK,
-      device: 'desktop',
-      platform: 'twitter',
+      linkAlias: 'course',
+      location: 'US',
     },
     {
       id: 'sample-4',
       date: new Date(Date.now() - 1000 * 60 * 60 * 5),
       type: 'click',
-      description: 'Link clicked',
+      description: 'visitor@gmail.com',
       amount: null,
       source: 'Direct Link',
       sourceIcon: 'direct',
       linkId: '1',
-      linkAlias: 'Summer Promo',
+      linkAlias: 'promo',
       location: 'FR',
-      locationFlag: FLAGS.FR,
-      device: 'mobile',
-      platform: 'tiktok',
     },
     {
       id: 'sample-5',
       date: new Date(Date.now() - 1000 * 60 * 60 * 8),
       type: 'sale',
-      description: 'E-book Bundle',
+      description: 'Sarah Johnson',
       amount: 79.00,
       source: 'Lemon Squeezy',
       sourceIcon: 'lemon',
       linkId: '2',
-      linkAlias: 'E-book Launch',
+      linkAlias: 'bundle',
       location: 'CA',
-      locationFlag: FLAGS.CA,
-      device: 'desktop',
-      platform: 'youtube',
     },
   ];
 
@@ -366,17 +350,16 @@ const Dashboard = () => {
     }
   };
 
-  const getSourceIcon = (source: string, sourceIcon: string) => {
-    switch (sourceIcon) {
-      case 'gumroad':
-        return <div className="w-5 h-5 rounded bg-pink-500/20 text-pink-400 flex items-center justify-center text-[10px] font-bold">G</div>;
-      case 'stripe':
-        return <div className="w-5 h-5 rounded bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-bold">S</div>;
-      case 'lemon':
-        return <div className="w-5 h-5 rounded bg-yellow-500/20 text-yellow-400 flex items-center justify-center text-[10px] font-bold">L</div>;
-      default:
-        return <Package className="w-4 h-4 text-muted-foreground" />;
+  // Get customer initials for avatar
+  const getCustomerInitials = (description: string) => {
+    if (description.includes('@')) {
+      return description.charAt(0).toUpperCase();
     }
+    const words = description.split(' ');
+    if (words.length >= 2) {
+      return `${words[0].charAt(0)}${words[1].charAt(0)}`.toUpperCase();
+    }
+    return description.charAt(0).toUpperCase();
   };
 
   const salesCount = filteredTransactions.filter(t => t.type === 'sale').length;
@@ -592,74 +575,79 @@ const Dashboard = () => {
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-border bg-muted/30">
-                          <TableHead className="text-muted-foreground font-medium">Time</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Type</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Description</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Event</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Link</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Source</TableHead>
-                          <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Location</TableHead>
-                          <TableHead className="text-muted-foreground font-medium hidden lg:table-cell">Device</TableHead>
+                          <TableHead className="text-muted-foreground font-medium">Customer</TableHead>
+                          <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Country</TableHead>
                           <TableHead className="text-muted-foreground font-medium text-right">Amount</TableHead>
+                          <TableHead className="text-muted-foreground font-medium text-right">Date</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTransactions.map((tx, index) => (
+                        {filteredTransactions.map((tx) => (
                           <TableRow 
                             key={tx.id} 
-                            className={`border-border hover:bg-primary/5 transition-colors ${index % 2 === 1 ? 'bg-muted/20' : ''}`}
+                            className="border-border hover:bg-muted/50 transition-colors h-14"
                           >
-                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap font-mono">
-                              {format(tx.date, 'MMM d, HH:mm')}
-                            </TableCell>
-                            <TableCell>{getTypeBadge(tx.type)}</TableCell>
-                            <TableCell className="text-sm text-foreground max-w-[200px] truncate">
-                              {tx.description}
-                            </TableCell>
-                            <TableCell>
+                            {/* Event Column */}
+                            <TableCell className="py-4">{getTypeBadge(tx.type)}</TableCell>
+                            
+                            {/* Link Column */}
+                            <TableCell className="py-4">
                               <button 
-                                className="text-sm text-primary/80 hover:text-primary hover:underline transition-colors cursor-pointer flex items-center gap-1"
+                                className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors cursor-pointer group"
                                 onClick={() => navigate('/links')}
                               >
-                                {tx.linkAlias}
-                                <ExternalLink className="w-3 h-3 opacity-50" />
+                                <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
+                                  <Link2 className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                </div>
+                                <span className="font-medium group-hover:underline">ghost.link/{tx.linkAlias}</span>
                               </button>
                             </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {getSourceIcon(tx.source, tx.sourceIcon)}
-                                <span className="text-sm text-muted-foreground">{tx.source}</span>
+                            
+                            {/* Customer Column */}
+                            <TableCell className="py-4">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8">
+                                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                                    {getCustomerInitials(tx.description)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm text-foreground truncate max-w-[180px]">
+                                  {tx.description}
+                                </span>
                               </div>
                             </TableCell>
-                            <TableCell className="hidden md:table-cell">
-                              {tx.location && (
-                                <div className="flex items-center gap-1.5">
-                                  <span>{tx.locationFlag}</span>
-                                  <span className="text-sm text-muted-foreground">{tx.location}</span>
+                            
+                            {/* Country Column */}
+                            <TableCell className="hidden md:table-cell py-4">
+                              {tx.location && COUNTRIES[tx.location] ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-base">{COUNTRIES[tx.location].flag}</span>
+                                  <span className="text-sm text-muted-foreground">{COUNTRIES[tx.location].name}</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <Globe className="w-4 h-4" />
+                                  <span className="text-sm">Unknown</span>
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
-                              {tx.device && (
-                                <div className="flex items-center gap-1.5">
-                                  {tx.device === 'desktop' ? (
-                                    <Monitor className="w-4 h-4 text-muted-foreground" />
-                                  ) : (
-                                    <Smartphone className="w-4 h-4 text-muted-foreground" />
-                                  )}
-                                  {tx.platform && (
-                                    <span className="text-xs text-muted-foreground uppercase">
-                                      {PLATFORMS[tx.platform] || tx.platform}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right font-mono">
+                            
+                            {/* Amount Column */}
+                            <TableCell className="text-right py-4 font-mono">
                               {tx.amount !== null ? (
-                                <span className="text-success font-medium">${tx.amount.toFixed(2)}</span>
+                                <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span>
                               ) : (
                                 <span className="text-muted-foreground">—</span>
                               )}
+                            </TableCell>
+                            
+                            {/* Date Column */}
+                            <TableCell className="text-right py-4">
+                              <span className="text-sm text-muted-foreground font-mono whitespace-nowrap">
+                                {format(tx.date, 'MMM d, HH:mm')}
+                              </span>
                             </TableCell>
                           </TableRow>
                         ))}
