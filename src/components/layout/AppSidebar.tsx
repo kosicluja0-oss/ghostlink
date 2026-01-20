@@ -1,4 +1,4 @@
-import { Ghost, LayoutDashboard, Puzzle, Database, Settings, LogOut, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { Ghost, LayoutDashboard, Puzzle, Link2, Settings, LogOut, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -50,10 +50,10 @@ export function AppSidebar({
       badge: undefined as number | undefined,
     },
     {
-      title: 'Data & Leads',
-      icon: Database,
-      onClick: () => navigate('/transactions'),
-      path: '/transactions',
+      title: 'Links',
+      icon: Link2,
+      onClick: () => navigate('/links'),
+      path: '/links',
       badge: undefined as number | undefined,
     },
     {
