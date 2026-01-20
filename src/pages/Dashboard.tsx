@@ -16,6 +16,7 @@ import { DataIntegrationModal } from '@/components/modals/DataIntegrationModal';
 import { StatCard } from '@/components/analytics/StatCard';
 import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
+import { TopCountriesCard } from '@/components/analytics/TopCountriesCard';
 import { PlacementBadge, parsePlacement } from '@/components/analytics/PlacementBadge';
 import { useLinks } from '@/hooks/useLinks';
 import { useClicksRealtime } from '@/hooks/useClicksRealtime';
@@ -448,6 +449,31 @@ const Dashboard = () => {
     return placements;
   }, [transactions]);
 
+  // Calculate country analytics from transactions
+  const countryAnalytics = useMemo(() => {
+    const countryCounts: Record<string, number> = {};
+    
+    transactions.forEach(tx => {
+      const country = tx.location || 'Unknown';
+      if (!countryCounts[country]) {
+        countryCounts[country] = 0;
+      }
+      countryCounts[country]++;
+    });
+
+    const total = transactions.length;
+    const countries = Object.entries(countryCounts)
+      .map(([code, count]) => ({
+        code,
+        count,
+        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+      }))
+      .filter(c => c.code !== 'Unknown') // Filter out unknown
+      .sort((a, b) => b.count - a.count);
+
+    return countries;
+  }, [transactions]);
+
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
@@ -513,9 +539,9 @@ const Dashboard = () => {
                 </div>
               </section>
 
-              {/* Chart + Top Placements Row */}
+              {/* Chart + Analytics Widgets Row */}
               <section className="mb-5">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                   <div className="lg:col-span-3">
                     <AnalyticsChart 
                       data={analyticsData} 
@@ -529,6 +555,9 @@ const Dashboard = () => {
                   </div>
                   <div className="lg:col-span-1">
                     <TopPlacementsCard placements={placementAnalytics} />
+                  </div>
+                  <div className="lg:col-span-1">
+                    <TopCountriesCard countries={countryAnalytics} />
                   </div>
                 </div>
               </section>
