@@ -56,6 +56,38 @@ const INTEGRATIONS: Integration[] = [
     status: 'not_connected',
     category: 'payment'
   },
+  {
+    id: 'whop',
+    name: 'Whop',
+    description: 'Sell digital products, memberships, and courses.',
+    logo: 'https://cdn.simpleicons.org/w/6366F1',
+    status: 'not_connected',
+    category: 'payment'
+  },
+  {
+    id: 'hotmart',
+    name: 'Hotmart',
+    description: 'Digital product marketplace for creators.',
+    logo: 'https://cdn.simpleicons.org/h/FF6B00',
+    status: 'not_connected',
+    category: 'payment'
+  },
+  {
+    id: 'thrivecart',
+    name: 'ThriveCart',
+    description: 'High-converting checkout pages for digital sales.',
+    logo: 'https://cdn.simpleicons.org/t/2DD4BF',
+    status: 'not_connected',
+    category: 'payment'
+  },
+  {
+    id: 'samcart',
+    name: 'SamCart',
+    description: 'E-commerce platform for digital creators.',
+    logo: 'https://cdn.simpleicons.org/s/3B82F6',
+    status: 'not_connected',
+    category: 'payment'
+  },
   // Creator Economy
   {
     id: 'kofi',
