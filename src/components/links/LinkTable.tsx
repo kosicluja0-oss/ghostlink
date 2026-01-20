@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ExternalLink, Copy, Pencil, Search, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ExternalLink, Pencil, Search, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { SmartCopyMenu } from './SmartCopyMenu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +29,6 @@ import {
 import { cn } from '@/lib/utils';
 import { getTrackingUrl, getDisplayUrl } from '@/lib/trackingUrl';
 import type { GhostLink, TierType } from '@/types';
-import { toast } from 'sonner';
 
 interface LinkTableProps {
   links: GhostLink[];
@@ -127,11 +127,7 @@ function LinkRow({
     );
   }, [link.clicks]);
 
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(trackingUrl);
-    toast.success('Tracking URL copied to clipboard');
-  };
+  // handleCopyLink removed - now handled by SmartCopyMenu
 
   const handleDeleteConfirm = () => {
     onDelete(link.id);
@@ -190,27 +186,11 @@ function LinkRow({
 
         {/* Actions - Right */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Copy Button - Always visible on hover */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className={cn(
-                  "h-7 px-2.5 text-[11px] gap-1.5 transition-opacity",
-                  "opacity-0 group-hover:opacity-100",
-                  isSelected && "opacity-100"
-                )}
-                onClick={handleCopyLink}
-              >
-                <Copy className="h-3 w-3" />
-                <span>Copy</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              Copy link to clipboard
-            </TooltipContent>
-          </Tooltip>
+          {/* Smart Copy Menu - Platform-aware copy */}
+          <SmartCopyMenu 
+            trackingUrl={trackingUrl} 
+            isVisible={isSelected}
+          />
 
           {/* More Actions Dropdown */}
           <DropdownMenu>
