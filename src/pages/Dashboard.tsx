@@ -15,6 +15,8 @@ import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { DataIntegrationModal } from '@/components/modals/DataIntegrationModal';
 import { StatCard } from '@/components/analytics/StatCard';
 import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
+import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
+import { PlacementBadge, parsePlacement } from '@/components/analytics/PlacementBadge';
 import { useLinks } from '@/hooks/useLinks';
 import { useClicksRealtime } from '@/hooks/useClicksRealtime';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,6 +56,7 @@ interface Transaction {
   linkId: string;
   linkAlias: string;
   location?: string;
+  placement?: string; // Tracking parameter (e.g., 'ig-story', 'tt-bio')
 }
 
 // Country data with flags and full names
@@ -72,7 +75,7 @@ const COUNTRIES: Record<string, { flag: string; name: string }> = {
   CZ: { flag: '🇨🇿', name: 'Czechia' },
 };
 
-// Sample mock data generator
+// Sample mock data generator with placement data
 const generateSampleData = (): Transaction[] => {
   const sampleTransactions: Transaction[] = [
     {
@@ -86,6 +89,7 @@ const generateSampleData = (): Transaction[] => {
       linkId: '1',
       linkAlias: 'ebook',
       location: 'JP',
+      placement: 'ig-story',
     },
     {
       id: 'sample-2',
@@ -98,6 +102,7 @@ const generateSampleData = (): Transaction[] => {
       linkId: '2',
       linkAlias: 'signup',
       location: 'DE',
+      placement: 'tt-bio',
     },
     {
       id: 'sample-3',
@@ -110,6 +115,7 @@ const generateSampleData = (): Transaction[] => {
       linkId: '3',
       linkAlias: 'course',
       location: 'US',
+      placement: 'yt-shorts',
     },
     {
       id: 'sample-4',
@@ -122,6 +128,7 @@ const generateSampleData = (): Transaction[] => {
       linkId: '1',
       linkAlias: 'promo',
       location: 'FR',
+      placement: 'ig-story',
     },
     {
       id: 'sample-5',
@@ -134,6 +141,33 @@ const generateSampleData = (): Transaction[] => {
       linkId: '2',
       linkAlias: 'bundle',
       location: 'CA',
+      placement: 'ig-story',
+    },
+    {
+      id: 'sample-6',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 10),
+      type: 'click',
+      description: 'john.doe@example.com',
+      amount: null,
+      source: 'Direct Link',
+      sourceIcon: 'direct',
+      linkId: '3',
+      linkAlias: 'course',
+      location: 'UK',
+      placement: undefined, // Direct/Other
+    },
+    {
+      id: 'sample-7',
+      date: new Date(Date.now() - 1000 * 60 * 60 * 12),
+      type: 'lead',
+      description: 'Emma Wilson',
+      amount: null,
+      source: 'Webhook',
+      sourceIcon: 'direct',
+      linkId: '1',
+      linkAlias: 'ebook',
+      location: 'AU',
+      placement: 'ig-reels',
     },
   ];
 
@@ -372,6 +406,37 @@ const Dashboard = () => {
 
   const hasRealData = realTransactions.length > 0;
 
+  // Calculate placement analytics
+  const placementAnalytics = useMemo(() => {
+    const placementCounts: Record<string, { platform: string; placement: string; count: number }> = {};
+    
+    transactions.forEach(tx => {
+      const placementInfo = parsePlacement(tx.placement);
+      const key = placementInfo 
+        ? `${placementInfo.platform}-${placementInfo.placement}` 
+        : 'direct-Direct';
+      
+      if (!placementCounts[key]) {
+        placementCounts[key] = {
+          platform: placementInfo?.platform || 'direct',
+          placement: placementInfo?.placement || 'Direct',
+          count: 0,
+        };
+      }
+      placementCounts[key].count++;
+    });
+
+    const total = transactions.length;
+    const placements = Object.values(placementCounts)
+      .map(p => ({
+        ...p,
+        percentage: total > 0 ? Math.round((p.count / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return placements;
+  }, [transactions]);
+
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
@@ -437,17 +502,24 @@ const Dashboard = () => {
                 </div>
               </section>
 
-              {/* Chart */}
+              {/* Chart + Top Placements Row */}
               <section className="mb-5">
-                <AnalyticsChart 
-                  data={analyticsData} 
-                  showConversions={!isFreeTier}
-                  onTimeRangeChange={handleTimeRangeChange}
-                  activeLinkId={null}
-                  selectedLinkAlias={undefined}
-                  onClearSelection={() => {}}
-                  links={links}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                  <div className="lg:col-span-3">
+                    <AnalyticsChart 
+                      data={analyticsData} 
+                      showConversions={!isFreeTier}
+                      onTimeRangeChange={handleTimeRangeChange}
+                      activeLinkId={null}
+                      selectedLinkAlias={undefined}
+                      onClearSelection={() => {}}
+                      links={links}
+                    />
+                  </div>
+                  <div className="lg:col-span-1">
+                    <TopPlacementsCard placements={placementAnalytics} />
+                  </div>
+                </div>
               </section>
 
               {/* Recent Activity Section */}
@@ -577,6 +649,7 @@ const Dashboard = () => {
                         <TableRow className="hover:bg-transparent border-border bg-muted/30">
                           <TableHead className="text-muted-foreground font-medium">Event</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Link</TableHead>
+                          <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">Placement</TableHead>
                           <TableHead className="text-muted-foreground font-medium">Customer</TableHead>
                           <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Country</TableHead>
                           <TableHead className="text-muted-foreground font-medium text-right">Amount</TableHead>
@@ -603,6 +676,11 @@ const Dashboard = () => {
                                 </div>
                                 <span className="font-medium group-hover:underline">ghost.link/{tx.linkAlias}</span>
                               </button>
+                            </TableCell>
+                            
+                            {/* Placement Column */}
+                            <TableCell className="hidden sm:table-cell py-4">
+                              <PlacementBadge source={tx.placement} />
                             </TableCell>
                             
                             {/* Customer Column */}
