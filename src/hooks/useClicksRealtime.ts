@@ -8,6 +8,7 @@ interface DbClick {
   link_id: string;
   created_at: string;
   source?: string | null; // Tracking parameter from Smart Copy (e.g., 'ig-story', 'tt-bio')
+  country?: string | null; // Two-letter country code from IP geolocation (e.g., 'US', 'GB')
 }
 
 interface DbConversion {
@@ -18,6 +19,7 @@ interface DbConversion {
   created_at: string;
   link_id?: string;
   source?: string | null; // Tracking parameter from the associated click
+  country?: string | null; // Country code from the associated click
 }
 
 export function useClicksRealtime() {
@@ -47,7 +49,7 @@ export function useClicksRealtime() {
           setClicks(clicksData ?? []);
         }
 
-        // Fetch conversions with link_id and source via clicks join
+        // Fetch conversions with link_id, source, and country via clicks join
         const { data: conversionsData, error: conversionsError } = await supabase
           .from('conversions')
           .select(`
@@ -56,7 +58,7 @@ export function useClicksRealtime() {
             type,
             value,
             created_at,
-            clicks!inner(link_id, source)
+            clicks!inner(link_id, source, country)
           `)
           .order('created_at', { ascending: true });
 
@@ -71,6 +73,7 @@ export function useClicksRealtime() {
             created_at: conv.created_at,
             link_id: conv.clicks.link_id,
             source: conv.clicks.source,
+            country: conv.clicks.country,
           }));
           setConversions(transformed);
         }

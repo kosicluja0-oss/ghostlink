@@ -5,6 +5,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Map of country codes to country names (for logging purposes)
+const getCountryFromIP = async (ip: string): Promise<string | null> => {
+  try {
+    // Use ip-api.com free service (no API key required, 45 requests per minute limit)
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=countryCode`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.countryCode) {
+        return data.countryCode;
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching country from IP:', error);
+  }
+  return null;
+};
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -58,21 +75,33 @@ Deno.serve(async (req) => {
     // Get source tracking parameter (from Smart Copy feature)
     const source = url.searchParams.get('s') || url.searchParams.get('source') || null;
     
-    console.log(`Found link: ${link.id}, target: ${link.target_url}, source: ${source}`);
+    // Get visitor IP for geolocation
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+      || req.headers.get('cf-connecting-ip') 
+      || req.headers.get('x-real-ip')
+      || null;
+    
+    console.log(`Found link: ${link.id}, target: ${link.target_url}, source: ${source}, IP: ${clientIP}`);
 
-    // Log the click asynchronously with source tracking (don't await to minimize latency)
-    supabase
-      .from('clicks')
-      .insert({ link_id: link.id, source: source })
-      .then(({ error }) => {
-        if (error) {
-          console.error('Error logging click:', error);
-        } else {
-          console.log(`Click logged for link: ${link.id}, source: ${source}`);
-        }
-      });
+    // Fetch country from IP (run in parallel with redirect)
+    const countryPromise = clientIP ? getCountryFromIP(clientIP) : Promise.resolve(null);
 
-    // Perform the redirect
+    // Log the click asynchronously with source and country tracking (don't await to minimize latency)
+    countryPromise.then(async (country) => {
+      console.log(`Country detected: ${country}`);
+      
+      const { error } = await supabase
+        .from('clicks')
+        .insert({ link_id: link.id, source: source, country: country });
+      
+      if (error) {
+        console.error('Error logging click:', error);
+      } else {
+        console.log(`Click logged for link: ${link.id}, source: ${source}, country: ${country}`);
+      }
+    });
+
+    // Perform the redirect immediately (don't wait for IP lookup)
     return new Response(null, {
       status: 302,
       headers: {
