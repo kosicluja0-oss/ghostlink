@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell } from 'lucide-react';
+import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell, Mail } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -132,6 +132,39 @@ const INTEGRATIONS: Integration[] = [
     status: 'not_connected',
     category: 'automation'
   },
+  // Marketing & CRM
+  {
+    id: 'gohighlevel',
+    name: 'GoHighLevel',
+    description: 'All-in-one marketing platform for agencies.',
+    logo: 'https://cdn.simpleicons.org/g2/FF492C',
+    status: 'not_connected',
+    category: 'marketing'
+  },
+  {
+    id: 'beehiiv',
+    name: 'Beehiiv',
+    description: 'Newsletter platform for growth-focused creators.',
+    logo: 'https://cdn.simpleicons.org/b/FFCC00',
+    status: 'not_connected',
+    category: 'marketing'
+  },
+  {
+    id: 'convertkit',
+    name: 'ConvertKit',
+    description: 'Email marketing for online creators.',
+    logo: 'https://cdn.simpleicons.org/convertkit/FB6970',
+    status: 'not_connected',
+    category: 'marketing'
+  },
+  {
+    id: 'substack',
+    name: 'Substack',
+    description: 'Subscription newsletter publishing platform.',
+    logo: 'https://cdn.simpleicons.org/substack/FF6719',
+    status: 'not_connected',
+    category: 'marketing'
+  },
   // Communication & Alerts
   {
     id: 'discord',
@@ -190,6 +223,12 @@ const CATEGORIES = [
     label: 'Automation', 
     icon: Zap,
     description: 'Connect with automation tools'
+  },
+  { 
+    id: 'marketing', 
+    label: 'Marketing & CRM', 
+    icon: Mail,
+    description: 'Sync leads and subscribers automatically'
   },
   { 
     id: 'communication', 
