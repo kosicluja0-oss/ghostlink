@@ -198,30 +198,21 @@ function AnimatedPrice({
 }
 
 // Stripe checkout handler
-async function handleSubscription(
-  planId: string, 
-  cycle: BillingCycle, 
-  isAuthenticated: boolean,
-  navigate: ReturnType<typeof useNavigate>,
-  setLoading: (loading: string | null) => void
-) {
+async function handleSubscription(planId: string, cycle: BillingCycle, isAuthenticated: boolean, navigate: ReturnType<typeof useNavigate>, setLoading: (loading: string | null) => void) {
   if (planId === 'free') return;
-  
+
   // Require authentication for paid plans
   if (!isAuthenticated) {
     toast.info('Please sign in to subscribe');
     navigate('/auth?mode=signup&redirect=pricing');
     return;
   }
-
   const stripePlanId = planId as PlanId;
   if (!STRIPE_PRICES[stripePlanId]) {
     toast.error('Invalid plan selected');
     return;
   }
-
   setLoading(`${planId}-${cycle}`);
-  
   try {
     const url = await createCheckoutSession(stripePlanId, cycle);
     if (url) {
@@ -233,7 +224,9 @@ async function handleSubscription(
 }
 export default function Landing() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -292,10 +285,9 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
-            Real-Time Analytics for
-            <br />
-            <span className="text-primary">The Modern Affiliate.</span>
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">Stop Guessing. Start Scaling.
+The Modern Affiliate.<br />
+            <span className="text-primary">Results first. Build for the modern Affiliate.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
             Track clicks, leads, and sales with millisecond latency. Bridge pages included.
@@ -399,19 +391,11 @@ export default function Landing() {
                         <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300">
                           Start free trial
                         </Button>
-                      </Link> : <Button 
-                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300" 
-                        onClick={() => handleSubscription(planId, billingCycle, isAuthenticated, navigate, setCheckoutLoading)}
-                        disabled={checkoutLoading === `${planId}-${billingCycle}`}
-                      >
-                        {checkoutLoading === `${planId}-${billingCycle}` ? (
-                          <>
+                      </Link> : <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300" onClick={() => handleSubscription(planId, billingCycle, isAuthenticated, navigate, setCheckoutLoading)} disabled={checkoutLoading === `${planId}-${billingCycle}`}>
+                        {checkoutLoading === `${planId}-${billingCycle}` ? <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Loading...
-                          </>
-                        ) : (
-                          'Get started'
-                        )}
+                          </> : 'Get started'}
                       </Button>}
                   </div>
                   
