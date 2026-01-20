@@ -71,7 +71,7 @@ function MockDashboardChart() {
 }
 const features = [{
   icon: Zap,
-  title: 'Real-Time Engine',
+  title: 'Real-time analytics',
   description: 'Watch traffic as it happens. No delays. Millisecond latency tracking for the data-driven marketer.'
 }, {
   icon: Target,
