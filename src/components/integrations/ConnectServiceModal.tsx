@@ -237,6 +237,39 @@ const serviceInstructions: Record<string, {
     settingsPath: 'Scenarios → Create → Webhooks',
     docsUrl: 'https://www.make.com/en/help/tools/webhooks'
   },
+  discord: {
+    title: 'Connect Discord',
+    steps: [
+      'Open Discord and go to your server',
+      'Navigate to Server Settings → Integrations → Webhooks',
+      'Click "New Webhook" and choose the channel',
+      'Copy the webhook URL and paste below'
+    ],
+    settingsPath: 'Server Settings → Integrations → Webhooks',
+    docsUrl: 'https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks'
+  },
+  telegram: {
+    title: 'Connect Telegram',
+    steps: [
+      'Open Telegram and message @BotFather',
+      'Create a new bot with /newbot command',
+      'Copy your bot token',
+      'Get your chat ID and configure notifications'
+    ],
+    settingsPath: '@BotFather → /newbot',
+    docsUrl: 'https://core.telegram.org/bots#how-do-i-create-a-bot'
+  },
+  slack: {
+    title: 'Connect Slack',
+    steps: [
+      'Go to Slack API and create a new app',
+      'Enable Incoming Webhooks feature',
+      'Add webhook to your desired channel',
+      'Copy the webhook URL and paste below'
+    ],
+    settingsPath: 'Slack API → Your Apps → Webhooks',
+    docsUrl: 'https://api.slack.com/messaging/webhooks'
+  },
 };
 
 export function ConnectServiceModal({
