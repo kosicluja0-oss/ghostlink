@@ -286,8 +286,8 @@ export default function Landing() {
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">Stop Guessing. Start Scaling.
-The Modern Affiliate.<br />
-            <span className="text-primary">Results first. Build for the modern Affiliate.</span>
+Built for the modern affiliate.<br />
+            <span className="text-primary">Built for the modern affiliate.</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
             Track clicks, leads, and sales with millisecond latency. Bridge pages included.
