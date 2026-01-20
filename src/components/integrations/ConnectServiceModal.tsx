@@ -270,6 +270,50 @@ const serviceInstructions: Record<string, {
     settingsPath: 'Slack API → Your Apps → Webhooks',
     docsUrl: 'https://api.slack.com/messaging/webhooks'
   },
+  gohighlevel: {
+    title: 'Connect GoHighLevel',
+    steps: [
+      'Go to your GoHighLevel account',
+      'Navigate to Settings → Webhooks',
+      'Click "Add Webhook" button',
+      'Paste the URL and select trigger events'
+    ],
+    settingsPath: 'Settings → Webhooks',
+    docsUrl: 'https://help.gohighlevel.com/support/solutions/articles/155000002294-webhooks'
+  },
+  beehiiv: {
+    title: 'Connect Beehiiv',
+    steps: [
+      'Go to your Beehiiv Dashboard',
+      'Navigate to Settings → Integrations → Webhooks',
+      'Click "Add Webhook"',
+      'Paste URL and select subscription events'
+    ],
+    settingsPath: 'Settings → Integrations → Webhooks',
+    docsUrl: 'https://developers.beehiiv.com/docs/webhooks'
+  },
+  convertkit: {
+    title: 'Connect ConvertKit',
+    steps: [
+      'Go to your ConvertKit account',
+      'Navigate to Settings → Advanced → Webhooks',
+      'Add new webhook URL',
+      'Select "Subscriber activated" trigger'
+    ],
+    settingsPath: 'Settings → Advanced → Webhooks',
+    docsUrl: 'https://help.convertkit.com/en/articles/2502494-using-webhooks'
+  },
+  substack: {
+    title: 'Connect Substack',
+    steps: [
+      'Go to your Substack Dashboard',
+      'Navigate to Settings → Integrations',
+      'Look for Webhook or Zapier integration',
+      'Configure with the webhook URL below'
+    ],
+    settingsPath: 'Settings → Integrations',
+    docsUrl: 'https://support.substack.com/hc/en-us/articles/360037466012-Integrations'
+  },
 };
 
 export function ConnectServiceModal({
