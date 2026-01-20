@@ -55,17 +55,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`Found link: ${link.id}, target: ${link.target_url}`);
+    // Get source tracking parameter (from Smart Copy feature)
+    const source = url.searchParams.get('s') || url.searchParams.get('source') || null;
+    
+    console.log(`Found link: ${link.id}, target: ${link.target_url}, source: ${source}`);
 
-    // Log the click asynchronously (don't await to minimize latency)
+    // Log the click asynchronously with source tracking (don't await to minimize latency)
     supabase
       .from('clicks')
-      .insert({ link_id: link.id })
+      .insert({ link_id: link.id, source: source })
       .then(({ error }) => {
         if (error) {
           console.error('Error logging click:', error);
         } else {
-          console.log(`Click logged for link: ${link.id}`);
+          console.log(`Click logged for link: ${link.id}, source: ${source}`);
         }
       });
 

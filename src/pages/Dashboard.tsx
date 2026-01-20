@@ -202,6 +202,9 @@ const Dashboard = () => {
     
     // Map link IDs to aliases
     const linkMap = new Map(links.map(l => [l.id, l.alias]));
+    
+    // Map click IDs to source for conversions
+    const clickSourceMap = new Map(clicks.map(c => [c.id, c.source]));
 
     // Add clicks
     clicks.forEach(click => {
@@ -216,12 +219,15 @@ const Dashboard = () => {
         sourceIcon: 'direct',
         linkId: click.link_id,
         linkAlias: alias,
+        placement: click.source || undefined, // Smart Copy tracking parameter
       });
     });
 
     // Add conversions (leads and sales)
     conversions.forEach(conv => {
       const alias = conv.link_id ? linkMap.get(conv.link_id) || 'Unknown' : 'Unknown';
+      // Get source from conversion (if available) or from click
+      const placementSource = conv.source || clickSourceMap.get(conv.click_id);
       result.push({
         id: `conv-${conv.id}`,
         date: new Date(conv.created_at),
@@ -232,6 +238,7 @@ const Dashboard = () => {
         sourceIcon: 'direct',
         linkId: conv.link_id || '',
         linkAlias: alias,
+        placement: placementSource || undefined, // Smart Copy tracking parameter
       });
     });
 

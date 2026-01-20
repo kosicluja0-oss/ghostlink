@@ -7,6 +7,7 @@ interface DbClick {
   id: string;
   link_id: string;
   created_at: string;
+  source?: string | null; // Tracking parameter from Smart Copy (e.g., 'ig-story', 'tt-bio')
 }
 
 interface DbConversion {
@@ -16,6 +17,7 @@ interface DbConversion {
   value: number;
   created_at: string;
   link_id?: string;
+  source?: string | null; // Tracking parameter from the associated click
 }
 
 export function useClicksRealtime() {
@@ -45,7 +47,7 @@ export function useClicksRealtime() {
           setClicks(clicksData ?? []);
         }
 
-        // Fetch conversions with link_id via clicks join
+        // Fetch conversions with link_id and source via clicks join
         const { data: conversionsData, error: conversionsError } = await supabase
           .from('conversions')
           .select(`
@@ -54,7 +56,7 @@ export function useClicksRealtime() {
             type,
             value,
             created_at,
-            clicks!inner(link_id)
+            clicks!inner(link_id, source)
           `)
           .order('created_at', { ascending: true });
 
@@ -68,6 +70,7 @@ export function useClicksRealtime() {
             value: Number(conv.value),
             created_at: conv.created_at,
             link_id: conv.clicks.link_id,
+            source: conv.clicks.source,
           }));
           setConversions(transformed);
         }
