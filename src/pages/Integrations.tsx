@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { IntegrationCard, type Integration } from '@/components/integrations/IntegrationCard';
+import { ConnectedEcosystemBar } from '@/components/integrations/ConnectedEcosystemBar';
 import { ConnectServiceModal } from '@/components/integrations/ConnectServiceModal';
 import { DeveloperWebhookCard } from '@/components/integrations/DeveloperWebhookCard';
 import { useAuth } from '@/hooks/useAuth';
@@ -363,6 +364,9 @@ const Integrations = () => {
                   )}
                 </div>
               </section>
+
+              {/* Connected Ecosystem Bar */}
+              <ConnectedEcosystemBar integrations={integrations} />
 
               {/* Integration Categories */}
               {CATEGORIES.map(category => {
