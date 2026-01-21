@@ -7,6 +7,8 @@ import whopLogo from '@/assets/logos/whop.png';
 import hotmartLogo from '@/assets/logos/hotmart.png';
 import thrivecartLogo from '@/assets/logos/thrivecart.png';
 import samcartLogo from '@/assets/logos/samcart.png';
+import clickbankLogo from '@/assets/logos/clickbank.png';
+import digistore24Logo from '@/assets/logos/digistore24.png';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -142,7 +144,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'clickbank',
     name: 'ClickBank',
     description: 'Leading affiliate marketplace worldwide.',
-    logo: 'https://logo.clearbit.com/clickbank.com',
+    logo: clickbankLogo,
     status: 'not_connected',
     category: 'affiliate'
   },
@@ -150,7 +152,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'digistore24',
     name: 'Digistore24',
     description: 'European affiliate network for digital products.',
-    logo: 'https://logo.clearbit.com/digistore24.com',
+    logo: digistore24Logo,
     status: 'not_connected',
     category: 'affiliate'
   },
