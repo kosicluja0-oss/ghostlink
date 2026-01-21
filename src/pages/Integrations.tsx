@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell, Mail } from 'lucide-react';
+import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell, Mail, ChevronDown } from 'lucide-react';
 
 // Brand logos
 import whopLogo from '@/assets/logos/whop.png';
@@ -294,6 +294,14 @@ const Integrations = () => {
   const [integrations, setIntegrations] = useState<Integration[]>(INTEGRATIONS);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+
+  const toggleCategory = (categoryId: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [categoryId]: !prev[categoryId]
+    }));
+  };
 
   // Prepare links for dropdown
   const linkOptions = useMemo(() => 
@@ -387,6 +395,12 @@ const Integrations = () => {
 
                 const Icon = category.icon;
                 const hasComingSoon = categoryIntegrations.some(i => i.comingSoon);
+                const isExpanded = expandedCategories[category.id];
+                const hasMoreThanThree = categoryIntegrations.length > 3;
+                const visibleIntegrations = hasMoreThanThree && !isExpanded 
+                  ? categoryIntegrations.slice(0, 3) 
+                  : categoryIntegrations;
+                const hiddenCount = categoryIntegrations.length - 3;
 
                 return (
                   <section key={category.id} className="mb-8">
@@ -402,7 +416,7 @@ const Integrations = () => {
                     <p className="text-xs text-muted-foreground mb-4">{category.description}</p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {categoryIntegrations.map(integration => (
+                      {visibleIntegrations.map(integration => (
                         <IntegrationCard
                           key={integration.id}
                           integration={integration}
@@ -410,6 +424,21 @@ const Integrations = () => {
                         />
                       ))}
                     </div>
+
+                    {/* Expand/Collapse Toggle */}
+                    {hasMoreThanThree && (
+                      <button
+                        onClick={() => toggleCategory(category.id)}
+                        className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50 group"
+                      >
+                        <ChevronDown 
+                          className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} 
+                        />
+                        <span>
+                          {isExpanded ? 'Show less' : `Show ${hiddenCount} more`}
+                        </span>
+                      </button>
+                    )}
                   </section>
                 );
               })}
