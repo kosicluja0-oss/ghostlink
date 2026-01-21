@@ -1,6 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell, Mail } from 'lucide-react';
+
+// Brand logos
+import whopLogo from '@/assets/logos/whop.png';
+import hotmartLogo from '@/assets/logos/hotmart.png';
+import thrivecartLogo from '@/assets/logos/thrivecart.png';
+import samcartLogo from '@/assets/logos/samcart.png';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -61,7 +67,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'whop',
     name: 'Whop',
     description: 'Sell digital products, memberships, and courses.',
-    logo: 'https://logo.clearbit.com/whop.com',
+    logo: whopLogo,
     status: 'not_connected',
     category: 'payment'
   },
@@ -69,7 +75,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'hotmart',
     name: 'Hotmart',
     description: 'Digital product marketplace for creators.',
-    logo: 'https://logo.clearbit.com/hotmart.com',
+    logo: hotmartLogo,
     status: 'not_connected',
     category: 'payment'
   },
@@ -77,7 +83,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'thrivecart',
     name: 'ThriveCart',
     description: 'High-converting checkout pages for digital sales.',
-    logo: 'https://logo.clearbit.com/thrivecart.com',
+    logo: thrivecartLogo,
     status: 'not_connected',
     category: 'payment'
   },
@@ -85,7 +91,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'samcart',
     name: 'SamCart',
     description: 'E-commerce platform for digital creators.',
-    logo: 'https://logo.clearbit.com/samcart.com',
+    logo: samcartLogo,
     status: 'not_connected',
     category: 'payment'
   },
