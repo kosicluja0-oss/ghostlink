@@ -283,30 +283,40 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">Stop Guessing. Start Scaling.
-Built for those who sell on social.<br />
-            <span className="text-primary">Built for those who sell on social.</span>
+      <section className="pt-40 pb-24 px-4">
+        <div className="container mx-auto flex flex-col items-center text-center">
+          {/* Main Headline */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.1]">
+            Stop guessing.
+            <br />
+            <span className="text-primary">Start scaling.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Track clicks, leads, and sales with millisecond latency. Bridge pages included.
+          
+          {/* Sub-headline */}
+          <p className="mt-8 text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl leading-relaxed">
+            Ghost Link is the missing piece of your sales funnel.
+            <br className="hidden sm:block" />
+            Track every click, lead, and sale from bio to bank account.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          
+          {/* CTA Buttons */}
+          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/auth?mode=signup">
-              <Button variant="glow" size="xl" className="min-w-[180px]">
-                Start Free
+              <Button variant="glow" size="xl" className="min-w-[200px] text-base font-semibold">
+                Start for free
               </Button>
             </Link>
             <a href="#features">
-              <Button variant="outline" size="xl" className="min-w-[180px]">
+              <Button variant="outline" size="xl" className="min-w-[200px] text-base font-semibold">
                 Learn More
               </Button>
             </a>
           </div>
           
           {/* Dashboard Preview */}
-          <MockDashboardChart />
+          <div className="mt-20 w-full">
+            <MockDashboardChart />
+          </div>
         </div>
       </section>
 
