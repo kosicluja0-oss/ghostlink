@@ -55,7 +55,7 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
       {isConnected && !isComingSoon && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-          Active
+          Live
         </div>
       )}
       {isPending && !isComingSoon && (
@@ -110,7 +110,7 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
           className={cn(
             "w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
             isConnected
-              ? "bg-success/10 text-success cursor-default"
+              ? "border border-success/50 bg-transparent text-success hover:bg-success/10"
               : isPending
               ? "bg-warning/10 text-warning hover:bg-warning/20"
               : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]"
@@ -118,8 +118,7 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
         >
           {isConnected ? (
             <>
-              <Check className="w-4 h-4" />
-              Connected
+              Manage
             </>
           ) : isPending ? (
             <>
