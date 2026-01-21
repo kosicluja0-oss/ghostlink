@@ -61,7 +61,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'whop',
     name: 'Whop',
     description: 'Sell digital products, memberships, and courses.',
-    logo: 'https://cdn.simpleicons.org/w/6366F1',
+    logo: 'https://logo.clearbit.com/whop.com',
     status: 'not_connected',
     category: 'payment'
   },
@@ -69,7 +69,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'hotmart',
     name: 'Hotmart',
     description: 'Digital product marketplace for creators.',
-    logo: 'https://cdn.simpleicons.org/h/FF6B00',
+    logo: 'https://logo.clearbit.com/hotmart.com',
     status: 'not_connected',
     category: 'payment'
   },
@@ -77,7 +77,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'thrivecart',
     name: 'ThriveCart',
     description: 'High-converting checkout pages for digital sales.',
-    logo: 'https://cdn.simpleicons.org/t/2DD4BF',
+    logo: 'https://logo.clearbit.com/thrivecart.com',
     status: 'not_connected',
     category: 'payment'
   },
@@ -85,7 +85,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'samcart',
     name: 'SamCart',
     description: 'E-commerce platform for digital creators.',
-    logo: 'https://cdn.simpleicons.org/s/3B82F6',
+    logo: 'https://logo.clearbit.com/samcart.com',
     status: 'not_connected',
     category: 'payment'
   },
@@ -136,7 +136,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'clickbank',
     name: 'ClickBank',
     description: 'Leading affiliate marketplace worldwide.',
-    logo: 'https://cdn.simpleicons.org/clickup/7B68EE',
+    logo: 'https://logo.clearbit.com/clickbank.com',
     status: 'not_connected',
     category: 'affiliate'
   },
@@ -144,7 +144,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'digistore24',
     name: 'Digistore24',
     description: 'European affiliate network for digital products.',
-    logo: 'https://cdn.simpleicons.org/docusign/FFCC00',
+    logo: 'https://logo.clearbit.com/digistore24.com',
     status: 'not_connected',
     category: 'affiliate'
   },
@@ -170,7 +170,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'gohighlevel',
     name: 'GoHighLevel',
     description: 'All-in-one marketing platform for agencies.',
-    logo: 'https://cdn.simpleicons.org/g2/FF492C',
+    logo: 'https://logo.clearbit.com/gohighlevel.com',
     status: 'not_connected',
     category: 'marketing'
   },
@@ -178,7 +178,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'beehiiv',
     name: 'Beehiiv',
     description: 'Newsletter platform for growth-focused creators.',
-    logo: 'https://cdn.simpleicons.org/b/FFCC00',
+    logo: 'https://logo.clearbit.com/beehiiv.com',
     status: 'not_connected',
     category: 'marketing'
   },
