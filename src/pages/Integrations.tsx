@@ -9,6 +9,10 @@ import thrivecartLogo from '@/assets/logos/thrivecart.png';
 import samcartLogo from '@/assets/logos/samcart.png';
 import clickbankLogo from '@/assets/logos/clickbank.png';
 import digistore24Logo from '@/assets/logos/digistore24.png';
+import gohighlevelLogo from '@/assets/logos/gohighlevel.png';
+import beehiivLogo from '@/assets/logos/beehiiv.png';
+import convertkitLogo from '@/assets/logos/convertkit.png';
+import slackLogo from '@/assets/logos/slack.png';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -178,7 +182,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'gohighlevel',
     name: 'GoHighLevel',
     description: 'All-in-one marketing platform for agencies.',
-    logo: 'https://logo.clearbit.com/gohighlevel.com',
+    logo: gohighlevelLogo,
     status: 'not_connected',
     category: 'marketing'
   },
@@ -186,7 +190,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'beehiiv',
     name: 'Beehiiv',
     description: 'Newsletter platform for growth-focused creators.',
-    logo: 'https://logo.clearbit.com/beehiiv.com',
+    logo: beehiivLogo,
     status: 'not_connected',
     category: 'marketing'
   },
@@ -194,7 +198,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'convertkit',
     name: 'ConvertKit',
     description: 'Email marketing for online creators.',
-    logo: 'https://cdn.simpleicons.org/convertkit/FB6970',
+    logo: convertkitLogo,
     status: 'not_connected',
     category: 'marketing'
   },
@@ -227,7 +231,7 @@ const INTEGRATIONS: Integration[] = [
     id: 'slack',
     name: 'Slack',
     description: 'Push notifications to your Slack channels.',
-    logo: 'https://cdn.simpleicons.org/slack/4A154B',
+    logo: slackLogo,
     status: 'not_connected',
     category: 'communication'
   },
