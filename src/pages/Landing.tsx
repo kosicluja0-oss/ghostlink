@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useAuth } from '@/hooks/useAuth';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
+import { HeroLinkInput } from '@/components/landing/HeroLinkInput';
 // Mock chart component for hero
 function MockDashboardChart() {
   return <div className="relative w-full max-w-4xl mx-auto">
@@ -310,18 +311,9 @@ export default function Landing() {
             Track every click, lead, and sale from bio to bank account.
           </p>
           
-          {/* CTA Buttons */}
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth?mode=signup">
-              <Button variant="glow" size="xl" className="min-w-[200px] text-base font-semibold">
-                Start for free
-              </Button>
-            </Link>
-            <a href="#features">
-              <Button variant="outline" size="xl" className="min-w-[200px] text-base font-semibold">
-                Learn More
-              </Button>
-            </a>
+          {/* Interactive Link Input */}
+          <div className="mt-12 w-full">
+            <HeroLinkInput />
           </div>
           
           {/* Dashboard Preview */}
