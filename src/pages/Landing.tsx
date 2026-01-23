@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
 import { HeroLinkInput } from '@/components/landing/HeroLinkInput';
+import { FloatingParticles } from '@/components/landing/FloatingParticles';
 // Mock chart component for hero
 function MockDashboardChart() {
   return <div className="relative w-full max-w-4xl mx-auto">
@@ -287,6 +288,8 @@ export default function Landing() {
       <section className="pt-24 pb-16 px-4 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 -z-10">
+          {/* Floating Particles */}
+          <FloatingParticles count={40} />
           {/* Primary gradient orb */}
           <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
           {/* Secondary gradient orb */}
