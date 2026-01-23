@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PLACEHOLDER_TEXT = 'Paste your first affiliate link here to start...';
@@ -9,6 +9,7 @@ export function HeroLinkInput() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [typedPlaceholder, setTypedPlaceholder] = useState(PLACEHOLDER_TEXT);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasValue = inputValue.trim().length > 0;
@@ -35,9 +36,16 @@ export function HeroLinkInput() {
 
   const handleClick = () => {
     if (hasValue) {
-      // Store the URL temporarily and redirect to signup
-      sessionStorage.setItem('pendingAffiliateLink', inputValue.trim());
-      navigate('/auth?mode=signup');
+      // Save URL to localStorage
+      localStorage.setItem('pending_initial_link', inputValue.trim());
+      
+      // Show loading state
+      setIsProcessing(true);
+      
+      // Redirect after 1.5s delay
+      setTimeout(() => {
+        navigate('/auth?mode=signup');
+      }, 1500);
     } else {
       // Trigger typewriter animation
       setIsTyping(true);
@@ -77,18 +85,30 @@ export function HeroLinkInput() {
         {/* Analyze & Track button */}
         <button
           onClick={handleClick}
+          disabled={isProcessing}
           className={cn(
             "flex items-center gap-2 px-5 h-11 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap",
-            hasValue
-              ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)]"
-              : "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground"
+            isProcessing
+              ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] cursor-wait"
+              : hasValue
+                ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)]"
+                : "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground"
           )}
         >
-          Analyze & Track
-          <ArrowRight className={cn(
-            "h-4 w-4 transition-transform duration-200",
-            hasValue && "translate-x-0.5"
-          )} />
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processing link...
+            </>
+          ) : (
+            <>
+              Analyze & Track
+              <ArrowRight className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                hasValue && "translate-x-0.5"
+              )} />
+            </>
+          )}
         </button>
       </div>
 
