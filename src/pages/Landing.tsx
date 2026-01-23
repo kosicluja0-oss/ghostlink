@@ -284,8 +284,26 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-16 px-4">
-        <div className="container mx-auto flex flex-col items-center text-center">
+      <section className="pt-24 pb-16 px-4 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 -z-10">
+          {/* Primary gradient orb */}
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
+          {/* Secondary gradient orb */}
+          <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-primary/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          {/* Accent gradient orb */}
+          <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+          {/* Grid overlay */}
+          <div 
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
+              backgroundSize: '60px 60px'
+            }}
+          />
+        </div>
+        
+        <div className="container mx-auto flex flex-col items-center text-center relative z-10">
           {/* Beta Badge */}
           <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 shadow-[0_0_15px_hsl(var(--primary)/0.1)] animate-pulse-glow">
             <span className="relative flex h-1.5 w-1.5">
