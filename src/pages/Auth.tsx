@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Ghost, Mail, Lock, Eye, EyeOff, Loader2, LinkIcon } from 'lucide-react';
+import { Ghost, Mail, Lock, Eye, EyeOff, Loader2, LinkIcon, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ export default function Auth() {
     searchParams.get('mode') === 'signup' ? 'signup' : 'login'
   );
   const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -157,6 +158,9 @@ export default function Auth() {
           password,
           options: {
             emailRedirectTo: redirectUrl,
+            data: {
+              display_name: fullName.trim() || email.split('@')[0],
+            },
           },
         });
 
@@ -241,7 +245,26 @@ export default function Auth() {
               )}
             </div>
 
-            {/* Password - only show for login/signup */}
+            {/* Full Name - only for signup */}
+            {mode === 'signup' && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName" className="text-sm font-medium text-foreground">
+                  Full Name
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            )}
             {mode !== 'forgot' && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">

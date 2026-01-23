@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -48,6 +48,8 @@ const Settings = () => {
   const [currency, setCurrency] = useState('usd');
   const [portalLoading, setPortalLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Danger Zone state
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -117,6 +119,68 @@ const Settings = () => {
       display_name: displayName,
       currency
     });
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/avatar.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // Update profile with avatar URL (add cache buster)
+      await updateProfile({ avatar_url: `${publicUrl}?t=${Date.now()}` });
+      toast.success('Avatar updated successfully');
+    } catch (error: any) {
+      console.error('[AVATAR-UPLOAD] Error:', error);
+      toast.error(error.message || 'Failed to upload avatar');
+    } finally {
+      setAvatarUploading(false);
+      // Reset input
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Generate gradient avatar based on initials
+  const getInitialGradient = (name: string) => {
+    const colors = [
+      'from-violet-500 to-purple-600',
+      'from-blue-500 to-cyan-500',
+      'from-emerald-500 to-teal-500',
+      'from-orange-500 to-red-500',
+      'from-pink-500 to-rose-500',
+      'from-indigo-500 to-blue-600',
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
   };
   const handleManageSubscription = async () => {
     setPortalLoading(true);
@@ -273,20 +337,58 @@ const Settings = () => {
                         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                       </div> : <>
                         {/* Avatar */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-6">
                           <div className="relative group">
-                            <Avatar className="h-20 w-20 border-2 border-border">
-                              {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="Profile" /> : <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
+                            <Avatar className="h-24 w-24 border-2 border-border shadow-lg">
+                              {profile?.avatar_url ? (
+                                <AvatarImage src={profile.avatar_url} alt="Profile" />
+                              ) : (
+                                <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-2xl font-bold`}>
                                   {userInitial}
-                                </AvatarFallback>}
+                                </AvatarFallback>
+                              )}
                             </Avatar>
-                            <button className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => toast.info('Avatar upload coming soon')}>
-                              <Camera className="w-6 h-6 text-white" />
+                            <button 
+                              className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={avatarUploading}
+                            >
+                              {avatarUploading ? (
+                                <Loader2 className="w-6 h-6 text-white animate-spin" />
+                              ) : (
+                                <Camera className="w-6 h-6 text-white" />
+                              )}
                             </button>
+                            <input
+                              ref={avatarInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAvatarUpload}
+                              className="hidden"
+                            />
                           </div>
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium text-foreground">Profile Photo</p>
-                            
+                          <div className="space-y-2">
+                            <p className="text-lg font-semibold text-foreground">{displayName || 'Set your name'}</p>
+                            <p className="text-sm text-muted-foreground">{user?.email}</p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={avatarUploading}
+                              className="mt-1"
+                            >
+                              {avatarUploading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  Change Photo
+                                </>
+                              )}
+                            </Button>
                           </div>
                         </div>
 
