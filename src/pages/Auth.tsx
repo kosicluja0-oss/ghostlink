@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Ghost, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Ghost, Mail, Lock, Eye, EyeOff, Loader2, LinkIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -31,6 +32,13 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isInitializing, setIsInitializing] = useState(true);
+  const [hasPendingLink, setHasPendingLink] = useState(false);
+
+  // Check for pending link from landing page
+  useEffect(() => {
+    const pendingLink = localStorage.getItem('pending_initial_link');
+    setHasPendingLink(!!pendingLink);
+  }, []);
 
   // Check if already logged in, but handle PASSWORD_RECOVERY specially
   useEffect(() => {
@@ -187,6 +195,16 @@ export default function Auth() {
 
         {/* Auth Card */}
         <div className="bg-card border border-border rounded-xl p-8 shadow-xl shadow-black/20">
+          {/* Pending Link Banner */}
+          {hasPendingLink && mode === 'signup' && (
+            <Alert className="mb-6 border-primary/30 bg-primary/5">
+              <LinkIcon className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-sm text-foreground/80">
+                Link detected! Create your account to start tracking revenue.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">
               {mode === 'forgot' ? 'Reset Password' : mode === 'login' ? 'Welcome Back' : 'Create Account'}
