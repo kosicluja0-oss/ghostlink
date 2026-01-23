@@ -286,9 +286,13 @@ export default function Landing() {
       <section className="pt-40 pb-24 px-4">
         <div className="container mx-auto flex flex-col items-center text-center">
           {/* Beta Badge */}
-          <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm shadow-[0_0_20px_hsl(var(--primary)/0.15)]">
+          <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm shadow-[0_0_20px_hsl(var(--primary)/0.15)] animate-pulse-glow">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
             <span className="text-xs font-medium tracking-wider text-primary/90">
-              • NOW IN BETA V2.0
+              NOW IN BETA V2.0
             </span>
           </div>
           
