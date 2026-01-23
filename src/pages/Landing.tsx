@@ -284,16 +284,16 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-40 pb-24 px-4">
+      <section className="pt-24 pb-16 px-4">
         <div className="container mx-auto flex flex-col items-center text-center">
           {/* Beta Badge */}
-          <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm shadow-[0_0_20px_hsl(var(--primary)/0.15)] animate-pulse-glow">
-            <span className="relative flex h-2 w-2">
+          <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 shadow-[0_0_15px_hsl(var(--primary)/0.1)] animate-pulse-glow">
+            <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
             </span>
-            <span className="text-xs font-medium tracking-wider text-primary/90">
-              NOW IN BETA V2.0
+            <span className="text-[10px] font-semibold tracking-widest text-primary uppercase">
+              Now in Beta V2.0
             </span>
           </div>
           
@@ -305,19 +305,19 @@ export default function Landing() {
           </h1>
           
           {/* Sub-headline */}
-          <p className="mt-8 text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl leading-relaxed">
+          <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">
             Ghost Link is the missing piece of your sales funnel.
             <br className="hidden sm:block" />
             Track every click, lead, and sale from bio to bank account.
           </p>
           
           {/* Interactive Link Input */}
-          <div className="mt-12 w-full">
+          <div className="mt-10 w-full">
             <HeroLinkInput />
           </div>
           
           {/* Dashboard Preview */}
-          <div className="mt-20 w-full">
+          <div className="mt-14 w-full">
             <MockDashboardChart />
           </div>
         </div>

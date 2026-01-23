@@ -45,14 +45,17 @@ export function HeroLinkInput() {
     }
   };
 
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto">
       <div 
         className={cn(
-          "relative flex items-center gap-3 p-2 rounded-xl border bg-card/80 backdrop-blur-sm transition-all duration-300",
-          hasValue 
-            ? "border-primary/50 shadow-[0_0_30px_hsl(var(--primary)/0.2)]" 
-            : "border-border/50 hover:border-border"
+          "relative flex items-center gap-2 p-1.5 rounded-2xl border transition-all duration-200",
+          "bg-[#0a0a0a]",
+          isFocused || hasValue
+            ? "border-white/20 shadow-[0_0_20px_hsl(var(--primary)/0.15)]" 
+            : "border-white/[0.08] hover:border-white/[0.12]"
         )}
       >
         {/* Input field */}
@@ -61,11 +64,13 @@ export function HeroLinkInput() {
           type="url"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder={typedPlaceholder}
           className={cn(
-            "flex-1 h-12 px-4 bg-transparent text-foreground text-base outline-none",
-            "placeholder:text-muted-foreground/60 placeholder:transition-all",
-            isTyping && "placeholder:text-muted-foreground/80"
+            "flex-1 h-11 px-4 bg-transparent text-foreground text-sm outline-none",
+            "placeholder:text-muted-foreground/50 placeholder:transition-all",
+            isTyping && "placeholder:text-muted-foreground/70"
           )}
         />
 
@@ -73,22 +78,22 @@ export function HeroLinkInput() {
         <button
           onClick={handleClick}
           className={cn(
-            "flex items-center gap-2 px-6 h-12 rounded-lg font-medium text-sm transition-all duration-300 whitespace-nowrap",
+            "flex items-center gap-2 px-5 h-11 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap",
             hasValue
-              ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)]"
-              : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)]"
+              : "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground"
           )}
         >
           Analyze & Track
           <ArrowRight className={cn(
-            "h-4 w-4 transition-transform duration-300",
+            "h-4 w-4 transition-transform duration-200",
             hasValue && "translate-x-0.5"
           )} />
         </button>
       </div>
 
       {/* Helper text */}
-      <p className="mt-3 text-xs text-muted-foreground/70 text-center">
+      <p className="mt-3 text-xs text-muted-foreground/60 text-center">
         No credit card required • Free forever tier available
       </p>
     </div>
