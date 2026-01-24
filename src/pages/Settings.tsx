@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -66,26 +66,18 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Password strength calculation
-  const getPasswordStrength = (password: string): { level: number; label: string; color: string } => {
-    if (!password) return { level: 0, label: '', color: '' };
-    
-    let score = 0;
-    if (password.length >= 6) score++;
-    if (password.length >= 8) score++;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
-    if (/\d/.test(password)) score++;
-    if (/[^a-zA-Z0-9]/.test(password)) score++;
-    
-    if (score <= 1) return { level: 1, label: 'Weak', color: 'bg-destructive' };
-    if (score <= 2) return { level: 2, label: 'Fair', color: 'bg-orange-500' };
-    if (score <= 3) return { level: 3, label: 'Good', color: 'bg-yellow-500' };
-    if (score <= 4) return { level: 4, label: 'Strong', color: 'bg-green-500' };
-    return { level: 5, label: 'Very Strong', color: 'bg-green-600' };
-  };
+  // Password strength calculation with detailed requirements
+  const passwordStrength = useMemo(() => {
+    return {
+      hasLength: newPassword.length >= 8,
+      hasNumber: /\d/.test(newPassword),
+      hasSymbol: /[^a-zA-Z0-9]/.test(newPassword),
+    };
+  }, [newPassword]);
 
-  const passwordStrength = getPasswordStrength(newPassword);
-  const isPasswordValid = newPassword.length >= 6 && newPassword === confirmPassword && currentPassword.length > 0;
+  const isNewPasswordStrong = passwordStrength.hasLength && passwordStrength.hasNumber && passwordStrength.hasSymbol;
+  const passwordsMatch = confirmPassword.length > 0 && newPassword === confirmPassword;
+  const isPasswordValid = isNewPasswordStrong && passwordsMatch && currentPassword.length > 0;
 
   // Handle checkout redirect result
   useEffect(() => {
@@ -521,32 +513,39 @@ const Settings = () => {
                                 {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                               </button>
                             </div>
-                            {/* Password Strength Indicator */}
-                            {newPassword && (
-                              <div className="space-y-1.5">
-                                <div className="flex gap-1">
-                                  {[1, 2, 3, 4, 5].map((level) => (
-                                    <div
-                                      key={level}
-                                      className={cn(
-                                        "h-1 flex-1 rounded-full transition-colors",
-                                        level <= passwordStrength.level
-                                          ? passwordStrength.color
-                                          : "bg-muted"
-                                      )}
-                                    />
-                                  ))}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                  Password strength: <span className={cn(
-                                    passwordStrength.level <= 1 && "text-destructive",
-                                    passwordStrength.level === 2 && "text-orange-500",
-                                    passwordStrength.level === 3 && "text-yellow-500",
-                                    passwordStrength.level >= 4 && "text-green-500"
-                                  )}>{passwordStrength.label}</span>
-                                </p>
+                            {/* Password Requirements */}
+                            <div className="space-y-1 pt-1">
+                              <div className="flex items-center gap-2 text-xs">
+                                {passwordStrength.hasLength ? (
+                                  <Check className="w-3.5 h-3.5 text-success" />
+                                ) : (
+                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                )}
+                                <span className={passwordStrength.hasLength ? 'text-success' : 'text-muted-foreground'}>
+                                  At least 8 characters
+                                </span>
                               </div>
-                            )}
+                              <div className="flex items-center gap-2 text-xs">
+                                {passwordStrength.hasNumber ? (
+                                  <Check className="w-3.5 h-3.5 text-success" />
+                                ) : (
+                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                )}
+                                <span className={passwordStrength.hasNumber ? 'text-success' : 'text-muted-foreground'}>
+                                  Include a number
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs">
+                                {passwordStrength.hasSymbol ? (
+                                  <Check className="w-3.5 h-3.5 text-success" />
+                                ) : (
+                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                )}
+                                <span className={passwordStrength.hasSymbol ? 'text-success' : 'text-muted-foreground'}>
+                                  Include a symbol
+                                </span>
+                              </div>
+                            </div>
                           </div>
 
                           {/* Confirm Password */}
@@ -569,8 +568,14 @@ const Settings = () => {
                                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                               </button>
                             </div>
-                            {confirmPassword && newPassword !== confirmPassword && (
+                            {confirmPassword && !passwordsMatch && (
                               <p className="text-xs text-destructive">Passwords do not match</p>
+                            )}
+                            {confirmPassword && passwordsMatch && (
+                              <div className="flex items-center gap-2 text-xs text-success">
+                                <Check className="w-3.5 h-3.5" />
+                                <span>Passwords match</span>
+                              </div>
                             )}
                           </div>
                         </div>
