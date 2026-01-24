@@ -198,10 +198,10 @@ export default function Auth() {
         </Link>
 
         {/* Auth Card */}
-        <div className="bg-card border border-border rounded-xl p-8 shadow-xl shadow-black/20">
+        <div className="bg-card border border-white/10 rounded-xl p-6 shadow-xl shadow-black/20">
           {/* Pending Link Banner */}
           {hasPendingLink && mode === 'signup' && (
-            <Alert className="mb-6 border-primary/30 bg-primary/5">
+            <Alert className="mb-4 border-primary/30 bg-primary/5">
               <LinkIcon className="h-4 w-4 text-primary" />
               <AlertDescription className="text-sm text-foreground/80">
                 Link detected! Create your account to start tracking revenue.
@@ -209,11 +209,11 @@ export default function Auth() {
             </Alert>
           )}
 
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-extrabold text-foreground mb-1.5">
               {mode === 'forgot' ? 'Reset Password' : mode === 'login' ? 'Welcome Back' : 'Create Account'}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground/70">
               {mode === 'forgot' 
                 ? 'Enter your email to receive a reset link'
                 : mode === 'login' 
@@ -222,51 +222,51 @@ export default function Auth() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                  className="pl-10 h-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                   disabled={isLoading}
                 />
               </div>
               {errors.email && (
-                <p className="text-xs text-destructive">{errors.email}</p>
+                <p className="text-xs text-destructive mt-1">{errors.email}</p>
               )}
             </div>
 
             {/* Full Name - only for signup */}
             {mode === 'signup' && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="fullName" className="text-sm font-medium text-foreground">
                   Full Name
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="fullName"
                     type="text"
                     placeholder="John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                    className="pl-10 h-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                     disabled={isLoading}
                   />
                 </div>
               </div>
             )}
             {mode !== 'forgot' && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium text-foreground">
                     Password
@@ -282,26 +282,26 @@ export default function Auth() {
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
+                    className="pl-10 pr-10 h-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
                     disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-xs text-destructive">{errors.password}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.password}</p>
                 )}
               </div>
             )}
@@ -310,7 +310,7 @@ export default function Auth() {
             <Button 
               type="submit" 
               variant="glow" 
-              className="w-full"
+              className="w-full h-10 mt-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -325,7 +325,7 @@ export default function Auth() {
           </form>
 
           {/* Toggle */}
-          <div className="mt-6 text-center">
+          <div className="mt-5 text-center">
             {mode === 'forgot' ? (
               <button
                 type="button"
@@ -335,7 +335,7 @@ export default function Auth() {
                 ← Back to login
               </button>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground/70">
                 {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
                 <button
                   type="button"
