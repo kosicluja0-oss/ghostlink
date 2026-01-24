@@ -143,14 +143,14 @@ export default function OnboardingPlans() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-5">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">Step 2 of 2</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3">
             Choose your power
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
@@ -254,14 +254,6 @@ export default function OnboardingPlans() {
             );
           })}
         </div>
-
-        {/* Skip Link */}
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="mt-8 text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
-        >
-          Skip for now, I'll decide later
-        </button>
       </main>
     </div>
   );
