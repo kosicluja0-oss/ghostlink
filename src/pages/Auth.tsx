@@ -46,7 +46,8 @@ export default function Auth() {
       hasSymbol: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(password),
     };
     const isStrong = checks.minLength && checks.hasNumber && checks.hasSymbol;
-    return { checks, isStrong };
+    const score = [checks.minLength, checks.hasNumber, checks.hasSymbol].filter(Boolean).length;
+    return { checks, isStrong, score };
   }, [password]);
 
   // Check if passwords match
@@ -330,45 +331,70 @@ export default function Auth() {
                 
                 {/* Password strength indicators - only show on signup */}
                 {mode === 'signup' && password.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    <div className="flex items-center gap-1.5">
-                      {passwordStrength.checks.minLength ? (
-                        <Check className="h-3 w-3 text-success" />
-                      ) : (
-                        <X className="h-3 w-3 text-muted-foreground/50" />
-                      )}
-                      <span className={cn(
-                        "text-xs transition-colors",
-                        passwordStrength.checks.minLength ? "text-success" : "text-muted-foreground/70"
-                      )}>
-                        At least 8 characters
-                      </span>
+                  <div className="space-y-2 pt-1">
+                    {/* Progress bar */}
+                    <div className="flex gap-1">
+                      {[1, 2, 3].map((level) => {
+                        const filled = level <= passwordStrength.score;
+                        return (
+                          <div
+                            key={level}
+                            className={cn(
+                              "h-1 flex-1 rounded-full transition-all duration-300",
+                              filled 
+                                ? passwordStrength.score === 3 
+                                  ? "bg-success" 
+                                  : passwordStrength.score === 2 
+                                    ? "bg-warning" 
+                                    : "bg-destructive"
+                                : "bg-muted"
+                            )}
+                          />
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      {passwordStrength.checks.hasNumber ? (
-                        <Check className="h-3 w-3 text-success" />
-                      ) : (
-                        <X className="h-3 w-3 text-muted-foreground/50" />
-                      )}
-                      <span className={cn(
-                        "text-xs transition-colors",
-                        passwordStrength.checks.hasNumber ? "text-success" : "text-muted-foreground/70"
-                      )}>
-                        Include a number
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {passwordStrength.checks.hasSymbol ? (
-                        <Check className="h-3 w-3 text-success" />
-                      ) : (
-                        <X className="h-3 w-3 text-muted-foreground/50" />
-                      )}
-                      <span className={cn(
-                        "text-xs transition-colors",
-                        passwordStrength.checks.hasSymbol ? "text-success" : "text-muted-foreground/70"
-                      )}>
-                        Include a symbol
-                      </span>
+                    
+                    {/* Requirements checklist */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        {passwordStrength.checks.minLength ? (
+                          <Check className="h-3 w-3 text-success" />
+                        ) : (
+                          <X className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                        <span className={cn(
+                          "text-xs transition-colors",
+                          passwordStrength.checks.minLength ? "text-success" : "text-muted-foreground/70"
+                        )}>
+                          At least 8 characters
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {passwordStrength.checks.hasNumber ? (
+                          <Check className="h-3 w-3 text-success" />
+                        ) : (
+                          <X className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                        <span className={cn(
+                          "text-xs transition-colors",
+                          passwordStrength.checks.hasNumber ? "text-success" : "text-muted-foreground/70"
+                        )}>
+                          Include a number
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {passwordStrength.checks.hasSymbol ? (
+                          <Check className="h-3 w-3 text-success" />
+                        ) : (
+                          <X className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                        <span className={cn(
+                          "text-xs transition-colors",
+                          passwordStrength.checks.hasSymbol ? "text-success" : "text-muted-foreground/70"
+                        )}>
+                          Include a symbol
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -68,11 +68,11 @@ const Settings = () => {
 
   // Password strength calculation with detailed requirements
   const passwordStrength = useMemo(() => {
-    return {
-      hasLength: newPassword.length >= 8,
-      hasNumber: /\d/.test(newPassword),
-      hasSymbol: /[^a-zA-Z0-9]/.test(newPassword),
-    };
+    const hasLength = newPassword.length >= 8;
+    const hasNumber = /\d/.test(newPassword);
+    const hasSymbol = /[^a-zA-Z0-9]/.test(newPassword);
+    const score = [hasLength, hasNumber, hasSymbol].filter(Boolean).length;
+    return { hasLength, hasNumber, hasSymbol, score };
   }, [newPassword]);
 
   const isNewPasswordStrong = passwordStrength.hasLength && passwordStrength.hasNumber && passwordStrength.hasSymbol;
@@ -514,36 +514,61 @@ const Settings = () => {
                               </button>
                             </div>
                             {/* Password Requirements */}
-                            <div className="space-y-1 pt-1">
-                              <div className="flex items-center gap-2 text-xs">
-                                {passwordStrength.hasLength ? (
-                                  <Check className="w-3.5 h-3.5 text-success" />
-                                ) : (
-                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
-                                )}
-                                <span className={passwordStrength.hasLength ? 'text-success' : 'text-muted-foreground'}>
-                                  At least 8 characters
-                                </span>
+                            <div className="space-y-2 pt-1">
+                              {/* Progress bar */}
+                              <div className="flex gap-1">
+                                {[1, 2, 3].map((level) => {
+                                  const filled = level <= passwordStrength.score;
+                                  return (
+                                    <div
+                                      key={level}
+                                      className={cn(
+                                        "h-1 flex-1 rounded-full transition-all duration-300",
+                                        filled 
+                                          ? passwordStrength.score === 3 
+                                            ? "bg-success" 
+                                            : passwordStrength.score === 2 
+                                              ? "bg-warning" 
+                                              : "bg-destructive"
+                                          : "bg-muted"
+                                      )}
+                                    />
+                                  );
+                                })}
                               </div>
-                              <div className="flex items-center gap-2 text-xs">
-                                {passwordStrength.hasNumber ? (
-                                  <Check className="w-3.5 h-3.5 text-success" />
-                                ) : (
-                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
-                                )}
-                                <span className={passwordStrength.hasNumber ? 'text-success' : 'text-muted-foreground'}>
-                                  Include a number
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 text-xs">
-                                {passwordStrength.hasSymbol ? (
-                                  <Check className="w-3.5 h-3.5 text-success" />
-                                ) : (
-                                  <X className="w-3.5 h-3.5 text-muted-foreground" />
-                                )}
-                                <span className={passwordStrength.hasSymbol ? 'text-success' : 'text-muted-foreground'}>
-                                  Include a symbol
-                                </span>
+                              
+                              {/* Requirements checklist */}
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-xs">
+                                  {passwordStrength.hasLength ? (
+                                    <Check className="w-3.5 h-3.5 text-success" />
+                                  ) : (
+                                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                  )}
+                                  <span className={passwordStrength.hasLength ? 'text-success' : 'text-muted-foreground'}>
+                                    At least 8 characters
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  {passwordStrength.hasNumber ? (
+                                    <Check className="w-3.5 h-3.5 text-success" />
+                                  ) : (
+                                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                  )}
+                                  <span className={passwordStrength.hasNumber ? 'text-success' : 'text-muted-foreground'}>
+                                    Include a number
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  {passwordStrength.hasSymbol ? (
+                                    <Check className="w-3.5 h-3.5 text-success" />
+                                  ) : (
+                                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                  )}
+                                  <span className={passwordStrength.hasSymbol ? 'text-success' : 'text-muted-foreground'}>
+                                    Include a symbol
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
