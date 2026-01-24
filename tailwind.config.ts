@@ -182,6 +182,14 @@ export default {
 				'75%': {
 					transform: 'translateY(-30px) translateX(5px)'
 				}
+			},
+			'border-beam': {
+				'0%': {
+					transform: 'rotate(0deg)'
+				},
+				'100%': {
+					transform: 'rotate(360deg)'
+				}
 			}
 		},
 		animation: {
@@ -191,7 +199,8 @@ export default {
 			'slide-in-right': 'slide-in-right 0.3s ease-out',
 			'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
 			'count-up': 'count-up 0.5s ease-out',
-			'float': 'float 20s ease-in-out infinite'
+			'float': 'float 20s ease-in-out infinite',
+			'border-beam': 'border-beam 10s linear infinite'
 		}
   	}
   },

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
@@ -18,10 +18,13 @@ import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
 import { TopCountriesCard } from '@/components/analytics/TopCountriesCard';
 import { PlacementBadge, parsePlacement } from '@/components/analytics/PlacementBadge';
+import { WelcomeWizard } from '@/components/wizard/WelcomeWizard';
+import { LiveSignalIndicator } from '@/components/wizard/LiveSignalIndicator';
 import { useLinks } from '@/hooks/useLinks';
 import { useClicksRealtime } from '@/hooks/useClicksRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+import { useProfile } from '@/hooks/useProfile';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -178,11 +181,16 @@ const generateSampleData = (): Transaction[] => {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
+  
+  // Welcome wizard state
+  const [showWizard, setShowWizard] = useState(false);
+  const [showLiveSignal, setShowLiveSignal] = useState(false);
   
   // Activity filters
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
@@ -194,6 +202,41 @@ const Dashboard = () => {
   const { links } = useLinks();
   const { analyticsData, clicks, conversions } = useClicksRealtime();
   const openTicketsCount = useOpenTicketsCount();
+  
+  // Check if wizard should be shown on mount
+  useEffect(() => {
+    const hasSeenWizard = localStorage.getItem('has_seen_welcome_wizard');
+    if (!hasSeenWizard) {
+      setShowWizard(true);
+    } else {
+      // Check if we should show the live signal (wizard completed but no clicks yet)
+      const wizardCompletedAt = localStorage.getItem('wizard_completed_at');
+      if (wizardCompletedAt && clicks.length === 0) {
+        setShowLiveSignal(true);
+      }
+    }
+  }, []);
+  
+  // Hide live signal once first click arrives
+  useEffect(() => {
+    if (clicks.length > 0 && showLiveSignal) {
+      setShowLiveSignal(false);
+      localStorage.removeItem('wizard_completed_at');
+    }
+  }, [clicks.length, showLiveSignal]);
+  
+  const handleWizardComplete = () => {
+    setShowWizard(false);
+    setShowLiveSignal(true);
+    localStorage.setItem('wizard_completed_at', new Date().toISOString());
+  };
+  
+  // Get user's display name for the wizard
+  const userName = useMemo(() => {
+    if (profile?.display_name) return profile.display_name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'Ghost';
+  }, [profile, user]);
   
   const isFreeTier = userTier === 'free';
 
@@ -477,6 +520,14 @@ const Dashboard = () => {
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
+        {/* Welcome Wizard Overlay */}
+        {showWizard && (
+          <WelcomeWizard 
+            userName={userName} 
+            onComplete={handleWizardComplete} 
+          />
+        )}
+        
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar
             userEmail={user?.email}
@@ -565,7 +616,11 @@ const Dashboard = () => {
               {/* Recent Activity Section */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
+                    {/* Live Signal Indicator - shows when waiting for first click */}
+                    {showLiveSignal && <LiveSignalIndicator />}
+                  </div>
                 </div>
 
                 {/* Enhanced Toolbar */}
