@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Ghost, Mail, Lock, Eye, EyeOff, Loader2, LinkIcon, User } from 'lucide-react';
+import { Ghost, Mail, Lock, Eye, EyeOff, Loader2, LinkIcon, User, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { cn } from '@/lib/utils';
 
 const emailSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -29,11 +30,34 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isInitializing, setIsInitializing] = useState(true);
   const [hasPendingLink, setHasPendingLink] = useState(false);
+
+  // Password strength validation
+  const passwordStrength = useMemo(() => {
+    const checks = {
+      minLength: password.length >= 8,
+      hasNumber: /\d/.test(password),
+      hasSymbol: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(password),
+    };
+    const isStrong = checks.minLength && checks.hasNumber && checks.hasSymbol;
+    return { checks, isStrong };
+  }, [password]);
+
+  // Check if passwords match
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+  const showMismatchError = confirmPassword.length > 0 && !passwordsMatch;
+
+  // Check if signup form is valid
+  const isSignupValid = useMemo(() => {
+    const emailValid = z.string().email().safeParse(email).success;
+    return emailValid && passwordStrength.isStrong && passwordsMatch;
+  }, [email, passwordStrength.isStrong, passwordsMatch]);
 
   // Check for pending link from landing page
   useEffect(() => {
@@ -303,6 +327,85 @@ export default function Auth() {
                 {errors.password && (
                   <p className="text-xs text-destructive mt-1">{errors.password}</p>
                 )}
+                
+                {/* Password strength indicators - only show on signup */}
+                {mode === 'signup' && password.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      {passwordStrength.checks.minLength ? (
+                        <Check className="h-3 w-3 text-success" />
+                      ) : (
+                        <X className="h-3 w-3 text-muted-foreground/50" />
+                      )}
+                      <span className={cn(
+                        "text-xs transition-colors",
+                        passwordStrength.checks.minLength ? "text-success" : "text-muted-foreground/70"
+                      )}>
+                        At least 8 characters
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {passwordStrength.checks.hasNumber ? (
+                        <Check className="h-3 w-3 text-success" />
+                      ) : (
+                        <X className="h-3 w-3 text-muted-foreground/50" />
+                      )}
+                      <span className={cn(
+                        "text-xs transition-colors",
+                        passwordStrength.checks.hasNumber ? "text-success" : "text-muted-foreground/70"
+                      )}>
+                        Include a number
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {passwordStrength.checks.hasSymbol ? (
+                        <Check className="h-3 w-3 text-success" />
+                      ) : (
+                        <X className="h-3 w-3 text-muted-foreground/50" />
+                      )}
+                      <span className={cn(
+                        "text-xs transition-colors",
+                        passwordStrength.checks.hasSymbol ? "text-success" : "text-muted-foreground/70"
+                      )}>
+                        Include a symbol
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Confirm Password - only for signup */}
+            {mode === 'signup' && (
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                  Confirm Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={cn(
+                      "pl-10 pr-10 h-10 bg-input border-border text-foreground placeholder:text-muted-foreground",
+                      showMismatchError && "border-destructive/50 focus-visible:ring-destructive/50"
+                    )}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {showMismatchError && (
+                  <p className="text-xs text-destructive mt-1">Passwords do not match</p>
+                )}
               </div>
             )}
 
@@ -310,8 +413,11 @@ export default function Auth() {
             <Button 
               type="submit" 
               variant="glow" 
-              className="w-full h-10 mt-2"
-              disabled={isLoading}
+              className={cn(
+                "w-full h-10 mt-2 transition-opacity",
+                mode === 'signup' && !isSignupValid && "opacity-50 cursor-not-allowed"
+              )}
+              disabled={isLoading || (mode === 'signup' && !isSignupValid)}
             >
               {isLoading ? (
                 <>
