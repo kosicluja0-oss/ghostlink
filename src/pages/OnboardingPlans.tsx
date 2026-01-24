@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ghost, Check, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
 
@@ -19,6 +18,8 @@ type PricingPlan = {
   highlighted: boolean;
   badge?: string;
 };
+
+const YEARLY_DISCOUNT = 0.75;
 
 const pricingPlans: Record<string, PricingPlan> = {
   free: {
@@ -59,11 +60,40 @@ const pricingPlans: Record<string, PricingPlan> = {
 
 function getDisplayPrice(plan: PricingPlan, cycle: BillingCycle): number {
   if (plan.monthlyPrice === 0) return 0;
-  return cycle === 'yearly' ? plan.monthlyPrice * 0.75 : plan.monthlyPrice;
+  if (cycle === 'monthly') return plan.monthlyPrice;
+  return plan.monthlyPrice * YEARLY_DISCOUNT;
 }
 
-function formatPrice(price: number): string {
-  return price % 1 === 0 ? price.toString() : price.toFixed(2);
+function formatPrice(value: number): string {
+  if (value === 0) return '0';
+  return value % 1 === 0 ? value.toString() : value.toFixed(2);
+}
+
+// Animated price component with count-up effect (matching Landing page)
+function AnimatedPrice({ value }: { value: number }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  
+  useEffect(() => {
+    const duration = 400;
+    const startTime = Date.now();
+    const startValue = displayValue;
+    const endValue = value;
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const current = startValue + (endValue - startValue) * easeOut;
+      setDisplayValue(current);
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [value]);
+  
+  return <span className="tabular-nums">${formatPrice(displayValue)}</span>;
 }
 
 export default function OnboardingPlans() {
@@ -73,13 +103,11 @@ export default function OnboardingPlans() {
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === 'free') {
-      // Free plan - go directly to dashboard
       toast.success('Welcome to Ghost Link!');
       navigate('/dashboard');
       return;
     }
 
-    // Paid plans - initiate checkout
     const stripePlanId = planId as PlanId;
     if (!STRIPE_PRICES[stripePlanId]) {
       toast.error('Invalid plan selected');
@@ -90,9 +118,7 @@ export default function OnboardingPlans() {
     try {
       const url = await createCheckoutSession(stripePlanId, billingCycle);
       if (url) {
-        // Open checkout in new tab, user will be redirected after payment
         window.open(url, '_blank');
-        // After a moment, redirect to dashboard
         setTimeout(() => {
           navigate('/dashboard');
         }, 1000);
@@ -119,7 +145,7 @@ export default function OnboardingPlans() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         {/* Hero Section */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">Step 2 of 2</span>
@@ -132,27 +158,8 @@ export default function OnboardingPlans() {
           </p>
         </div>
 
-        {/* Billing Toggle */}
-        <div className="flex items-center gap-3 mb-10">
-          <span className={`text-sm transition-colors ${billingCycle === 'monthly' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-            Monthly
-          </span>
-          <Switch
-            checked={billingCycle === 'yearly'}
-            onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-          />
-          <span className={`text-sm transition-colors ${billingCycle === 'yearly' ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-            Yearly
-          </span>
-          {billingCycle === 'yearly' && (
-            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-              Save 25%
-            </Badge>
-          )}
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl w-full">
+        {/* Pricing Cards - Matching Landing Page Style */}
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl w-full items-stretch">
           {Object.entries(pricingPlans).map(([planId, plan]) => {
             const isFree = planId === 'free';
             const displayPrice = getDisplayPrice(plan, billingCycle);
@@ -161,67 +168,85 @@ export default function OnboardingPlans() {
             return (
               <div
                 key={planId}
-                className={`relative bg-card border rounded-xl p-6 flex flex-col transition-all duration-300 ${
+                className={`relative bg-card border rounded-xl p-6 flex flex-col ${
                   plan.highlighted
                     ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10'
-                    : 'border-border hover:border-primary/50'
+                    : 'border-border'
                 }`}
               >
                 {/* Badge */}
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge className="bg-primary text-primary-foreground shadow-lg">
+                    <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
                       {plan.badge}
-                    </Badge>
+                    </span>
                   </div>
                 )}
 
-                {/* Plan Header */}
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground">{plan.description}</p>
-                </div>
+                {/* Header Container - Fixed height for alignment */}
+                <div className="min-h-[180px] flex flex-col">
+                  {/* Plan Name */}
+                  <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
 
-                {/* Price */}
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-4xl font-bold text-foreground tabular-nums">
-                      ${formatPrice(displayPrice)}
+                  {/* Price Area */}
+                  <div className="flex items-baseline justify-center mt-4">
+                    <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
+                      <AnimatedPrice value={displayPrice} />
                     </span>
-                    <span className="text-muted-foreground">/mo</span>
+                    <span className="text-muted-foreground text-sm ml-1.5">
+                      {isFree ? '' : 'per month'}
+                    </span>
                   </div>
-                  {!isFree && billingCycle === 'yearly' && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Billed annually
+                  {isFree && (
+                    <p className="text-xs text-muted-foreground text-center mt-1">
+                      Free forever
                     </p>
                   )}
+
+                  {/* Toggle for Paid Plans - Matching Landing Page */}
+                  {!isFree ? (
+                    <div className="flex items-center justify-center gap-2 mt-4 h-8">
+                      <Switch
+                        checked={billingCycle === 'yearly'}
+                        onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                      <span className="text-sm text-muted-foreground">Billed yearly</span>
+                      <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                        3 months free
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="h-8 mt-4" />
+                  )}
                 </div>
 
-                {/* CTA Button */}
-                <Button
-                  variant={plan.highlighted ? 'glow' : 'default'}
-                  className="w-full mb-6"
-                  onClick={() => handleSelectPlan(planId)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : isFree ? (
-                    'Start free'
-                  ) : (
-                    'Get started'
-                  )}
-                </Button>
+                {/* CTA Button - Matching Landing Page Style */}
+                <div className="mt-6">
+                  <Button
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
+                    onClick={() => handleSelectPlan(planId)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : isFree ? (
+                      'Start free trial'
+                    ) : (
+                      'Get started'
+                    )}
+                  </Button>
+                </div>
 
-                {/* Features */}
-                <ul className="space-y-3 flex-1">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground">{feature}</span>
+                {/* Features List */}
+                <ul className="space-y-3 mt-6 flex-1">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      {feature}
                     </li>
                   ))}
                 </ul>
