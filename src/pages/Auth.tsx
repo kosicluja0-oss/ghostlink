@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
+import { usePasswordStrength } from '@/hooks/usePasswordStrength';
 
 const emailSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -39,16 +40,7 @@ export default function Auth() {
   const [hasPendingLink, setHasPendingLink] = useState(false);
 
   // Password strength validation
-  const passwordStrength = useMemo(() => {
-    const checks = {
-      minLength: password.length >= 8,
-      hasNumber: /\d/.test(password),
-      hasSymbol: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~;']/.test(password),
-    };
-    const isStrong = checks.minLength && checks.hasNumber && checks.hasSymbol;
-    const score = [checks.minLength, checks.hasNumber, checks.hasSymbol].filter(Boolean).length;
-    return { checks, isStrong, score };
-  }, [password]);
+  const passwordStrength = usePasswordStrength(password);
 
   // Check if passwords match
   const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
@@ -357,40 +349,40 @@ export default function Auth() {
                     {/* Requirements checklist */}
                     <div className="space-y-1">
                       <div className="flex items-center gap-1.5">
-                        {passwordStrength.checks.minLength ? (
+                        {passwordStrength.hasLength ? (
                           <Check className="h-3 w-3 text-success" />
                         ) : (
                           <X className="h-3 w-3 text-muted-foreground/50" />
                         )}
                         <span className={cn(
                           "text-xs transition-colors",
-                          passwordStrength.checks.minLength ? "text-success" : "text-muted-foreground/70"
+                          passwordStrength.hasLength ? "text-success" : "text-muted-foreground/70"
                         )}>
                           At least 8 characters
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        {passwordStrength.checks.hasNumber ? (
+                        {passwordStrength.hasNumber ? (
                           <Check className="h-3 w-3 text-success" />
                         ) : (
                           <X className="h-3 w-3 text-muted-foreground/50" />
                         )}
                         <span className={cn(
                           "text-xs transition-colors",
-                          passwordStrength.checks.hasNumber ? "text-success" : "text-muted-foreground/70"
+                          passwordStrength.hasNumber ? "text-success" : "text-muted-foreground/70"
                         )}>
                           Include a number
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        {passwordStrength.checks.hasSymbol ? (
+                        {passwordStrength.hasSymbol ? (
                           <Check className="h-3 w-3 text-success" />
                         ) : (
                           <X className="h-3 w-3 text-muted-foreground/50" />
                         )}
                         <span className={cn(
                           "text-xs transition-colors",
-                          passwordStrength.checks.hasSymbol ? "text-success" : "text-muted-foreground/70"
+                          passwordStrength.hasSymbol ? "text-success" : "text-muted-foreground/70"
                         )}>
                           Include a symbol
                         </span>

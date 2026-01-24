@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+import { usePasswordStrength } from '@/hooks/usePasswordStrength';
 import { openCustomerPortal, createCheckoutSession } from '@/lib/stripe';
 import { TIERS } from '@/types';
 import { cn } from '@/lib/utils';
@@ -67,17 +68,10 @@ const Settings = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Password strength calculation with detailed requirements
-  const passwordStrength = useMemo(() => {
-    const hasLength = newPassword.length >= 8;
-    const hasNumber = /\d/.test(newPassword);
-    const hasSymbol = /[^a-zA-Z0-9]/.test(newPassword);
-    const score = [hasLength, hasNumber, hasSymbol].filter(Boolean).length;
-    return { hasLength, hasNumber, hasSymbol, score };
-  }, [newPassword]);
+  const passwordStrength = usePasswordStrength(newPassword);
 
-  const isNewPasswordStrong = passwordStrength.hasLength && passwordStrength.hasNumber && passwordStrength.hasSymbol;
   const passwordsMatch = confirmPassword.length > 0 && newPassword === confirmPassword;
-  const isPasswordValid = isNewPasswordStrong && passwordsMatch && currentPassword.length > 0;
+  const isPasswordValid = passwordStrength.isStrong && passwordsMatch && currentPassword.length > 0;
 
   // Handle checkout redirect result
   useEffect(() => {
