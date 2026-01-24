@@ -173,8 +173,8 @@ export default function Auth() {
           return;
         }
 
-        toast.success('Account created! You can now login.');
-        navigate('/dashboard');
+        toast.success('Account created! Choose your plan to get started.');
+        navigate('/onboarding/plans');
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
