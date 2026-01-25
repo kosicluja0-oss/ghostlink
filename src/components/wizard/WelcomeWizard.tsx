@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowRight, Sparkles, Globe, Zap } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,16 +59,11 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
     ? localStorage.getItem('pending_initial_link') 
     : null;
 
-  // Auto-transition from welcome to link after 2.5s
-  useEffect(() => {
-    if (step === 'welcome') {
-      const timer = setTimeout(() => {
-        setShowParticles(false);
-        setStep('link');
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [step]);
+  // Manual transition handler for welcome step
+  const handleWelcomeContinue = () => {
+    setShowParticles(false);
+    setStep('link');
+  };
 
   const handleNext = () => {
     if (step === 'link') {
@@ -76,6 +71,11 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
     } else if (step === 'source') {
       setStep('setup');
     }
+  };
+
+  const handleSkipRevenue = () => {
+    setSelectedPlatform(null);
+    setStep('setup');
   };
 
   const handleComplete = () => {
@@ -115,10 +115,10 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
 
           {/* Modal */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: -10 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.98, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
             className="relative w-full max-w-lg mx-4"
           >
             <div className="relative rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden">
@@ -132,9 +132,10 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                   {step === 'welcome' && (
                     <motion.div
                       key="welcome"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="text-center py-8"
                     >
                       <WizardParticles active={showParticles} count={25} />
@@ -142,16 +143,16 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, type: "spring", damping: 15 }}
+                        transition={{ delay: 0.15, duration: 0.3, ease: "easeOut" }}
                         className="w-16 h-16 mx-auto mb-6 rounded-full bg-success/20 flex items-center justify-center"
                       >
                         <Check className="w-8 h-8 text-success" />
                       </motion.div>
 
                       <motion.h2
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.25, duration: 0.25 }}
                         className="text-2xl font-semibold text-foreground mb-3"
                       >
                         Welcome to the elite, <span className="text-primary">{userName}</span>.
@@ -160,7 +161,7 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                       <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
+                        transition={{ delay: 0.35, duration: 0.25 }}
                         className="text-muted-foreground"
                       >
                         Your infrastructure is ready.
@@ -169,11 +170,17 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 1 }}
-                        className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground"
+                        transition={{ delay: 0.5, duration: 0.25 }}
+                        className="mt-8"
                       >
-                        <Zap className="w-3 h-3 text-primary animate-pulse" />
-                        <span>Initializing...</span>
+                        <Button 
+                          onClick={handleWelcomeContinue}
+                          className="group"
+                          size="lg"
+                        >
+                          Continue
+                          <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
                       </motion.div>
                     </motion.div>
                   )}
@@ -182,10 +189,10 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                   {step === 'link' && (
                     <motion.div
                       key="link"
-                      initial={{ opacity: 0, x: 50 }}
+                      initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ type: "spring", damping: 25 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
                     >
                       <div className="flex items-center gap-2 mb-6">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
@@ -232,10 +239,10 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                   {step === 'source' && (
                     <motion.div
                       key="source"
-                      initial={{ opacity: 0, x: 50 }}
+                      initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ type: "spring", damping: 25 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
                     >
                       <div className="flex items-center gap-2 mb-6">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
@@ -276,15 +283,24 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                         ))}
                       </div>
 
-                      <Button 
-                        onClick={handleNext}
-                        className="w-full group"
-                        size="lg"
-                        disabled={!selectedPlatform}
-                      >
-                        Continue
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Button>
+                      <div className="space-y-3">
+                        <Button 
+                          onClick={handleNext}
+                          className="w-full group"
+                          size="lg"
+                          disabled={!selectedPlatform}
+                        >
+                          Continue
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                        
+                        <button
+                          onClick={handleSkipRevenue}
+                          className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+                        >
+                          Skip for now
+                        </button>
+                      </div>
                     </motion.div>
                   )}
 
@@ -292,10 +308,10 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                   {step === 'setup' && (
                     <motion.div
                       key="setup"
-                      initial={{ opacity: 0, x: 50 }}
+                      initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ type: "spring", damping: 25 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
                     >
                       <div className="flex items-center gap-2 mb-6">
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
