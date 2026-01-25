@@ -190,6 +190,9 @@ export default function Auth() {
           return;
         }
 
+        // Reset wizard flag so new accounts always see the welcome wizard
+        localStorage.removeItem('has_seen_welcome_wizard');
+        
         toast.success('Account created! Choose your plan to get started.');
         navigate('/onboarding/plans');
       }
