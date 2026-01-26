@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BorderBeam } from './BorderBeam';
 import { WizardParticles } from './WizardParticles';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Platform logos (using simple SVG icons for demo)
 const platforms = [
@@ -45,14 +47,16 @@ type WizardStep = 'welcome' | 'link' | 'source' | 'setup';
 interface WelcomeWizardProps {
   userName?: string;
   onComplete: () => void;
+  onLinkCreated?: () => void;
 }
 
-export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardProps) => {
+export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }: WelcomeWizardProps) => {
   const [step, setStep] = useState<WizardStep>('welcome');
   const [showParticles, setShowParticles] = useState(true);
   const [linkName, setLinkName] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Get pending link from localStorage
   const pendingLink = typeof window !== 'undefined' 
@@ -78,16 +82,71 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
     setStep('setup');
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Only save if we have a pending link
+    if (pendingLink) {
+      setIsSaving(true);
+      
+      try {
+        // Get current user session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          toast.error('You must be logged in to save your link');
+          setIsSaving(false);
+          return;
+        }
+
+        // Generate a unique alias from the link name or use a random one
+        const aliasBase = linkName.trim() || 'my-first-link';
+        const alias = aliasBase
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .slice(0, 30) + '-' + Date.now().toString(36);
+
+        // Insert the link into the database
+        const { error } = await supabase
+          .from('links')
+          .insert({
+            user_id: session.user.id,
+            target_url: pendingLink,
+            custom_alias: alias,
+            has_bridge_page: false,
+          });
+
+        if (error) {
+          console.error('Error saving link:', error);
+          if (error.code === '23505') {
+            toast.error('This alias is already taken. Please try again.');
+          } else {
+            toast.error('Failed to save your link');
+          }
+          setIsSaving(false);
+          return;
+        }
+
+        // Clear pending link from localStorage
+        localStorage.removeItem('pending_initial_link');
+        
+        // Notify parent to refetch links
+        onLinkCreated?.();
+        
+        toast.success('Your first link has been created!');
+      } catch (error) {
+        console.error('Error in handleComplete:', error);
+        toast.error('Something went wrong. Please try again.');
+        setIsSaving(false);
+        return;
+      }
+      
+      setIsSaving(false);
+    }
+
     setIsExiting(true);
     
     // Store completion flag
     localStorage.setItem('has_seen_welcome_wizard', 'true');
-    
-    // Clean up pending link
-    if (pendingLink) {
-      localStorage.removeItem('pending_initial_link');
-    }
     
     // Delay to allow exit animation
     setTimeout(() => {
@@ -345,9 +404,19 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete }: WelcomeWizardP
                         className="w-full group"
                         size="lg"
                         variant="glow"
+                        disabled={isSaving}
                       >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Initialize Dashboard
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-4 h-4 mr-2" />
+                            Initialize Dashboard
+                          </>
+                        )}
                       </Button>
                     </motion.div>
                   )}
