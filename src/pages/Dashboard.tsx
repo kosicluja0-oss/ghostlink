@@ -199,7 +199,7 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   // Use real data hooks
-  const { links } = useLinks();
+  const { links, refetch: refetchLinks } = useLinks();
   const { analyticsData, clicks, conversions } = useClicksRealtime();
   const openTicketsCount = useOpenTicketsCount();
   
@@ -524,7 +524,8 @@ const Dashboard = () => {
         {showWizard && (
           <WelcomeWizard 
             userName={userName} 
-            onComplete={handleWizardComplete} 
+            onComplete={handleWizardComplete}
+            onLinkCreated={refetchLinks}
           />
         )}
         
