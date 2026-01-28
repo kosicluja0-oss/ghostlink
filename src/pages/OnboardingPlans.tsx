@@ -1,10 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Ghost, Check, Loader2, Sparkles } from 'lucide-react';
+import { Ghost, Check, Loader2, Sparkles, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
+
+// Extract display-friendly domain from URL
+function extractDisplayUrl(url: string): string {
+  try {
+    const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const hostname = parsed.hostname.replace('www.', '');
+    const path = parsed.pathname !== '/' ? parsed.pathname.slice(0, 30) : '';
+    return hostname + (path.length === 30 ? path + '...' : path);
+  } catch {
+    return url.slice(0, 40) + (url.length > 40 ? '...' : '');
+  }
+}
 
 type PricingPlan = {
   name: string;
@@ -100,6 +112,12 @@ export default function OnboardingPlans() {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [pendingLink, setPendingLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedLink = localStorage.getItem('pending_initial_link');
+    setPendingLink(storedLink);
+  }, []);
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === 'free') {
@@ -144,6 +162,17 @@ export default function OnboardingPlans() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center px-4 pt-[8vh] pb-[5vh]">
+        {/* Personalized Hook */}
+        <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-card border border-border">
+          <Link2 className="h-4 w-4 text-primary" />
+          <span className="text-sm text-muted-foreground">
+            Unlock revenue tracking for:{' '}
+            <span className="font-medium text-primary">
+              {pendingLink ? extractDisplayUrl(pendingLink) : 'your business'}
+            </span>
+          </span>
+        </div>
+
         {/* Hero Section */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
