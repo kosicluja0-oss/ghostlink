@@ -163,14 +163,14 @@ export default function OnboardingPlans() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center px-4 pt-[8vh] pb-[5vh]">
         {/* Personalized Hook */}
-        <div className="flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-card border border-border">
-          <Link2 className="h-4 w-4 text-primary" />
-          <span className="text-sm text-muted-foreground">
-            Unlock revenue tracking for:{' '}
-            <span className="font-medium text-primary">
+        <div className="flex items-center gap-2.5 mb-6">
+          <span className="text-sm text-muted-foreground">Unlock revenue tracking for</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
+            <Link2 className="h-3.5 w-3.5 text-primary" />
+            <span className="text-sm font-medium text-primary">
               {pendingLink ? extractDisplayUrl(pendingLink) : 'your business'}
             </span>
-          </span>
+          </div>
         </div>
 
         {/* Hero Section */}

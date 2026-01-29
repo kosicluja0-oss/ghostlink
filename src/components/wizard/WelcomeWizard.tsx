@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight, Loader2 } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight, Loader2, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { WizardParticles } from './WizardParticles';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getTrackingUrl } from '@/lib/trackingUrl';
 
 // Platform logos (using simple SVG icons for demo)
 const platforms = [
@@ -42,7 +43,7 @@ const platforms = [
   },
 ];
 
-type WizardStep = 'welcome' | 'link' | 'source' | 'setup';
+type WizardStep = 'welcome' | 'link' | 'source' | 'setup' | 'success';
 
 interface WelcomeWizardProps {
   userName?: string;
@@ -57,6 +58,8 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   const [isExiting, setIsExiting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [generatedAlias, setGeneratedAlias] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Get pending link from localStorage
   const pendingLink = typeof window !== 'undefined' 
@@ -82,7 +85,7 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
     setStep('setup');
   };
 
-  const handleComplete = async () => {
+  const handleInitialize = async () => {
     // Only save if we have a pending link
     if (pendingLink) {
       setIsSaving(true);
@@ -132,17 +135,35 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
         // Notify parent to refetch links
         onLinkCreated?.();
         
-        toast.success('Your first link has been created!');
+        // Store the generated alias and transition to success step
+        setGeneratedAlias(alias);
+        setStep('success');
       } catch (error) {
-        console.error('Error in handleComplete:', error);
+        console.error('Error in handleInitialize:', error);
         toast.error('Something went wrong. Please try again.');
         setIsSaving(false);
         return;
       }
       
       setIsSaving(false);
+    } else {
+      // No pending link, just show success state
+      setStep('success');
     }
+  };
 
+  const handleCopyLink = async () => {
+    if (!generatedAlias) return;
+    
+    const ghostLink = getTrackingUrl(generatedAlias);
+    await navigator.clipboard.writeText(ghostLink);
+    setIsCopied(true);
+    toast.success('Ghost Link copied to clipboard!');
+    
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  const handleComplete = () => {
     setIsExiting(true);
     
     // Store completion flag
@@ -400,7 +421,7 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                       </div>
 
                       <Button 
-                        onClick={handleComplete}
+                        onClick={handleInitialize}
                         className="w-full group"
                         size="lg"
                         variant="glow"
@@ -420,10 +441,101 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                       </Button>
                     </motion.div>
                   )}
+
+                  {/* Success Step */}
+                  {step === 'success' && (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.98 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="text-center py-4"
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
+                        className="w-16 h-16 mx-auto mb-6 rounded-full bg-success/20 flex items-center justify-center"
+                      >
+                        <Check className="w-8 h-8 text-success" />
+                      </motion.div>
+
+                      <motion.h2
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15, duration: 0.25 }}
+                        className="text-2xl font-semibold text-foreground mb-2"
+                      >
+                        You are ready to go!
+                      </motion.h2>
+
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.25 }}
+                        className="text-muted-foreground mb-6"
+                      >
+                        Your Ghost Link is live and tracking.
+                      </motion.p>
+
+                      {generatedAlias && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.25, duration: 0.25 }}
+                          className="mb-6 p-4 rounded-xl bg-muted/50 border border-border"
+                        >
+                          <p className="text-xs text-muted-foreground mb-2">Your Ghost Link</p>
+                          <p className="text-sm font-mono text-primary break-all">
+                            {getTrackingUrl(generatedAlias)}
+                          </p>
+                        </motion.div>
+                      )}
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.25 }}
+                        className="space-y-3"
+                      >
+                        {generatedAlias && (
+                          <Button
+                            onClick={handleCopyLink}
+                            className="w-full group"
+                            size="lg"
+                            variant="glow"
+                          >
+                            {isCopied ? (
+                              <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Copy Ghost Link
+                              </>
+                            )}
+                          </Button>
+                        )}
+
+                        <Button
+                          onClick={handleComplete}
+                          variant={generatedAlias ? "outline" : "glow"}
+                          className="w-full group"
+                          size="lg"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Go to Dashboard
+                        </Button>
+                      </motion.div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
 
                 {/* Step Indicator */}
-                {step !== 'welcome' && (
+                {step !== 'welcome' && step !== 'success' && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
