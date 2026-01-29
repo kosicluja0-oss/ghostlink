@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight, Loader2, Copy, ExternalLink } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, Globe, Zap, ChevronRight, Loader2, Copy, ExternalLink, Pencil, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { WizardParticles } from './WizardParticles';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getTrackingUrl } from '@/lib/trackingUrl';
+import { getTrackingBaseUrl, getTrackingUrl } from '@/lib/trackingUrl';
 
 // Platform logos (using simple SVG icons for demo)
 const platforms = [
@@ -60,6 +60,84 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
   const [isSaving, setIsSaving] = useState(false);
   const [generatedAlias, setGeneratedAlias] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  
+  // Editable slug state
+  const [editableSlug, setEditableSlug] = useState<string>('');
+  const [originalSlug, setOriginalSlug] = useState<string>('');
+  const [isEditingSlug, setIsEditingSlug] = useState(false);
+  const [isSavingSlug, setIsSavingSlug] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [createdLinkId, setCreatedLinkId] = useState<string | null>(null);
+
+  // Validate slug - only URL-safe characters
+  const validateSlug = (slug: string): boolean => {
+    const validSlugRegex = /^[a-z0-9-]+$/;
+    return validSlugRegex.test(slug) && slug.length >= 3 && slug.length <= 50;
+  };
+
+  // Handle slug input change
+  const handleSlugChange = (value: string) => {
+    const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setEditableSlug(sanitized);
+    
+    if (sanitized.length > 0 && !validateSlug(sanitized)) {
+      if (sanitized.length < 3) {
+        setSlugError('Slug must be at least 3 characters');
+      } else if (sanitized.length > 50) {
+        setSlugError('Slug must be 50 characters or less');
+      } else {
+        setSlugError('Only letters, numbers, and hyphens allowed');
+      }
+    } else {
+      setSlugError(null);
+    }
+  };
+
+  // Save updated slug to database
+  const handleSaveSlug = async () => {
+    if (!createdLinkId || !editableSlug || editableSlug === originalSlug) return;
+    
+    if (!validateSlug(editableSlug)) {
+      setSlugError('Invalid slug format');
+      return;
+    }
+    
+    setIsSavingSlug(true);
+    
+    try {
+      const { error } = await supabase
+        .from('links')
+        .update({ custom_alias: editableSlug })
+        .eq('id', createdLinkId);
+      
+      if (error) {
+        if (error.code === '23505') {
+          setSlugError('This slug is already taken');
+        } else {
+          toast.error('Failed to update slug');
+        }
+        setIsSavingSlug(false);
+        return;
+      }
+      
+      // Update all state to reflect the new slug
+      setOriginalSlug(editableSlug);
+      setGeneratedAlias(editableSlug);
+      setIsEditingSlug(false);
+      toast.success('Slug updated successfully!');
+      
+      // Notify parent to refetch links
+      onLinkCreated?.();
+    } catch (error) {
+      console.error('Error saving slug:', error);
+      toast.error('Something went wrong');
+    } finally {
+      setIsSavingSlug(false);
+    }
+  };
+
+  // Check if slug has been modified
+  const hasSlugChanged = editableSlug !== originalSlug && editableSlug.length > 0;
 
   // Get pending link from localStorage
   const pendingLink = typeof window !== 'undefined' 
@@ -109,14 +187,16 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
           .slice(0, 30) + '-' + Date.now().toString(36);
 
         // Insert the link into the database
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('links')
           .insert({
             user_id: session.user.id,
             target_url: pendingLink,
             custom_alias: alias,
             has_bridge_page: false,
-          });
+          })
+          .select()
+          .single();
 
         if (error) {
           console.error('Error saving link:', error);
@@ -135,8 +215,11 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
         // Notify parent to refetch links
         onLinkCreated?.();
         
-        // Store the generated alias and transition to success step
+        // Store the generated alias, link ID, and initialize editable state
         setGeneratedAlias(alias);
+        setCreatedLinkId(data.id);
+        setEditableSlug(alias);
+        setOriginalSlug(alias);
         setStep('success');
       } catch (error) {
         console.error('Error in handleInitialize:', error);
@@ -153,9 +236,9 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
   };
 
   const handleCopyLink = async () => {
-    if (!generatedAlias) return;
+    if (!editableSlug) return;
     
-    const ghostLink = getTrackingUrl(generatedAlias);
+    const ghostLink = getTrackingUrl(editableSlug);
     await navigator.clipboard.writeText(ghostLink);
     setIsCopied(true);
     toast.success('Ghost Link copied to clipboard!');
@@ -486,10 +569,81 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                           transition={{ delay: 0.25, duration: 0.25 }}
                           className="mb-6 p-4 rounded-xl bg-muted/50 border border-border"
                         >
-                          <p className="text-xs text-muted-foreground mb-2">Your Ghost Link</p>
-                          <p className="text-sm font-mono text-primary break-all">
-                            {getTrackingUrl(generatedAlias)}
-                          </p>
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs text-muted-foreground">Your Ghost Link</p>
+                            {!isEditingSlug && (
+                              <button
+                                onClick={() => setIsEditingSlug(true)}
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                Edit
+                              </button>
+                            )}
+                          </div>
+                          
+                          {/* Editable Slug UI */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-1 p-3 rounded-lg bg-background/50 border border-border/50">
+                              <span className="text-xs text-muted-foreground truncate flex-shrink-0">
+                                {getTrackingBaseUrl()}/
+                              </span>
+                              {isEditingSlug ? (
+                                <Input
+                                  value={editableSlug}
+                                  onChange={(e) => handleSlugChange(e.target.value)}
+                                  className="h-6 px-1 py-0 text-sm font-mono text-primary bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  placeholder="your-custom-slug"
+                                  autoFocus
+                                />
+                              ) : (
+                                <span className="text-sm font-mono text-primary truncate">
+                                  {editableSlug}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* Validation Error */}
+                            {slugError && isEditingSlug && (
+                              <p className="text-xs text-destructive">{slugError}</p>
+                            )}
+                            
+                            {/* Save Button - only show when editing and changed */}
+                            {isEditingSlug && hasSlugChanged && !slugError && (
+                              <Button
+                                onClick={handleSaveSlug}
+                                size="sm"
+                                disabled={isSavingSlug || !!slugError}
+                                className="w-full"
+                              >
+                                {isSavingSlug ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                                    Saving...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Save className="w-3 h-3 mr-2" />
+                                    Save Custom Slug
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            
+                            {/* Cancel button when editing */}
+                            {isEditingSlug && (
+                              <button
+                                onClick={() => {
+                                  setEditableSlug(originalSlug);
+                                  setSlugError(null);
+                                  setIsEditingSlug(false);
+                                }}
+                                className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                              >
+                                Cancel
+                              </button>
+                            )}
+                          </div>
                         </motion.div>
                       )}
 
