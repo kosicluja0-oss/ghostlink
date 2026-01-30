@@ -25,6 +25,7 @@ import { useClicksRealtime } from '@/hooks/useClicksRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { useProfile } from '@/hooks/useProfile';
+import { useSubscription } from '@/hooks/useSubscription';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -182,6 +183,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
+  const { tier: subscriptionTier } = useSubscription();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -523,7 +525,8 @@ const Dashboard = () => {
         {/* Welcome Wizard Overlay */}
         {showWizard && (
           <WelcomeWizard 
-            userName={userName} 
+            userName={userName}
+            tier={subscriptionTier}
             onComplete={handleWizardComplete}
             onLinkCreated={refetchLinks}
           />
