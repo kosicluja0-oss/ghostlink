@@ -1,265 +1,233 @@
 
-# Kompletní Přepracování Welcome Wizardu
+# Dynamický Welcome Wizard podle Plánu Uživatele
 
 ## Shrnutí
-Přepracování 5-krokového onboarding wizardu na efektivnější 4-krokový proces s lepší hodnotovou nabídkou, rozšířenými platformami a jasnější navigací.
+Upravit Welcome Wizard tak, aby se přizpůsobil zvolenému plánu uživatele. Free uživatelé uvidí zkrácený wizard bez kroku platforem, protože nemají přístup k revenue tracking.
 
 ---
 
-## Analýza Současného Stavu
+## Analýza Funkcí podle Plánů
 
-### Současná Struktura (5 kroků)
-1. **Welcome** - Uvítací animace s tlačítkem "Continue"
-2. **Link** - Pojmenování odkazu (nejasný účel)
-3. **Source** - Výběr platformy (pouze 3 možnosti: Stripe, Gumroad, Shopify)
-4. **Setup** - Statická ukázka custom domény (bez interakce)
-5. **Success** - Zobrazení Ghost Linku s možností editace slugu
+### Pricing Karty - Funkce
 
-### Identifikované Problémy
-- **Krok "Link"**: Vstupní pole "pojmenuj odkaz" je matoucí, uživatel neví proč to dělá
-- **Krok "Source"**: Pouze 3 platformy, přitom máme loga pro 10+ platforem
-- **Krok "Setup"**: Mrtvý krok bez reálné interakce, jen statická ukázka
-- **Indikátor kroků**: Malé tečky, špatně čitelné, chybí názvy kroků
-- **Chybí vysvětlení**: Nikde se nevysvětluje co Ghost Link vlastně dělá
-- **Pending link**: Zobrazení URL z landing page je příliš malé a nevýrazné
-- **Chybí tlačítko Zpět**: Uživatel nemůže navigovat zpět
+| Funkce | Free | Pro | Business |
+|--------|------|-----|----------|
+| Active links | 25 | 100 | 175 |
+| Click tracking | ✅ | ✅ | ✅ |
+| Leads & Sales tracking | ❌ | ✅ | ✅ |
+| Full analytics | ❌ | ✅ | ✅ |
+| Bridge pages | ❌ | ✅ | ✅ |
+| Team collaboration | ❌ | ❌ | ✅ |
+| API access | ❌ | ❌ | ✅ |
 
----
-
-## Navrhovaná Nová Struktura (4 kroky)
-
-```text
-+-----------+     +---------------+     +---------------+     +------------+
-|  WELCOME  | --> |  VALUE PROPS  | --> |  PLATFORMS    | --> |  SUCCESS   |
-|  (Intro)  |     |  (Co získáš)  |     |  (Integrace)  |     |  (Hotovo)  |
-+-----------+     +---------------+     +---------------+     +------------+
-```
-
-### Krok 1: Welcome (Vylepšený)
-**Změny:**
-- Přidat sekci "Co získáš s Ghost Link"
-- Zobrazit 3 hlavní benefity jako ikonky
-- Prominentně zobrazit pending URL (pokud existuje)
-
-**UI:**
-```text
-+----------------------------------------+
-|           ✓ (zelená fajfka)            |
-|                                        |
-|   Welcome to the elite, [UserName].    |
-|                                        |
-|   +----------------------------------+ |
-|   | 🔗 instagram.com/profile         | |  <- Pending URL chip
-|   +----------------------------------+ |
-|                                        |
-|   What you'll unlock:                  |
-|   📊 Real-time click tracking          |
-|   💰 Revenue attribution               |
-|   🎯 Smart placement analytics         |
-|                                        |
-|         [ Get Started → ]              |
-+----------------------------------------+
-```
-
-### Krok 2: Value Props (NOVÝ - nahrazuje "Link")
-**Změny:**
-- Odstranit matoucí "pojmenuj odkaz"
-- Ukázat jak Ghost Link funguje vizuálně
-- Jednoduchý diagram flow: Link → Click → Sale → Dashboard
-
-**UI:**
-```text
-+----------------------------------------+
-|  [←]  (2) How It Works                 |
-|                                        |
-|   Your URL              Ghost Link     |
-|   +----------+    →    +----------+    |
-|   | shop.com |         | g.lnk/x  |    |
-|   +----------+         +----------+    |
-|                   ↓                    |
-|        +--------------------+          |
-|        |   📊 Dashboard     |          |
-|        | Clicks, Sales, EPC |          |
-|        +--------------------+          |
-|                                        |
-|   We track every click and attribute   |
-|   sales back to specific placements.   |
-|                                        |
-|         [ Continue → ]                 |
-+----------------------------------------+
-```
-
-### Krok 3: Connect Platforms (Vylepšený "Source")
-**Změny:**
-- Rozšířit ze 3 na 10+ platforem (využít existující loga)
-- Grid layout 3x4 pro lepší přehlednost
-- Možnost vybrat více platforem
-- Kategorizace: Payment, Creator Economy, Affiliate
-
-**Nové platformy:**
-- Stripe, Gumroad, Shopify (stávající)
-- ThriveCart, SamCart, ClickBank, Hotmart, Digistore24, Whop (z assets/logos)
-- Beehiiv, ConvertKit, GoHighLevel (z assets/logos)
-
-**UI:**
-```text
-+----------------------------------------+
-|  [←]  (3) Connect Revenue Platforms    |
-|                                        |
-|  Select the platforms you use:         |
-|                                        |
-|  +--------+ +--------+ +--------+      |
-|  | Stripe | |Gumroad | |Shopify |      |
-|  +--------+ +--------+ +--------+      |
-|  +--------+ +--------+ +--------+      |
-|  |Thrive  | |ClickB. | | Whop  |      |
-|  +--------+ +--------+ +--------+      |
-|  +--------+ +--------+ +--------+      |
-|  |Beehiiv | |Convert | |  ...  |      |
-|  +--------+ +--------+ +--------+      |
-|                                        |
-|         [ Continue → ]                 |
-|         Skip for now                   |
-+----------------------------------------+
-```
-
-### Krok 4: Success (Vylepšený)
-**Změny:**
-- Zachovat stávající funkcionalitu (editovatelný slug)
-- Přidat rychlý tip jak link použít
-- Výraznější "Copy" tlačítko
+### Klíčový Rozdíl
+- **Free plan**: Pouze click tracking - nepotřebuje napojení na revenue platformy
+- **Pro/Business**: Plné revenue tracking - potřebuje výběr platforem pro postback integraci
 
 ---
 
-## Horizontální Progress Bar
+## Navrhovaná Struktura Wizardu
 
-Nahradit malé tečky vizuálním progress barem s názvy kroků:
-
+### Free Plan Flow (3 kroky)
 ```text
-+--------------------------------------------------+
-| Welcome    How It Works    Platforms    Ready    |
-|   ●─────────────●────────────○───────────○       |
-+--------------------------------------------------+
++------------+     +----------------+     +------------+
+|  WELCOME   | --> |  HOW IT WORKS  | --> |  SUCCESS   |
+|  (Intro)   |     |  (Click Focus) |     |  (Ready)   |
++------------+     +----------------+     +------------+
 ```
 
-**Implementace:**
-- Vizuální čára propojující kroky
-- Aktivní krok zvýrazněný primární barvou
-- Dokončené kroky s fajfkou
-- Klikatelné pro navigaci zpět
+**Změny oproti full flow:**
+- Přeskočit krok "Platforms" (Connect Revenue Platforms)
+- "How It Works" krok se zaměří pouze na click tracking
+- Progress bar ukáže pouze 3 kroky
 
----
-
-## Tlačítko Zpět
-
-Přidat navigaci zpět na všech krocích kromě Welcome:
-
+### Pro/Business Flow (4 kroky) - beze změny
 ```text
-+----------------------------------------+
-|  [← Back]        (2) How It Works      |
-+----------------------------------------+
++------------+     +----------------+     +-------------+     +------------+
+|  WELCOME   | --> |  HOW IT WORKS  | --> |  PLATFORMS  | --> |  SUCCESS   |
+|  (Intro)   |     |  (Full Value)  |     |  (Revenue)  |     |  (Ready)   |
++------------+     +----------------+     +-------------+     +------------+
 ```
 
 ---
 
 ## Technické Změny
 
-### Soubory k Úpravě
+### 1. Předání `tier` do WelcomeWizard
 
-**src/components/wizard/WelcomeWizard.tsx**
-- Změnit `WizardStep` type: `'welcome' | 'value' | 'platforms' | 'success'`
-- Přidat `handleBack()` funkci
-- Rozšířit `platforms` array o nové platformy s PNG logy
-- Přepsat UI pro každý krok
-- Přidat novou komponentu `ProgressBar`
-
-**Nové Komponenty:**
-- `WizardProgressBar.tsx` - Horizontální progress bar
-- `ValuePropsStep.tsx` - Nový krok s flow diagramem (volitelně)
-
-### Struktura Dat - Rozšířené Platformy
-
+**Dashboard.tsx** - předat tier jako prop:
 ```typescript
-const platforms = [
-  // Payment
-  { id: 'stripe', name: 'Stripe', logo: '/logos/stripe.svg', category: 'payment' },
-  { id: 'thrivecart', name: 'ThriveCart', logo: '/assets/logos/thrivecart.png', category: 'payment' },
-  { id: 'samcart', name: 'SamCart', logo: '/assets/logos/samcart.png', category: 'payment' },
-  
-  // Creator Economy
-  { id: 'gumroad', name: 'Gumroad', logo: '/logos/gumroad.svg', category: 'creator' },
-  { id: 'whop', name: 'Whop', logo: '/assets/logos/whop.png', category: 'creator' },
-  { id: 'beehiiv', name: 'Beehiiv', logo: '/assets/logos/beehiiv.png', category: 'creator' },
-  { id: 'convertkit', name: 'ConvertKit', logo: '/assets/logos/convertkit.png', category: 'creator' },
-  
-  // Affiliate/E-commerce
-  { id: 'shopify', name: 'Shopify', logo: '/logos/shopify.svg', category: 'ecommerce' },
-  { id: 'clickbank', name: 'ClickBank', logo: '/assets/logos/clickbank.png', category: 'affiliate' },
-  { id: 'digistore24', name: 'Digistore24', logo: '/assets/logos/digistore24.png', category: 'affiliate' },
-  { id: 'hotmart', name: 'Hotmart', logo: '/assets/logos/hotmart.png', category: 'affiliate' },
-  
-  // Automation
-  { id: 'gohighlevel', name: 'GoHighLevel', logo: '/assets/logos/gohighlevel.png', category: 'automation' },
+<WelcomeWizard 
+  userName={user.email?.split('@')[0]} 
+  tier={subscriptionTier}  // Nový prop
+  onComplete={handleWizardComplete}
+/>
+```
+
+### 2. Úprava WelcomeWizard.tsx
+
+**Nové props interface:**
+```typescript
+interface WelcomeWizardProps {
+  userName?: string;
+  tier?: 'free' | 'pro' | 'business';  // Nový prop
+  onComplete: () => void;
+  onLinkCreated?: () => void;
+}
+```
+
+**Dynamické kroky podle tieru:**
+```typescript
+const isFreeUser = tier === 'free';
+
+// Různé kroky pro různé plány
+const WIZARD_STEPS_FREE = [
+  { id: 'welcome', label: 'Welcome' },
+  { id: 'value', label: 'How It Works' },
+  { id: 'success', label: 'Ready' },
 ];
+
+const WIZARD_STEPS_PAID = [
+  { id: 'welcome', label: 'Welcome' },
+  { id: 'value', label: 'How It Works' },
+  { id: 'platforms', label: 'Platforms' },
+  { id: 'success', label: 'Ready' },
+];
+
+const activeSteps = isFreeUser ? WIZARD_STEPS_FREE : WIZARD_STEPS_PAID;
+```
+
+### 3. Upravený "How It Works" Krok
+
+**Pro Free uživatele** - zaměření na click tracking:
+```text
++----------------------------------------+
+|  How Ghost Link Works                  |
+|                                        |
+|   Your URL    →    Ghost Link          |
+|   [shop.com]       [g.lnk/xyz]         |
+|                                        |
+|   ┌──────────────────────────────────┐ |
+|   │  📊 Every click is tracked       │ |
+|   │  🌍 Geographic insights          │ |
+|   │  📱 Device & browser data        │ |
+|   └──────────────────────────────────┘ |
+|                                        |
+|   [ Continue → ]                       |
++----------------------------------------+
+```
+
+**Pro Pro/Business uživatele** - plné revenue tracking (stávající):
+```text
++----------------------------------------+
+|  How Ghost Link Works                  |
+|                                        |
+|   Your URL    →    Ghost Link          |
+|   [shop.com]       [g.lnk/xyz]         |
+|                   ↓                    |
+|   [Clicks]  [Sales]  [EPC]             |
+|                                        |
+|   [ Continue → ]                       |
++----------------------------------------+
+```
+
+### 4. Navigační Logika
+
+**Free flow navigace:**
+```typescript
+// Po "value" kroku přeskočit přímo na "success"
+const handleValueContinue = () => {
+  if (isFreeUser) {
+    handleInitialize(); // Vytvořit link a jít na success
+  } else {
+    setStep('platforms');
+  }
+};
+```
+
+### 5. Welcome Krok - Personalizované Benefity
+
+**Free uživatel:**
+```text
+What you'll unlock:
+📊 Real-time Click Tracking
+🌍 Geographic Insights  
+📱 Device Analytics
+```
+
+**Pro/Business uživatel:**
+```text
+What you'll unlock:
+📊 Real-time Tracking
+💰 Revenue Attribution
+🎯 Smart Analytics
+```
+
+### 6. Success Krok - Upgrade CTA pro Free
+
+**Pro Free uživatele** přidat upgrade hint:
+```text
++----------------------------------------+
+|  ✓ You're all set!                     |
+|                                        |
+|  Your Ghost Link is live.              |
+|  [g.lnk/your-link]                     |
+|                                        |
+|  ┌────────────────────────────────────┐|
+|  │ 💡 Want to track sales & revenue?  │|
+|  │    Upgrade to Pro →                │|
+|  └────────────────────────────────────┘|
+|                                        |
+|  [ Copy Ghost Link ]                   |
+|  [ Go to Dashboard ]                   |
++----------------------------------------+
 ```
 
 ---
 
-## Vizuální Vylepšení
+## Soubory k Úpravě
 
-### Welcome Krok - Pending URL Chip
+1. **src/components/wizard/WelcomeWizard.tsx**
+   - Přidat `tier` prop
+   - Podmíněné kroky podle tieru
+   - Upravené benefity pro free vs paid
+   - Upravený "How It Works" krok
+   - Upgrade CTA na success kroku pro free
+
+2. **src/pages/Dashboard.tsx**
+   - Předat `tier` do WelcomeWizard komponenty
+
+3. **src/components/wizard/WizardProgressBar.tsx**
+   - Dynamicky přijímat různý počet kroků (již podporuje)
+
+---
+
+## Vizuální Porovnání
+
+### Free User Journey
 ```text
-<div class="bg-white/5 border border-white/10 rounded-full px-4 py-2">
-  <Link2 icon /> instagram.com/profile
-</div>
+[Welcome] ─── [How It Works] ─── [Success + Upgrade CTA]
+    │              │                    │
+    │              │                    └─ "Want revenue tracking? Upgrade →"
+    │              └─ Click tracking only
+    └─ "Track every click"
 ```
 
-### Value Props - Benefity
+### Pro/Business User Journey
 ```text
-<div class="grid grid-cols-3 gap-4">
-  <div class="flex flex-col items-center">
-    <BarChart3 class="w-8 h-8 text-primary" />
-    <span>Real-time Analytics</span>
-  </div>
-  ...
-</div>
-```
-
-### Progress Bar - Styling
-```text
-<div class="flex items-center justify-between px-4 py-2 bg-muted/30 rounded-lg">
-  {steps.map((step, i) => (
-    <div class="flex items-center">
-      <div class={cn(
-        "w-6 h-6 rounded-full flex items-center justify-center",
-        currentIndex > i ? "bg-success text-white" : 
-        currentIndex === i ? "bg-primary text-white" : 
-        "bg-muted text-muted-foreground"
-      )}>
-        {currentIndex > i ? <Check /> : i + 1}
-      </div>
-      <span class="ml-2 text-sm">{step.label}</span>
-      {i < steps.length - 1 && <div class="w-8 h-0.5 bg-border mx-2" />}
-    </div>
-  ))}
-</div>
+[Welcome] ─── [How It Works] ─── [Platforms] ─── [Success]
+    │              │                  │              │
+    │              │                  │              └─ Full features
+    │              │                  └─ Connect Stripe, ClickBank, etc.
+    │              └─ Clicks + Sales + EPC
+    └─ "Track clicks & attribute revenue"
 ```
 
 ---
 
 ## Poznámky k Implementaci
 
-1. **Zachovat stávající funkce**: Editace slugu, ukládání do DB, localStorage logika
-2. **Animace**: Použít stávající Framer Motion přechody (0.25s ease-out)
-3. **Responsivita**: Grid platforem se přizpůsobí (3 sloupce desktop, 2 mobile)
-4. **Accessibility**: Přidat aria-labels na progress bar a navigační tlačítka
-
----
-
-## Očekávaný Výsledek
-
-- **Kratší flow**: 4 kroky místo 5
-- **Jasnější hodnota**: Uživatel okamžitě pochopí co Ghost Link dělá
-- **Více integrací**: 12+ platforem místo 3
-- **Lepší navigace**: Progress bar + tlačítko zpět
-- **Profesionální dojem**: Konzistentní s "Linear-like" stylem aplikace
+1. **Získání tieru**: Použít `useSubscription()` hook v Dashboard a předat tier do wizardu
+2. **Default tier**: Pokud tier není k dispozici, použít 'free' jako fallback
+3. **Konzistence**: Texty benefitů musí odpovídat pricing kartám
+4. **Upgrade CTA**: Link na /onboarding/plans nebo Settings s billing options
