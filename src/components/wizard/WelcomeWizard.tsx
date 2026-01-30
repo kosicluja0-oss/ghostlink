@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
@@ -15,8 +15,13 @@ import {
   Target,
   Link2,
   MousePointerClick,
-  TrendingUp
+  TrendingUp,
+  Globe,
+  Smartphone,
+  Sparkles
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import type { TierType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BorderBeam } from './BorderBeam';
@@ -134,7 +139,14 @@ const platforms = [
 
 type WizardStep = 'welcome' | 'value' | 'platforms' | 'success';
 
-const WIZARD_STEPS = [
+// Step definitions for different tiers
+const WIZARD_STEPS_FREE = [
+  { id: 'welcome', label: 'Welcome' },
+  { id: 'value', label: 'How It Works' },
+  { id: 'success', label: 'Ready' },
+];
+
+const WIZARD_STEPS_PAID = [
   { id: 'welcome', label: 'Welcome' },
   { id: 'value', label: 'How It Works' },
   { id: 'platforms', label: 'Platforms' },
@@ -143,11 +155,13 @@ const WIZARD_STEPS = [
 
 interface WelcomeWizardProps {
   userName?: string;
+  tier?: TierType;
   onComplete: () => void;
   onLinkCreated?: () => void;
 }
 
-export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }: WelcomeWizardProps) => {
+export const WelcomeWizard = ({ userName = 'Ghost', tier = 'free', onComplete, onLinkCreated }: WelcomeWizardProps) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState<WizardStep>('welcome');
   const [showParticles, setShowParticles] = useState(true);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
@@ -163,6 +177,14 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
   const [isSavingSlug, setIsSavingSlug] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [createdLinkId, setCreatedLinkId] = useState<string | null>(null);
+
+  // Determine if user is on free tier
+  const isFreeUser = tier === 'free';
+  
+  // Get the appropriate wizard steps based on tier
+  const activeSteps = useMemo(() => {
+    return isFreeUser ? WIZARD_STEPS_FREE : WIZARD_STEPS_PAID;
+  }, [isFreeUser]);
 
   // Validate slug - only URL-safe characters
   const validateSlug = (slug: string): boolean => {
@@ -251,7 +273,10 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
   const handleBack = () => {
     if (step === 'value') setStep('welcome');
     else if (step === 'platforms') setStep('value');
-    else if (step === 'success') setStep('platforms');
+    else if (step === 'success') {
+      // For free users, go back to value; for paid users, go back to platforms
+      setStep(isFreeUser ? 'value' : 'platforms');
+    }
   };
 
   const handleStepClick = (stepId: string) => {
@@ -264,7 +289,12 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
   };
 
   const handleValueContinue = () => {
-    setStep('platforms');
+    // Free users skip platforms step and go directly to initialize
+    if (isFreeUser) {
+      handleInitialize();
+    } else {
+      setStep('platforms');
+    }
   };
 
   const handlePlatformToggle = (platformId: string) => {
@@ -394,7 +424,7 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                 {/* Progress Bar - show on all steps except welcome */}
                 {step !== 'welcome' && (
                   <WizardProgressBar
-                    steps={WIZARD_STEPS}
+                    steps={activeSteps}
                     currentStep={step}
                     onBack={handleBack}
                     onStepClick={handleStepClick}
@@ -448,7 +478,7 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                         </motion.div>
                       )}
 
-                      {/* Value Props */}
+                      {/* Value Props - Different for Free vs Paid */}
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -457,18 +487,39 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                       >
                         <p className="text-sm text-muted-foreground mb-4">What you'll unlock:</p>
                         <div className="grid grid-cols-3 gap-4">
-                          <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
-                            <BarChart3 className="w-6 h-6 text-primary" />
-                            <span className="text-xs text-muted-foreground text-center">Real-time Tracking</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
-                            <DollarSign className="w-6 h-6 text-primary" />
-                            <span className="text-xs text-muted-foreground text-center">Revenue Attribution</span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
-                            <Target className="w-6 h-6 text-primary" />
-                            <span className="text-xs text-muted-foreground text-center">Smart Analytics</span>
-                          </div>
+                          {isFreeUser ? (
+                            // Free user benefits - Click tracking focus
+                            <>
+                              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
+                                <BarChart3 className="w-6 h-6 text-primary" />
+                                <span className="text-xs text-muted-foreground text-center">Click Tracking</span>
+                              </div>
+                              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
+                                <Globe className="w-6 h-6 text-primary" />
+                                <span className="text-xs text-muted-foreground text-center">Geographic Insights</span>
+                              </div>
+                              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
+                                <Smartphone className="w-6 h-6 text-primary" />
+                                <span className="text-xs text-muted-foreground text-center">Device Analytics</span>
+                              </div>
+                            </>
+                          ) : (
+                            // Pro/Business benefits - Full revenue tracking
+                            <>
+                              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
+                                <BarChart3 className="w-6 h-6 text-primary" />
+                                <span className="text-xs text-muted-foreground text-center">Real-time Tracking</span>
+                              </div>
+                              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
+                                <DollarSign className="w-6 h-6 text-primary" />
+                                <span className="text-xs text-muted-foreground text-center">Revenue Attribution</span>
+                              </div>
+                              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
+                                <Target className="w-6 h-6 text-primary" />
+                                <span className="text-xs text-muted-foreground text-center">Smart Analytics</span>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </motion.div>
 
@@ -526,45 +577,87 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                           <div className="w-0.5 h-6 bg-border" />
                         </div>
 
-                        {/* Step 2: Click Tracking */}
-                        <div className="flex items-center justify-center gap-6">
-                          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
-                            <MousePointerClick className="w-5 h-5 text-primary" />
-                            <div>
-                              <span className="text-xs text-muted-foreground block">Clicks</span>
-                              <span className="text-sm font-medium">Tracked</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
-                            <DollarSign className="w-5 h-5 text-success" />
-                            <div>
-                              <span className="text-xs text-muted-foreground block">Sales</span>
-                              <span className="text-sm font-medium">Attributed</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
-                            <TrendingUp className="w-5 h-5 text-chart-1" />
-                            <div>
-                              <span className="text-xs text-muted-foreground block">EPC</span>
-                              <span className="text-sm font-medium">Calculated</span>
-                            </div>
-                          </div>
+                        {/* Step 2: Tracking Features - Different for Free vs Paid */}
+                        <div className="flex items-center justify-center gap-4">
+                          {isFreeUser ? (
+                            // Free user: Click tracking only
+                            <>
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
+                                <MousePointerClick className="w-5 h-5 text-primary" />
+                                <div>
+                                  <span className="text-xs text-muted-foreground block">Clicks</span>
+                                  <span className="text-sm font-medium">Tracked</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
+                                <Globe className="w-5 h-5 text-chart-1" />
+                                <div>
+                                  <span className="text-xs text-muted-foreground block">Location</span>
+                                  <span className="text-sm font-medium">Detected</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
+                                <Smartphone className="w-5 h-5 text-chart-2" />
+                                <div>
+                                  <span className="text-xs text-muted-foreground block">Device</span>
+                                  <span className="text-sm font-medium">Identified</span>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            // Pro/Business: Full revenue tracking
+                            <>
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
+                                <MousePointerClick className="w-5 h-5 text-primary" />
+                                <div>
+                                  <span className="text-xs text-muted-foreground block">Clicks</span>
+                                  <span className="text-sm font-medium">Tracked</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
+                                <DollarSign className="w-5 h-5 text-success" />
+                                <div>
+                                  <span className="text-xs text-muted-foreground block">Sales</span>
+                                  <span className="text-sm font-medium">Attributed</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-muted/30 border border-border/50">
+                                <TrendingUp className="w-5 h-5 text-chart-1" />
+                                <div>
+                                  <span className="text-xs text-muted-foreground block">EPC</span>
+                                  <span className="text-sm font-medium">Calculated</span>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
 
-                      {/* Explanation */}
+                      {/* Explanation - Different for Free vs Paid */}
                       <p className="text-sm text-muted-foreground text-center mb-8">
-                        We track every click and attribute sales back to specific placements, 
-                        so you know exactly which links drive revenue.
+                        {isFreeUser 
+                          ? "We track every click and provide geographic insights, so you know where your audience comes from."
+                          : "We track every click and attribute sales back to specific placements, so you know exactly which links drive revenue."
+                        }
                       </p>
 
                       <Button 
                         onClick={handleValueContinue}
                         className="w-full group"
                         size="lg"
+                        disabled={isSaving}
                       >
-                        Continue
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Creating your link...
+                          </>
+                        ) : (
+                          <>
+                            Continue
+                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                          </>
+                        )}
                       </Button>
                     </motion.div>
                   )}
@@ -781,8 +874,36 @@ export const WelcomeWizard = ({ userName = 'Ghost', onComplete, onLinkCreated }:
                         </motion.div>
                       )}
 
-                      {/* Quick Tip */}
-                      {generatedAlias && (
+                      {/* Upgrade CTA for Free users */}
+                      {isFreeUser && generatedAlias && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3, duration: 0.25 }}
+                          className="mb-6 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                              <Sparkles className="w-4 h-4 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground">Want to track sales & revenue?</p>
+                              <p className="text-xs text-muted-foreground">Upgrade to Pro for full analytics</p>
+                            </div>
+                            <Button
+                              onClick={() => navigate('/onboarding/plans')}
+                              size="sm"
+                              variant="outline"
+                              className="shrink-0 text-primary border-primary/30 hover:bg-primary/10"
+                            >
+                              Upgrade
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Quick Tip - Only for paid users */}
+                      {!isFreeUser && generatedAlias && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
