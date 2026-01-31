@@ -1,233 +1,132 @@
 
-# Dynamický Welcome Wizard podle Plánu Uživatele
+# Implementační Plán: Sekce "Ghost Link vs. Industry Average"
 
 ## Shrnutí
-Upravit Welcome Wizard tak, aby se přizpůsobil zvolenému plánu uživatele. Free uživatelé uvidí zkrácený wizard bez kroku platforem, protože nemají přístup k revenue tracking.
+Přidat novou sekci na landing page s anonymním porovnáním Ghost Link vs. průměr trhu. Sekce bude umístěna mezi Features a Pricing pro maximální konverzní efekt.
 
 ---
 
-## Analýza Funkcí podle Plánů
+## Umístění v Page Flow
 
-### Pricing Karty - Funkce
-
-| Funkce | Free | Pro | Business |
-|--------|------|-----|----------|
-| Active links | 25 | 100 | 175 |
-| Click tracking | ✅ | ✅ | ✅ |
-| Leads & Sales tracking | ❌ | ✅ | ✅ |
-| Full analytics | ❌ | ✅ | ✅ |
-| Bridge pages | ❌ | ✅ | ✅ |
-| Team collaboration | ❌ | ❌ | ✅ |
-| API access | ❌ | ❌ | ✅ |
-
-### Klíčový Rozdíl
-- **Free plan**: Pouze click tracking - nepotřebuje napojení na revenue platformy
-- **Pro/Business**: Plné revenue tracking - potřebuje výběr platforem pro postback integraci
-
----
-
-## Navrhovaná Struktura Wizardu
-
-### Free Plan Flow (3 kroky)
 ```text
-+------------+     +----------------+     +------------+
-|  WELCOME   | --> |  HOW IT WORKS  | --> |  SUCCESS   |
-|  (Intro)   |     |  (Click Focus) |     |  (Ready)   |
-+------------+     +----------------+     +------------+
+[Hero] → [Features] → [VS INDUSTRY - NOVÁ] → [Pricing] → [FAQ] → [Footer]
 ```
 
-**Změny oproti full flow:**
-- Přeskočit krok "Platforms" (Connect Revenue Platforms)
-- "How It Works" krok se zaměří pouze na click tracking
-- Progress bar ukáže pouze 3 kroky
+Důvod umístění: Buduje hodnotu a kontrastuje cenu těsně před pricing sekcí.
 
-### Pro/Business Flow (4 kroky) - beze změny
+---
+
+## Vizuální Návrh
+
 ```text
-+------------+     +----------------+     +-------------+     +------------+
-|  WELCOME   | --> |  HOW IT WORKS  | --> |  PLATFORMS  | --> |  SUCCESS   |
-|  (Intro)   |     |  (Full Value)  |     |  (Revenue)  |     |  (Ready)   |
-+------------+     +----------------+     +-------------+     +------------+
++------------------------------------------------------------------+
+|                    Why Choose Ghost Link?                         |
+|           See how we compare to industry standards                |
+|                                                                   |
+|  +---------------------------+  +---------------------------+     |
+|  |      Ghost Link           |  |   Industry Average        |     |
+|  |      (zelený akcent)      |  |   (šedý/tlumený)          |     |
+|  +---------------------------+  +---------------------------+     |
+|  |                           |  |                           |     |
+|  |  💰 $7.50 - $15/mo        |  |  $80 - $150/mo            |     |
+|  |  ✅ Real-time tracking    |  |  ⏱️ Often delayed          |     |
+|  |  ✅ Free tier (25 links)  |  |  ❌ Rare / $30+ minimum   |     |
+|  |  ✅ 2 min setup           |  |  ⏱️ 30+ minutes           |     |
+|  |  ✅ Revenue attribution   |  |  💵 Extra cost            |     |
+|  |  ✅ No hidden fees        |  |  ⚠️ Overage charges       |     |
+|  |                           |  |                           |     |
+|  +---------------------------+  +---------------------------+     |
+|                                                                   |
+|              [ Start Free → ]  (CTA tlačítko)                     |
++------------------------------------------------------------------+
 ```
 
 ---
 
-## Technické Změny
+## Porovnávací Data
 
-### 1. Předání `tier` do WelcomeWizard
+| Aspekt | Ghost Link | Industry Average |
+|--------|------------|------------------|
+| **Cena** | $7.50 - $15/mo | $80 - $150/mo |
+| **Real-time tracking** | Instant (ms latency) | Often 5-15 min delay |
+| **Free tier** | 25 links included | Rare or very limited |
+| **Setup time** | Under 2 minutes | 30+ minutes typical |
+| **Revenue tracking** | Included in Pro | Often separate add-on |
+| **Hidden fees** | None - transparent | Overage & API charges |
+| **Learning curve** | Minimal - intuitive UI | Complex dashboards |
 
-**Dashboard.tsx** - předat tier jako prop:
+---
+
+## Technická Implementace
+
+### Nová Komponenta
+Vytvořit `src/components/landing/ComparisonSection.tsx`
+
+### Struktura Komponenty
+
 ```typescript
-<WelcomeWizard 
-  userName={user.email?.split('@')[0]} 
-  tier={subscriptionTier}  // Nový prop
-  onComplete={handleWizardComplete}
-/>
-```
-
-### 2. Úprava WelcomeWizard.tsx
-
-**Nové props interface:**
-```typescript
-interface WelcomeWizardProps {
-  userName?: string;
-  tier?: 'free' | 'pro' | 'business';  // Nový prop
-  onComplete: () => void;
-  onLinkCreated?: () => void;
-}
-```
-
-**Dynamické kroky podle tieru:**
-```typescript
-const isFreeUser = tier === 'free';
-
-// Různé kroky pro různé plány
-const WIZARD_STEPS_FREE = [
-  { id: 'welcome', label: 'Welcome' },
-  { id: 'value', label: 'How It Works' },
-  { id: 'success', label: 'Ready' },
+// Data pro porovnání
+const comparisonItems = [
+  {
+    label: 'Monthly Price',
+    ghostLink: '$7.50 - $15',
+    industry: '$80 - $150',
+    ghostLinkHighlight: true,
+  },
+  {
+    label: 'Real-time Tracking',
+    ghostLink: 'Instant',
+    industry: 'Often delayed',
+    ghostLinkHighlight: true,
+  },
+  // ... další položky
 ];
-
-const WIZARD_STEPS_PAID = [
-  { id: 'welcome', label: 'Welcome' },
-  { id: 'value', label: 'How It Works' },
-  { id: 'platforms', label: 'Platforms' },
-  { id: 'success', label: 'Ready' },
-];
-
-const activeSteps = isFreeUser ? WIZARD_STEPS_FREE : WIZARD_STEPS_PAID;
 ```
 
-### 3. Upravený "How It Works" Krok
+### Styling
+- Dvě karty vedle sebe (grid 2 cols na desktop, stack na mobile)
+- Ghost Link karta: `border-primary/50`, zelené checkmarky
+- Industry karta: `border-border`, šedé/oranžové ikony
+- Subtle glow effect na Ghost Link kartě
 
-**Pro Free uživatele** - zaměření na click tracking:
+---
+
+## Soubory k Vytvoření/Úpravě
+
+### 1. Nový soubor: `src/components/landing/ComparisonSection.tsx`
+- Samostatná komponenta pro comparison sekci
+- Ikony: Check, X, Clock, DollarSign z lucide-react
+- Responsivní grid layout
+
+### 2. Úprava: `src/pages/Landing.tsx`
+- Import ComparisonSection
+- Přidat mezi Features a Pricing sekci
+- Přidat nav link "#comparison" do navbar (volitelné)
+
+---
+
+## Responsivita
+
+**Desktop (md+)**:
 ```text
-+----------------------------------------+
-|  How Ghost Link Works                  |
-|                                        |
-|   Your URL    →    Ghost Link          |
-|   [shop.com]       [g.lnk/xyz]         |
-|                                        |
-|   ┌──────────────────────────────────┐ |
-|   │  📊 Every click is tracked       │ |
-|   │  🌍 Geographic insights          │ |
-|   │  📱 Device & browser data        │ |
-|   └──────────────────────────────────┘ |
-|                                        |
-|   [ Continue → ]                       |
-+----------------------------------------+
+[ Ghost Link Card ]  [ Industry Card ]
 ```
 
-**Pro Pro/Business uživatele** - plné revenue tracking (stávající):
+**Mobile**:
 ```text
-+----------------------------------------+
-|  How Ghost Link Works                  |
-|                                        |
-|   Your URL    →    Ghost Link          |
-|   [shop.com]       [g.lnk/xyz]         |
-|                   ↓                    |
-|   [Clicks]  [Sales]  [EPC]             |
-|                                        |
-|   [ Continue → ]                       |
-+----------------------------------------+
-```
-
-### 4. Navigační Logika
-
-**Free flow navigace:**
-```typescript
-// Po "value" kroku přeskočit přímo na "success"
-const handleValueContinue = () => {
-  if (isFreeUser) {
-    handleInitialize(); // Vytvořit link a jít na success
-  } else {
-    setStep('platforms');
-  }
-};
-```
-
-### 5. Welcome Krok - Personalizované Benefity
-
-**Free uživatel:**
-```text
-What you'll unlock:
-📊 Real-time Click Tracking
-🌍 Geographic Insights  
-📱 Device Analytics
-```
-
-**Pro/Business uživatel:**
-```text
-What you'll unlock:
-📊 Real-time Tracking
-💰 Revenue Attribution
-🎯 Smart Analytics
-```
-
-### 6. Success Krok - Upgrade CTA pro Free
-
-**Pro Free uživatele** přidat upgrade hint:
-```text
-+----------------------------------------+
-|  ✓ You're all set!                     |
-|                                        |
-|  Your Ghost Link is live.              |
-|  [g.lnk/your-link]                     |
-|                                        |
-|  ┌────────────────────────────────────┐|
-|  │ 💡 Want to track sales & revenue?  │|
-|  │    Upgrade to Pro →                │|
-|  └────────────────────────────────────┘|
-|                                        |
-|  [ Copy Ghost Link ]                   |
-|  [ Go to Dashboard ]                   |
-+----------------------------------------+
+[ Ghost Link Card ]
+        vs
+[ Industry Card ]
 ```
 
 ---
 
-## Soubory k Úpravě
-
-1. **src/components/wizard/WelcomeWizard.tsx**
-   - Přidat `tier` prop
-   - Podmíněné kroky podle tieru
-   - Upravené benefity pro free vs paid
-   - Upravený "How It Works" krok
-   - Upgrade CTA na success kroku pro free
-
-2. **src/pages/Dashboard.tsx**
-   - Předat `tier` do WelcomeWizard komponenty
-
-3. **src/components/wizard/WizardProgressBar.tsx**
-   - Dynamicky přijímat různý počet kroků (již podporuje)
+## Animace (volitelné)
+- Fade-in při scroll do view
+- Subtle hover effect na kartách
+- Checkmarky s micro-animation
 
 ---
 
-## Vizuální Porovnání
-
-### Free User Journey
-```text
-[Welcome] ─── [How It Works] ─── [Success + Upgrade CTA]
-    │              │                    │
-    │              │                    └─ "Want revenue tracking? Upgrade →"
-    │              └─ Click tracking only
-    └─ "Track every click"
-```
-
-### Pro/Business User Journey
-```text
-[Welcome] ─── [How It Works] ─── [Platforms] ─── [Success]
-    │              │                  │              │
-    │              │                  │              └─ Full features
-    │              │                  └─ Connect Stripe, ClickBank, etc.
-    │              └─ Clicks + Sales + EPC
-    └─ "Track clicks & attribute revenue"
-```
-
----
-
-## Poznámky k Implementaci
-
-1. **Získání tieru**: Použít `useSubscription()` hook v Dashboard a předat tier do wizardu
-2. **Default tier**: Pokud tier není k dispozici, použít 'free' jako fallback
-3. **Konzistence**: Texty benefitů musí odpovídat pricing kartám
-4. **Upgrade CTA**: Link na /onboarding/plans nebo Settings s billing options
+## Výsledný Efekt
+Uživatel uvidí jasný kontrast: Ghost Link nabízí stejné (nebo lepší) funkce za zlomek ceny konkurence, bez nutnosti jmenovat konkrétní produkty.
