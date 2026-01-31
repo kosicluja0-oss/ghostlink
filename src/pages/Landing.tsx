@@ -9,6 +9,7 @@ import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } 
 import { toast } from 'sonner';
 import { HeroLinkInput } from '@/components/landing/HeroLinkInput';
 import { FloatingParticles } from '@/components/landing/FloatingParticles';
+import { ComparisonSection } from '@/components/landing/ComparisonSection';
 // Mock chart component for hero
 function MockDashboardChart() {
   return <div className="relative w-full max-w-4xl mx-auto">
@@ -367,6 +368,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Comparison Section */}
+      <ComparisonSection />
 
       {/* Pricing Section */}
       <section id="pricing" className="py-20 px-4">
