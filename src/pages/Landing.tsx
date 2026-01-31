@@ -340,7 +340,7 @@ export default function Landing() {
           </div>
           
           {/* Dashboard Preview */}
-          <div className="mt-14 w-full">
+          <div className="mt-8 w-full">
             <MockDashboardChart />
           </div>
         </div>
