@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const PLACEHOLDER_TEXT = 'Paste your first affiliate link here to start...';
@@ -116,6 +116,25 @@ export function HeroLinkInput() {
       <p className="mt-3 text-xs text-muted-foreground/60 text-center">
         No credit card required • Free forever tier available
       </p>
+      
+      {/* Social proof counter */}
+      <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
+        <div className="flex items-center gap-1.5">
+          <div className="flex -space-x-1.5">
+            {[...Array(3)].map((_, i) => (
+              <div 
+                key={i}
+                className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 border border-background flex items-center justify-center"
+              >
+                <Users className="w-2.5 h-2.5 text-primary/80" />
+              </div>
+            ))}
+          </div>
+          <span className="text-muted-foreground/80">
+            Join <span className="text-primary font-medium">500+</span> users already tracking
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
