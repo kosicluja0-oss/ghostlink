@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { HeroLinkInput } from '@/components/landing/HeroLinkInput';
 import { FloatingParticles } from '@/components/landing/FloatingParticles';
 import { ComparisonSection } from '@/components/landing/ComparisonSection';
+import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 // Mock chart component for hero
 function MockDashboardChart() {
   return <div className="relative w-full max-w-4xl mx-auto">
@@ -449,6 +450,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <TestimonialsSection />
 
       {/* FAQ Section */}
       <section className="py-20 px-4 bg-card/30">
