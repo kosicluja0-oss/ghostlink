@@ -38,12 +38,13 @@ export function useProfile() {
       if (error) {
         // Profile might not exist yet for existing users
         if (error.code === 'PGRST116') {
-          // Create profile for existing user
+          // Create profile for existing user - use display_name from auth metadata if available
+          const displayName = user.user_metadata?.display_name || user.email?.split('@')[0] || null;
           const { data: newProfile, error: insertError } = await supabase
             .from('profiles')
             .insert({
               id: user.id,
-              display_name: user.email?.split('@')[0] || null,
+              display_name: displayName,
             })
             .select()
             .single();

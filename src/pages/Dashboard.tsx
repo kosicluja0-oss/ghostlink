@@ -236,6 +236,7 @@ const Dashboard = () => {
   // Get user's display name for the wizard
   const userName = useMemo(() => {
     if (profile?.display_name) return profile.display_name;
+    if (user?.user_metadata?.display_name) return user.user_metadata.display_name;
     if (user?.email) return user.email.split('@')[0];
     return 'Ghost';
   }, [profile, user]);
