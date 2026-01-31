@@ -128,7 +128,7 @@ export function ComparisonSection() {
           viewport={{ once: true, margin: '-50px' }}
         >
           {/* Ghost Link Card */}
-          <motion.div variants={itemVariants} whileHover={{ y: -4 }} transition={{ duration: 0.3 }}>
+          <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: '0 8px 30px hsl(var(--primary) / 0.15)' }} transition={{ duration: 0.3 }}>
             <Card className="border-primary/50 shadow-lg shadow-primary/10 relative overflow-hidden h-full">
               {/* Subtle glow effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
@@ -158,7 +158,7 @@ export function ComparisonSection() {
           </motion.div>
 
           {/* Industry Average Card */}
-          <motion.div variants={itemVariants} whileHover={{ y: -4 }} transition={{ duration: 0.3 }}>
+          <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: '0 8px 30px hsl(0 0% 100% / 0.05)' }} transition={{ duration: 0.3 }}>
             <Card className="border-border bg-card/50 h-full">
               <CardHeader className="pb-4">
                 <CardTitle className="text-center text-xl text-muted-foreground">
