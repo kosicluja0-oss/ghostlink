@@ -2,6 +2,7 @@ import { Check, X, Clock, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 interface ComparisonItem {
   label: string;
@@ -76,75 +77,113 @@ function IndustryIcon({ type }: { type: 'x' | 'clock' | 'warning' | 'dollar' }) 
   }
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.25, 0.1, 0.25, 1] as const,
+    },
+  },
+};
+
 export function ComparisonSection() {
   return (
     <section id="comparison" className="py-20 px-4">
       <div className="container mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-12">
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-100px' }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Why Choose Ghost Link?
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             See how we compare to industry standards
           </p>
-        </div>
+        </motion.div>
 
         {/* Comparison Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <motion.div
+          className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+        >
           {/* Ghost Link Card */}
-          <Card className="border-primary/50 shadow-lg shadow-primary/10 relative overflow-hidden">
-            {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            
-            <CardHeader className="pb-4">
-              <CardTitle className="text-center text-xl text-foreground">
-                Ghost Link
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {comparisonItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
-                >
-                  <div className="flex-shrink-0 h-6 w-6 rounded-full bg-success/10 flex items-center justify-center">
-                    <GhostLinkIcon type={item.ghostLinkIcon} />
+          <motion.div variants={itemVariants}>
+            <Card className="border-primary/50 shadow-lg shadow-primary/10 relative overflow-hidden h-full">
+              {/* Subtle glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+              
+              <CardHeader className="pb-4">
+                <CardTitle className="text-center text-xl text-foreground">
+                  Ghost Link
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {comparisonItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                  >
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-success/10 flex items-center justify-center">
+                      <GhostLinkIcon type={item.ghostLinkIcon} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-muted-foreground">{item.label}</div>
+                      <div className="text-sm font-medium text-foreground">{item.ghostLink}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-muted-foreground">{item.label}</div>
-                    <div className="text-sm font-medium text-foreground">{item.ghostLink}</div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Industry Average Card */}
-          <Card className="border-border bg-card/50">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-center text-xl text-muted-foreground">
-                Industry Average
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {comparisonItems.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
-                >
-                  <div className="flex-shrink-0 h-6 w-6 rounded-full bg-muted/20 flex items-center justify-center">
-                    <IndustryIcon type={item.industryIcon} />
+          <motion.div variants={itemVariants}>
+            <Card className="border-border bg-card/50 h-full">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-center text-xl text-muted-foreground">
+                  Industry Average
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {comparisonItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-3 py-2 border-b border-border/50 last:border-0"
+                  >
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-muted/20 flex items-center justify-center">
+                      <IndustryIcon type={item.industryIcon} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-muted-foreground">{item.label}</div>
+                      <div className="text-sm font-medium text-muted-foreground">{item.industry}</div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-muted-foreground">{item.label}</div>
-                    <div className="text-sm font-medium text-muted-foreground">{item.industry}</div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
 
         {/* Mobile "vs" indicator - only visible on mobile when cards stack */}
         <div className="md:hidden flex justify-center -my-3 relative z-10">
@@ -154,13 +193,19 @@ export function ComparisonSection() {
         </div>
 
         {/* CTA */}
-        <div className="text-center mt-12">
+        <motion.div
+          className="text-center mt-12"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
           <Link to="/auth?mode=signup">
             <Button variant="glow" size="lg">
               Start Free →
             </Button>
           </Link>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
