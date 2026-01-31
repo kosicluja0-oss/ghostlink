@@ -359,7 +359,7 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map(feature => <div key={feature.title} className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300">
+            {features.map(feature => <div key={feature.title} className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -389,7 +389,7 @@ export default function Landing() {
             {Object.entries(pricingPlans).map(([planId, plan]) => {
             const isFree = planId === 'free';
             const displayPrice = getDisplayPrice(plan, billingCycle);
-            return <div key={planId} className={`relative bg-card border rounded-xl p-6 flex flex-col hover:-translate-y-1 transition-all duration-300 ${plan.highlighted ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' : 'border-border'}`}>
+            return <div key={planId} className={`relative bg-card border rounded-xl p-6 flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)] transition-all duration-300 ${plan.highlighted ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' : 'border-border'}`}>
                   {plan.badge && <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
                         {plan.badge}

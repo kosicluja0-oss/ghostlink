@@ -103,7 +103,7 @@ export function HeroLinkInput() {
         className={cn(
           "relative flex items-center gap-2 p-1.5 rounded-2xl border transition-all duration-300",
           "bg-[#0a0a0a]",
-          "hover:-translate-y-1",
+          "hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)]",
           isFocused || hasValue
             ? "border-white/20 shadow-[0_0_20px_hsl(var(--primary)/0.15)]" 
             : "border-white/[0.08] hover:border-white/[0.12]"
