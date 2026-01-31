@@ -5,14 +5,56 @@ import { cn } from '@/lib/utils';
 
 const PLACEHOLDER_TEXT = 'Paste your first affiliate link here to start...';
 
+const TARGET_COUNT = 500;
+const COUNT_DURATION = 2000; // 2 seconds
+
 export function HeroLinkInput() {
   const navigate = useNavigate();
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [typedPlaceholder, setTypedPlaceholder] = useState(PLACEHOLDER_TEXT);
+  const [userCount, setUserCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const counterRef = useRef<HTMLDivElement>(null);
   const hasValue = inputValue.trim().length > 0;
+
+  // Animated counter effect - triggers when element is in view
+  useEffect(() => {
+    if (hasAnimated) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setHasAnimated(true);
+          const startTime = Date.now();
+          
+          const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / COUNT_DURATION, 1);
+            // Ease out cubic for smooth deceleration
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(easeOut * TARGET_COUNT);
+            setUserCount(current);
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (counterRef.current) {
+      observer.observe(counterRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasAnimated]);
 
   // Typewriter animation effect
   useEffect(() => {
@@ -118,7 +160,7 @@ export function HeroLinkInput() {
       </p>
       
       {/* Social proof counter */}
-      <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
+      <div ref={counterRef} className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
         <div className="flex items-center gap-1.5">
           <div className="flex -space-x-1.5">
             {[...Array(3)].map((_, i) => (
@@ -131,7 +173,7 @@ export function HeroLinkInput() {
             ))}
           </div>
           <span className="text-muted-foreground/80">
-            Join <span className="text-primary font-medium">500+</span> users already tracking
+            Join <span className="text-primary font-medium tabular-nums">{userCount}+</span> users already tracking
           </span>
         </div>
       </div>
