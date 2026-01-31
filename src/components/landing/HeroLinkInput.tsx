@@ -101,8 +101,9 @@ export function HeroLinkInput() {
     <div className="w-full max-w-2xl mx-auto">
       <div 
         className={cn(
-          "relative flex items-center gap-2 p-1.5 rounded-2xl border transition-all duration-200",
+          "relative flex items-center gap-2 p-1.5 rounded-2xl border transition-all duration-300",
           "bg-[#0a0a0a]",
+          "hover:-translate-y-1",
           isFocused || hasValue
             ? "border-white/20 shadow-[0_0_20px_hsl(var(--primary)/0.15)]" 
             : "border-white/[0.08] hover:border-white/[0.12]"
