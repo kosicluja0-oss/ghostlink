@@ -1,79 +1,57 @@
 
-# Plán: Změna věkového limitu na 16+ a přidání potvrzení při registraci
 
-## Shrnutí
-Změníme minimální věk z 18 na 16 let a přidáme povinný checkbox při registraci, kde uživatel potvrdí svůj věk a souhlas s podmínkami.
+# Vytvoření SVG loga Ghost Link
 
----
+## Přehled
+Vytvořím sadu profesionálních SVG logo souborů pro Ghost Link, které budou obsahovat ikonu ducha a text "Ghost Link". Logo bude dostupné v několika variantách pro různé použití.
 
-## Co se změní
+## Varianty loga
 
-### 1. Privacy Policy (`src/pages/Privacy.tsx`)
-**Řádek 170** - změna textu:
-- Z: "Ghost Link is not intended for users under 18 years of age"
-- Na: "Ghost Link is not intended for users under 16 years of age"
+### 1. Hlavní logo (světlé na průhledném pozadí)
+- Bílá ikona ducha + bílý text "Ghost Link"
+- Ideální pro tmavé pozadí
 
-### 2. Registrační formulář (`src/pages/Auth.tsx`)
-Přidání povinného checkboxu pod pole "Confirm Password":
+### 2. Tmavé logo (tmavé na průhledném pozadí)  
+- Černá/tmavě šedá ikona + text
+- Ideální pro světlé pozadí
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│ ☐ I am at least 16 years old and agree to the          │
-│   Terms of Service and Privacy Policy                   │
-└─────────────────────────────────────────────────────────┘
+### 3. Barevné logo s gradientem
+- Ikona s gradientem primary barvy (#8B5CF6 → #A78BFA)
+- Pro brandingové účely
+
+### 4. Pouze ikona
+- Samotný duch bez textu
+- Pro favicon, app ikony, sociální sítě
+
+## Soubory k vytvoření
+
+```
+public/brand/
+├── ghostlink-logo-light.svg      (bílé logo pro tmavé pozadí)
+├── ghostlink-logo-dark.svg       (tmavé logo pro světlé pozadí)
+├── ghostlink-logo-gradient.svg   (barevné logo s gradientem)
+├── ghostlink-icon-light.svg      (pouze ikona - bílá)
+├── ghostlink-icon-dark.svg       (pouze ikona - tmavá)
+└── ghostlink-icon-gradient.svg   (pouze ikona - gradient)
 ```
 
-- Checkbox bude povinný - tlačítko "Create Account" bude neaktivní dokud není zaškrtnutý
-- Text bude obsahovat odkazy na `/terms` a `/privacy`
-- Přidá se nový state `agreedToTerms: boolean`
-- Validace `isSignupValid` se rozšíří o kontrolu checkboxu
+## Design specifikace
 
----
-
-## Jak to zajistí ochranu před mladšími uživateli?
-
-**Standardní metoda v oboru:**
-- **Self-certification** - uživatel sám potvrzuje svůj věk při registraci
-- Toto je právně dostatečné pro běžné SaaS služby
-- Přenáší odpovědnost na uživatele v případě lživého prohlášení
-
-**Proč ne přísnější ověření:**
-- Ghost Link není gambling ani adult content - nepotřebuje ID verifikaci
-- Stripe (platební brána) provádí vlastní KYC při platbách
-- Pro 16+ v EU (GDPR minimum) je checkbox dostatečný
-
----
+- **Font**: Sans-serif, bold tracking-tight (odpovídá současnému stylu v aplikaci)
+- **Ikona**: Vektorová verze Lucide Ghost ikony
+- **Rozměry**: Optimalizováno pro různé velikosti (scalable SVG)
+- **Barvy**:
+  - Light: `#FFFFFF`
+  - Dark: `#1A1A2E`
+  - Primary gradient: `#8B5CF6` → `#A78BFA`
 
 ## Technické detaily
 
-### Nový state v Auth.tsx
-```typescript
-const [agreedToTerms, setAgreedToTerms] = useState(false);
-```
+Každý SVG soubor bude:
+- Plně vektorový (škálovatelný bez ztráty kvality)
+- Optimalizovaný pro web (minimální velikost)
+- S průhledným pozadím
+- Kompatibilní se všemi moderními prohlížeči
 
-### Aktualizovaná validace
-```typescript
-const isSignupValid = useMemo(() => {
-  const emailValid = z.string().email().safeParse(email).success;
-  return emailValid && passwordStrength.isStrong && passwordsMatch && agreedToTerms;
-}, [email, passwordStrength.isStrong, passwordsMatch, agreedToTerms]);
-```
+Po vytvoření budou soubory dostupné ke stažení přímo z `/brand/` adresáře projektu.
 
-### Nový Checkbox component
-- Použije existující `@/components/ui/checkbox`
-- Stylizace konzistentní s ostatními prvky formuláře
-- Odkazy otevřou nové taby (`target="_blank"`)
-
----
-
-## Soubory k úpravě
-
-| Soubor | Změna |
-|--------|-------|
-| `src/pages/Privacy.tsx` | Změna "18" na "16" |
-| `src/pages/Auth.tsx` | Přidání checkboxu + state + validace |
-
----
-
-## Časový odhad
-5-10 minut implementace
