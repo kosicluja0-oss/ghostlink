@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -18,10 +18,11 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { usePasswordStrength } from '@/hooks/usePasswordStrength';
 import { openCustomerPortal, createCheckoutSession } from '@/lib/stripe';
-import { TIERS } from '@/types';
+import { TIERS, TierType } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserRole } from '@/hooks/useUserRole';
 const Settings = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -45,8 +46,13 @@ const Settings = () => {
     refetch: refetchSubscription
   } = useSubscription();
   const openTicketsCount = useOpenTicketsCount();
+  const { isAdmin } = useUserRole();
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
+  
+  // Admin tier switcher state
+  const [selectedTier, setSelectedTier] = useState<TierType>(tier);
+  const [isChangingTier, setIsChangingTier] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -98,6 +104,34 @@ const Settings = () => {
       setCurrency(profile.currency || 'usd');
     }
   }, [profile]);
+  
+  // Sync selected tier with current tier
+  useEffect(() => {
+    setSelectedTier(tier);
+  }, [tier]);
+  
+  // Admin tier change handler
+  const handleAdminTierChange = async () => {
+    if (!user?.id || selectedTier === tier) return;
+    
+    setIsChangingTier(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ tier: selectedTier })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      toast.success(`Tier changed to ${selectedTier.toUpperCase()}`);
+      refetchSubscription();
+    } catch (error: any) {
+      console.error('[ADMIN-TIER-CHANGE] Error:', error);
+      toast.error(error.message || 'Failed to change tier');
+    } finally {
+      setIsChangingTier(false);
+    }
+  };
   const userInitial = displayName ? displayName.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : 'U';
   const currentTierData = TIERS[tier];
   const handleSaveProfile = () => {
@@ -743,6 +777,84 @@ const Settings = () => {
                       </>}
                   </CardContent>
                 </Card>
+
+                {/* Admin Developer Tools - Only visible to admins */}
+                {isAdmin && (
+                  <Card className="bg-card border-border border-dashed border-warning/50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-foreground">
+                        <Wrench className="w-5 h-5 text-warning" />
+                        Developer Tools
+                        <Badge variant="outline" className="ml-2 text-xs border-warning/50 text-warning">
+                          Admin Only
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        Test different subscription tiers without payment
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <Label>Test Tier Switching</Label>
+                        <div className="flex gap-3">
+                          <Select value={selectedTier} onValueChange={(value: TierType) => setSelectedTier(value)}>
+                            <SelectTrigger className="w-[180px] bg-input">
+                              <SelectValue placeholder="Select tier" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">
+                                <span className="flex items-center gap-2">
+                                  <Shield className="w-4 h-4 text-muted-foreground" />
+                                  Free (25 links)
+                                </span>
+                              </SelectItem>
+                              <SelectItem value="pro">
+                                <span className="flex items-center gap-2">
+                                  <Crown className="w-4 h-4 text-primary" />
+                                  Pro (100 links)
+                                </span>
+                              </SelectItem>
+                              <SelectItem value="business">
+                                <span className="flex items-center gap-2">
+                                  <Crown className="w-4 h-4 text-warning" />
+                                  Business (175 links)
+                                </span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            onClick={handleAdminTierChange}
+                            disabled={isChangingTier || selectedTier === tier}
+                            variant="outline"
+                          >
+                            {isChangingTier ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Applying...
+                              </>
+                            ) : (
+                              'Apply'
+                            )}
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">Current tier:</span>
+                          <Badge 
+                            variant="secondary" 
+                            className={cn(
+                              tier === 'free' && "bg-muted text-muted-foreground",
+                              tier === 'pro' && "bg-primary/10 text-primary",
+                              tier === 'business' && "bg-warning/10 text-warning"
+                            )}
+                          >
+                            {tier.toUpperCase()}
+                          </Badge>
+                          {tier !== 'free' && <Check className="w-4 h-4 text-success" />}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Delete Account - Subtle placement */}
                 <div className="pt-4 flex justify-center">
