@@ -227,6 +227,67 @@ export function useLinks() {
     []
   );
 
+  // Update an existing link
+  const updateLink = useCallback(
+    async (
+      id: string,
+      updates: {
+        targetUrl?: string;
+        hasBridgePage?: boolean;
+        bridgePageConfig?: BridgePageConfig;
+      }
+    ) => {
+      try {
+        const updateData: {
+          target_url?: string;
+          has_bridge_page?: boolean;
+          bridge_page_config?: BridgePageConfig | null;
+        } = {};
+
+        if (updates.targetUrl !== undefined) {
+          updateData.target_url = updates.targetUrl;
+        }
+        if (updates.hasBridgePage !== undefined) {
+          updateData.has_bridge_page = updates.hasBridgePage;
+        }
+        if (updates.bridgePageConfig !== undefined) {
+          updateData.bridge_page_config = updates.bridgePageConfig;
+        } else if (updates.hasBridgePage === false) {
+          updateData.bridge_page_config = null;
+        }
+
+        const { error } = await supabase
+          .from('links')
+          .update(updateData as any)
+          .eq('id', id);
+
+        if (error) {
+          console.error('Error updating link:', error);
+          toast.error('Failed to update link');
+          return;
+        }
+
+        setLinks((prev) =>
+          prev.map((link) =>
+            link.id === id
+              ? {
+                  ...link,
+                  targetUrl: updates.targetUrl ?? link.targetUrl,
+                  hasBridgePage: updates.hasBridgePage ?? link.hasBridgePage,
+                  bridgePageConfig: updates.hasBridgePage ? updates.bridgePageConfig : undefined,
+                }
+              : link
+          )
+        );
+        toast.success('Link updated successfully');
+      } catch (error) {
+        console.error('Error in updateLink:', error);
+        toast.error('Failed to update link');
+      }
+    },
+    []
+  );
+
   // Delete a link permanently
   const deleteLink = useCallback(async (id: string) => {
     try {
@@ -253,6 +314,7 @@ export function useLinks() {
     links,
     isLoading,
     addLink,
+    updateLink,
     deleteLink,
     refetch: fetchLinks,
   };

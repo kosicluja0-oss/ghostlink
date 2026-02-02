@@ -34,6 +34,7 @@ interface LinkTableProps {
   links: GhostLink[];
   userTier: TierType;
   onDeleteLink: (id: string) => void;
+  onEditLink?: (link: GhostLink) => void;
   activeLinkId?: string | null;
   onLinkSelect?: (linkId: string) => void;
 }
@@ -42,6 +43,7 @@ interface LinkRowProps {
   link: GhostLink;
   userTier: TierType;
   onDelete: (id: string) => void;
+  onEdit?: (link: GhostLink) => void;
   isSelected?: boolean;
   onSelect?: (linkId: string) => void;
 }
@@ -110,6 +112,7 @@ function LinkRow({
   link, 
   userTier, 
   onDelete,
+  onEdit,
   isSelected = false,
   onSelect
 }: LinkRowProps) {
@@ -216,10 +219,15 @@ function LinkRow({
               </TooltipContent>
             </Tooltip>
             <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                <Pencil className="h-3.5 w-3.5 mr-2" />
-                Edit Link
-              </DropdownMenuItem>
+              {onEdit && (
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(link);
+                }}>
+                  <Pencil className="h-3.5 w-3.5 mr-2" />
+                  Edit Link
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={(e) => e.stopPropagation()} asChild>
                 <a href={link.targetUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-3.5 w-3.5 mr-2" />
@@ -271,6 +279,7 @@ export function LinkTable({
   links, 
   userTier, 
   onDeleteLink,
+  onEditLink,
   activeLinkId,
   onLinkSelect
 }: LinkTableProps) {
@@ -332,6 +341,7 @@ export function LinkTable({
               link={link}
               userTier={userTier}
               onDelete={onDeleteLink}
+              onEdit={onEditLink}
               isSelected={activeLinkId === link.id}
               onSelect={onLinkSelect}
             />

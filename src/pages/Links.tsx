@@ -7,11 +7,12 @@ import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
+import { EditLinkModal } from '@/components/links/EditLinkModal';
 import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
-import type { TierType } from '@/types';
+import type { GhostLink, BridgePageConfig } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
 
@@ -22,10 +23,12 @@ const Links = () => {
   
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<GhostLink | null>(null);
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
   // Use real data hooks
-  const { links, addLink, deleteLink } = useLinks();
+  const { links, addLink, updateLink, deleteLink } = useLinks();
   const openTicketsCount = useOpenTicketsCount();
   
   const tier = TIERS[userTier];
@@ -35,6 +38,18 @@ const Links = () => {
   const handleLinkSelect = useCallback((linkId: string) => {
     setActiveLinkId(prev => prev === linkId ? null : linkId);
   }, []);
+
+  const handleEditLink = useCallback((link: GhostLink) => {
+    setEditingLink(link);
+    setEditModalOpen(true);
+  }, []);
+
+  const handleSaveLink = useCallback(async (
+    id: string, 
+    updates: { targetUrl: string; hasBridgePage: boolean; bridgePageConfig?: BridgePageConfig }
+  ) => {
+    await updateLink(id, updates);
+  }, [updateLink]);
 
   return (
     <TooltipProvider>
@@ -84,6 +99,7 @@ const Links = () => {
                   links={links}
                   userTier={userTier}
                   onDeleteLink={deleteLink}
+                  onEditLink={handleEditLink}
                   activeLinkId={activeLinkId}
                   onLinkSelect={handleLinkSelect}
                 />
@@ -107,6 +123,14 @@ const Links = () => {
           userTier={userTier}
           currentLinkCount={activeLinksCount}
           maxLinks={tier.maxLinks}
+        />
+
+        <EditLinkModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          link={editingLink}
+          userTier={userTier}
+          onSave={handleSaveLink}
         />
       </SidebarProvider>
     </TooltipProvider>
