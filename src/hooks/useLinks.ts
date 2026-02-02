@@ -193,6 +193,8 @@ export function useLinks() {
           console.error('Error adding link:', error);
           if (error.code === '23505') {
             toast.error('This alias is already taken. Please choose another.');
+          } else if (error.message?.includes('violates row-level security')) {
+            toast.error('Link limit reached. Upgrade your plan to create more links.');
           } else {
             toast.error('Failed to create link');
           }
