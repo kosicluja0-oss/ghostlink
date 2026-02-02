@@ -1,57 +1,77 @@
 
-
-# Vytvoření SVG loga Ghost Link
+# Admin Tier Switcher - Testování všech plánů
 
 ## Přehled
-Vytvořím sadu profesionálních SVG logo souborů pro Ghost Link, které budou obsahovat ikonu ducha a text "Ghost Link". Logo bude dostupné v několika variantách pro různé použití.
+Přidám speciální sekci do Settings stránky, která bude viditelná **pouze pro adminy** a umožní okamžité přepínání mezi všemi tarify (Free, Pro, Business) bez nutnosti platby.
 
-## Varianty loga
+## Co se změní
 
-### 1. Hlavní logo (světlé na průhledném pozadí)
-- Bílá ikona ducha + bílý text "Ghost Link"
-- Ideální pro tmavé pozadí
+### 1. Settings stránka (`src/pages/Settings.tsx`)
+Přidám novou kartu "Developer Tools" s tier switcherem:
+- Viditelná pouze pokud `isAdmin === true`
+- Dropdown pro výběr tarifu (Free / Pro / Business)
+- Tlačítko "Apply" pro okamžitou změnu
+- Barevné označení aktuálního tarifu
 
-### 2. Tmavé logo (tmavé na průhledném pozadí)  
-- Černá/tmavě šedá ikona + text
-- Ideální pro světlé pozadí
-
-### 3. Barevné logo s gradientem
-- Ikona s gradientem primary barvy (#8B5CF6 → #A78BFA)
-- Pro brandingové účely
-
-### 4. Pouze ikona
-- Samotný duch bez textu
-- Pro favicon, app ikony, sociální sítě
-
-## Soubory k vytvoření
-
-```
-public/brand/
-├── ghostlink-logo-light.svg      (bílé logo pro tmavé pozadí)
-├── ghostlink-logo-dark.svg       (tmavé logo pro světlé pozadí)
-├── ghostlink-logo-gradient.svg   (barevné logo s gradientem)
-├── ghostlink-icon-light.svg      (pouze ikona - bílá)
-├── ghostlink-icon-dark.svg       (pouze ikona - tmavá)
-└── ghostlink-icon-gradient.svg   (pouze ikona - gradient)
+### 2. Jak to bude fungovat
+```text
+┌─────────────────────────────────────┐
+│ 🔧 Developer Tools (Admin Only)     │
+├─────────────────────────────────────┤
+│ Test Tier Switching                 │
+│                                     │
+│ [  Free  ▼ ] [Apply]                │
+│  ○ Free (25 links)                  │
+│  ○ Pro (100 links)                  │
+│  ○ Business (175 links)             │
+│                                     │
+│ Current: Business ✓                 │
+└─────────────────────────────────────┘
 ```
 
-## Design specifikace
-
-- **Font**: Sans-serif, bold tracking-tight (odpovídá současnému stylu v aplikaci)
-- **Ikona**: Vektorová verze Lucide Ghost ikony
-- **Rozměry**: Optimalizováno pro různé velikosti (scalable SVG)
-- **Barvy**:
-  - Light: `#FFFFFF`
-  - Dark: `#1A1A2E`
-  - Primary gradient: `#8B5CF6` → `#A78BFA`
+### 3. Bezpečnost
+- Tier se mění přímo v `profiles` tabulce přes Supabase
+- RLS politiky povolují uživateli měnit vlastní profil
+- UI sekce je podmíněna `useUserRole().isAdmin`
+- Žádné bezpečnostní riziko - admin mění pouze svůj vlastní tier
 
 ## Technické detaily
 
-Každý SVG soubor bude:
-- Plně vektorový (škálovatelný bez ztráty kvality)
-- Optimalizovaný pro web (minimální velikost)
-- S průhledným pozadím
-- Kompatibilní se všemi moderními prohlížeči
+### Import hook
+```typescript
+import { useUserRole } from '@/hooks/useUserRole';
+```
 
-Po vytvoření budou soubory dostupné ke stažení přímo z `/brand/` adresáře projektu.
+### Podmíněné renderování
+```typescript
+const { isAdmin } = useUserRole();
 
+{isAdmin && (
+  <Card>
+    <CardHeader>
+      <CardTitle>Developer Tools</CardTitle>
+    </CardHeader>
+    <CardContent>
+      {/* Tier switcher UI */}
+    </CardContent>
+  </Card>
+)}
+```
+
+### Změna tarifu
+```typescript
+const handleTierChange = async (newTier: TierType) => {
+  await supabase
+    .from('profiles')
+    .update({ tier: newTier })
+    .eq('id', user.id);
+  refetchSubscription();
+};
+```
+
+## Výsledek
+Po implementaci budeš moci:
+1. Jít do Settings
+2. Vidět sekci "Developer Tools" (pouze ty jako admin)
+3. Vybrat libovolný tier a aplikovat
+4. Okamžitě testovat všechny funkce daného plánu
