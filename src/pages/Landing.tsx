@@ -485,8 +485,8 @@ export default function Landing() {
               <span className="font-semibold text-foreground">Ghost Link</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
             </div>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} Ghost Link. All rights reserved.
