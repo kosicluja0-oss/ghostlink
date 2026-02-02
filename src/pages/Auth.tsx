@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { usePasswordStrength } from '@/hooks/usePasswordStrength';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const emailSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -36,6 +37,7 @@ export default function Auth() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [hasPendingLink, setHasPendingLink] = useState(false);
 
@@ -49,8 +51,8 @@ export default function Auth() {
   // Check if signup form is valid
   const isSignupValid = useMemo(() => {
     const emailValid = z.string().email().safeParse(email).success;
-    return emailValid && passwordStrength.isStrong && passwordsMatch;
-  }, [email, passwordStrength.isStrong, passwordsMatch]);
+    return emailValid && passwordStrength.isStrong && passwordsMatch && agreedToTerms;
+  }, [email, passwordStrength.isStrong, passwordsMatch, agreedToTerms]);
 
   // Check for pending link from landing page
   useEffect(() => {
@@ -427,6 +429,42 @@ export default function Auth() {
                 {showMismatchError && (
                   <p className="text-xs text-destructive mt-1">Passwords do not match</p>
                 )}
+              </div>
+            )}
+
+            {/* Age and Terms Checkbox - only for signup */}
+            {mode === 'signup' && (
+              <div className="flex items-start gap-3 pt-2">
+                <Checkbox
+                  id="agreedToTerms"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                  disabled={isLoading}
+                  className="mt-0.5"
+                />
+                <label
+                  htmlFor="agreedToTerms"
+                  className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
+                >
+                  I am at least 16 years old and agree to the{' '}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Terms of Service
+                  </a>{' '}
+                  and{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Privacy Policy
+                  </a>
+                </label>
               </div>
             )}
 

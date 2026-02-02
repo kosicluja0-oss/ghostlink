@@ -167,7 +167,7 @@ export default function Privacy() {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">10. Children's Privacy</h2>
             <p>
-              Ghost Link is not intended for users under 18 years of age. We do not knowingly collect 
+              Ghost Link is not intended for users under 16 years of age. We do not knowingly collect 
               personal information from children.
             </p>
           </section>
