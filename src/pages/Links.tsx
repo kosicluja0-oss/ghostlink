@@ -9,6 +9,7 @@ import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import type { TierType } from '@/types';
 import { TIERS } from '@/types';
@@ -17,8 +18,8 @@ import { Button } from '@/components/ui/button';
 const Links = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { tier: userTier } = useSubscription();
   
-  const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
@@ -96,7 +97,7 @@ const Links = () => {
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           userTier={userTier}
-          onChangeTier={setUserTier}
+          onChangeTier={() => {}}
         />
 
         <CreateLinkModal

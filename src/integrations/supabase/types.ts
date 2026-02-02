@@ -259,6 +259,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_link: { Args: { p_user_id: string }; Returns: boolean }
+      get_link_limit_info: {
+        Args: { p_user_id: string }
+        Returns: {
+          current_count: number
+          max_links: number
+          tier: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
