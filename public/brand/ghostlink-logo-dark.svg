@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" fill="none">
+  <!-- Ghost Icon -->
+  <g transform="translate(5, 5)">
+    <path d="M9 2C6.38 2 4.5 4.62 4.5 7.5c0 1.76.56 3.36 1.5 4.5v8l2.5-2.5L11 20l2.5-2.5L16 20v-8c.94-1.14 1.5-2.74 1.5-4.5C17.5 4.62 15.62 2 13 2H9Z" stroke="#1A1A2E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(0, 10) scale(1.8)"/>
+    <circle cx="14.4" cy="25.2" r="1.8" fill="#1A1A2E"/>
+    <circle cx="21.6" cy="25.2" r="1.8" fill="#1A1A2E"/>
+  </g>
+  
+  <!-- Text "Ghost Link" -->
+  <text x="60" y="33" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="700" letter-spacing="-0.5" fill="#1A1A2E">Ghost Link</text>
+</svg>
