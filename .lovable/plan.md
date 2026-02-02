@@ -1,77 +1,60 @@
 
-# Admin Tier Switcher - Testování všech plánů
+# Oprava zbývajících bezpečnostních problémů
 
-## Přehled
-Přidám speciální sekci do Settings stránky, která bude viditelná **pouze pro adminy** a umožní okamžité přepínání mezi všemi tarify (Free, Pro, Business) bez nutnosti platby.
+## Nalezené problémy
 
-## Co se změní
+### Kritické (error)
+1. **user_roles** - Chybí INSERT/UPDATE/DELETE políčky → uživatel by si mohl přiřadit admin roli
+2. **support_messages** - Chybí UPDATE/DELETE políčky → uživatel by mohl mazat/měnit zprávy
 
-### 1. Settings stránka (`src/pages/Settings.tsx`)
-Přidám novou kartu "Developer Tools" s tier switcherem:
-- Viditelná pouze pokud `isAdmin === true`
-- Dropdown pro výběr tarifu (Free / Pro / Business)
-- Tlačítko "Apply" pro okamžitou změnu
-- Barevné označení aktuálního tarifu
+### Varování (warn)
+3. **clicks** - Chybí explicitní blokace UPDATE/DELETE
+4. **conversions** - Chybí explicitní blokace UPDATE/DELETE
+5. **support_tickets** - Chybí DELETE políčka
+6. **profiles** - Chybí DELETE políčka (záměrné - používáme edge function)
 
-### 2. Jak to bude fungovat
-```text
-┌─────────────────────────────────────┐
-│ 🔧 Developer Tools (Admin Only)     │
-├─────────────────────────────────────┤
-│ Test Tier Switching                 │
-│                                     │
-│ [  Free  ▼ ] [Apply]                │
-│  ○ Free (25 links)                  │
-│  ○ Pro (100 links)                  │
-│  ○ Business (175 links)             │
-│                                     │
-│ Current: Business ✓                 │
-└─────────────────────────────────────┘
+## Plán oprav
+
+### 1. user_roles - Zablokovat všechny modifikace
+```sql
+-- Nikdo nemůže vkládat/měnit/mazat role (pouze přes backend/admin)
+-- Tabulka už má tyto operace zakázané, jen to explicitně potvrdíme
+```
+Tato tabulka už má správně nastavené restrikce v Supabase - uživatelé nemohou INSERT/UPDATE/DELETE.
+
+### 2. support_messages - Přidat UPDATE políčku pro read_at
+```sql
+CREATE POLICY "Admins can update message read status"
+ON public.support_messages FOR UPDATE
+TO authenticated
+USING (has_role(auth.uid(), 'admin'))
+WITH CHECK (has_role(auth.uid(), 'admin'));
 ```
 
-### 3. Bezpečnost
-- Tier se mění přímo v `profiles` tabulce přes Supabase
-- RLS politiky povolují uživateli měnit vlastní profil
-- UI sekce je podmíněna `useUserRole().isAdmin`
-- Žádné bezpečnostní riziko - admin mění pouze svůj vlastní tier
+### 3. clicks & conversions - Explicitní blokace
+Tyto tabulky už mají správně nastavené restrikce - uživatelé nemohou UPDATE/DELETE. Scan reportuje varování, ale je to záměr.
 
-## Technické detaily
-
-### Import hook
-```typescript
-import { useUserRole } from '@/hooks/useUserRole';
+### 4. support_tickets - Přidat DELETE políčku (pouze admin)
+```sql
+CREATE POLICY "Only admins can delete tickets"
+ON public.support_tickets FOR DELETE
+TO authenticated
+USING (has_role(auth.uid(), 'admin'));
 ```
 
-### Podmíněné renderování
-```typescript
-const { isAdmin } = useUserRole();
+## Ignorované položky (záměrné)
+- **profiles DELETE** - Mazání účtu řešíme přes edge function `delete-account`
+- **clicks/conversions UPDATE/DELETE** - Data mají být immutable
 
-{isAdmin && (
-  <Card>
-    <CardHeader>
-      <CardTitle>Developer Tools</CardTitle>
-    </CardHeader>
-    <CardContent>
-      {/* Tier switcher UI */}
-    </CardContent>
-  </Card>
-)}
-```
+## Shrnutí změn
+| Tabulka | Akce |
+|---------|------|
+| support_messages | Přidat UPDATE pro adminy |
+| support_tickets | Přidat DELETE pro adminy |
+| user_roles | Ověřit existující restrikce |
+| clicks, conversions | Označit jako záměrně immutable |
 
-### Změna tarifu
-```typescript
-const handleTierChange = async (newTier: TierType) => {
-  await supabase
-    .from('profiles')
-    .update({ tier: newTier })
-    .eq('id', user.id);
-  refetchSubscription();
-};
-```
-
-## Výsledek
-Po implementaci budeš moci:
-1. Jít do Settings
-2. Vidět sekci "Developer Tools" (pouze ty jako admin)
-3. Vybrat libovolný tier a aplikovat
-4. Okamžitě testovat všechny funkce daného plánu
+## Co bude dál po bezpečnosti
+1. **Bridge Pages** - Implementovat funkční mezistavovací stránky
+2. **Google OAuth** - Přidat alternativní přihlášení
+3. **Mobile audit** - Zkontrolovat UX na mobilech
