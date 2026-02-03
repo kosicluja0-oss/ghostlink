@@ -152,14 +152,7 @@ function LinkRow({
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <Favicon url={link.targetUrl} />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-semibold text-foreground truncate">{displayUrl}</span>
-              {link.hasBridgePage && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium uppercase tracking-wide">
-                  Bridge
-                </span>
-              )}
-            </div>
+            <span className="text-[13px] font-semibold text-foreground truncate block">{displayUrl}</span>
             <p className="text-[11px] text-muted-foreground/70 truncate max-w-[200px]">
               {link.targetUrl}
             </p>

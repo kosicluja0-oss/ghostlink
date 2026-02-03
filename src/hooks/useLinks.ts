@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { GhostLink, BridgePageConfig } from '@/types';
+import type { GhostLink } from '@/types';
 import { toast } from 'sonner';
 import { USE_MOCK_DATA, getMockLinks } from '@/lib/mockData';
 
@@ -16,7 +16,6 @@ export function useLinks() {
 
   // Fetch links and their click counts
   const fetchLinks = useCallback(async () => {
-    // If using mock data, return mock links immediately
     if (USE_MOCK_DATA) {
       setLinks(getMockLinks());
       setIsLoading(false);
@@ -24,7 +23,6 @@ export function useLinks() {
     }
 
     try {
-      // Get current user session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -52,13 +50,11 @@ export function useLinks() {
       // Get click counts and conversions for each link
       const linksWithStats = await Promise.all(
         linksData.map(async (link) => {
-          // Get click count
           const { count: clickCount } = await supabase
             .from('clicks')
             .select('*', { count: 'exact', head: true })
             .eq('link_id', link.id);
 
-          // Get clicks IDs for this link to find conversions
           const { data: clickIds } = await supabase
             .from('clicks')
             .select('id')
@@ -71,7 +67,6 @@ export function useLinks() {
           if (clickIds && clickIds.length > 0) {
             const ids = clickIds.map(c => c.id);
             
-            // Get conversions for these clicks
             const { data: conversions } = await supabase
               .from('conversions')
               .select('type, value')
@@ -89,14 +84,10 @@ export function useLinks() {
             }
           }
 
-          const bridgeConfig = link.bridge_page_config as unknown as BridgePageConfig | null;
-
           return {
             id: link.id,
             alias: link.custom_alias,
             targetUrl: link.target_url,
-            hasBridgePage: link.has_bridge_page ?? false,
-            bridgePageConfig: bridgeConfig ?? undefined,
             clicks: clickCount ?? 0,
             leads,
             sales,
@@ -115,7 +106,6 @@ export function useLinks() {
     }
   }, []);
 
-  // Initial fetch
   useEffect(() => {
     fetchLinks();
   }, [fetchLinks]);
@@ -135,7 +125,6 @@ export function useLinks() {
           const newClick = payload.new as DbClick;
           console.log('New click received:', newClick);
           
-          // Update the click count for the affected link
           setLinks((prev) =>
             prev.map((link) =>
               link.id === newClick.link_id
@@ -154,11 +143,8 @@ export function useLinks() {
 
   // Add a new link
   const addLink = useCallback(
-    async (
-      link: Omit<GhostLink, 'id' | 'clicks' | 'leads' | 'sales' | 'earnings' | 'createdAt'>
-    ) => {
+    async (link: Omit<GhostLink, 'id' | 'clicks' | 'leads' | 'sales' | 'earnings' | 'createdAt'>) => {
       try {
-        // Get current user session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
@@ -166,26 +152,13 @@ export function useLinks() {
           return;
         }
 
-        const insertData: {
-          user_id: string;
-          custom_alias: string;
-          target_url: string;
-          has_bridge_page: boolean;
-          bridge_page_config?: BridgePageConfig;
-        } = {
-          user_id: session.user.id,
-          custom_alias: link.alias,
-          target_url: link.targetUrl,
-          has_bridge_page: link.hasBridgePage,
-        };
-
-        if (link.bridgePageConfig) {
-          insertData.bridge_page_config = link.bridgePageConfig;
-        }
-
         const { data, error } = await supabase
           .from('links')
-          .insert([insertData as any])
+          .insert([{
+            user_id: session.user.id,
+            custom_alias: link.alias,
+            target_url: link.targetUrl,
+          }])
           .select()
           .single();
 
@@ -201,14 +174,10 @@ export function useLinks() {
           return;
         }
 
-        const bridgeConfig = data.bridge_page_config as unknown as BridgePageConfig | null;
-
         const newLink: GhostLink = {
           id: data.id,
           alias: data.custom_alias,
           targetUrl: data.target_url,
-          hasBridgePage: data.has_bridge_page ?? false,
-          bridgePageConfig: bridgeConfig ?? undefined,
           clicks: 0,
           leads: 0,
           sales: 0,
@@ -229,36 +198,17 @@ export function useLinks() {
 
   // Update an existing link
   const updateLink = useCallback(
-    async (
-      id: string,
-      updates: {
-        targetUrl?: string;
-        hasBridgePage?: boolean;
-        bridgePageConfig?: BridgePageConfig;
-      }
-    ) => {
+    async (id: string, updates: { targetUrl?: string }) => {
       try {
-        const updateData: {
-          target_url?: string;
-          has_bridge_page?: boolean;
-          bridge_page_config?: BridgePageConfig | null;
-        } = {};
+        const updateData: { target_url?: string } = {};
 
         if (updates.targetUrl !== undefined) {
           updateData.target_url = updates.targetUrl;
         }
-        if (updates.hasBridgePage !== undefined) {
-          updateData.has_bridge_page = updates.hasBridgePage;
-        }
-        if (updates.bridgePageConfig !== undefined) {
-          updateData.bridge_page_config = updates.bridgePageConfig;
-        } else if (updates.hasBridgePage === false) {
-          updateData.bridge_page_config = null;
-        }
 
         const { error } = await supabase
           .from('links')
-          .update(updateData as any)
+          .update(updateData)
           .eq('id', id);
 
         if (error) {
@@ -270,12 +220,7 @@ export function useLinks() {
         setLinks((prev) =>
           prev.map((link) =>
             link.id === id
-              ? {
-                  ...link,
-                  targetUrl: updates.targetUrl ?? link.targetUrl,
-                  hasBridgePage: updates.hasBridgePage ?? link.hasBridgePage,
-                  bridgePageConfig: updates.hasBridgePage ? updates.bridgePageConfig : undefined,
-                }
+              ? { ...link, targetUrl: updates.targetUrl ?? link.targetUrl }
               : link
           )
         );

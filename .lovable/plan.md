@@ -1,49 +1,37 @@
+# GhostLink Project Plan
 
-# Odstranění Bridge Pages
+## ✅ Completed - Bridge Pages Removal (Feb 2026)
 
-## Přehled změn
+Úspěšně odstraněna funkce Bridge Pages pro zjednodušení aplikace před vydáním v1.
 
-Odstraníme kompletně funkci Bridge Pages, která umožňuje zobrazit mezistavovací stránku před přesměrováním. Tím zjednodušíme aplikaci pro první vydání.
+### Co bylo provedeno:
+- ✅ Zjednodušena `redirect` Edge Function na přímý 302 redirect
+- ✅ Odstraněn `BridgePageConfig` interface z `types/index.ts`
+- ✅ Zjednodušen `CreateLinkModal` (odstraněn bridge toggle)
+- ✅ Zjednodušen `EditLinkModal` (kompaktní verze bez preview)
+- ✅ Odstraněn bridge badge z `LinkTable`
+- ✅ Vyčištěn `useLinks.ts` hook
+- ✅ Aktualizovány mock data soubory
 
-## Co se odstraní
+### Zachováno pro budoucnost:
+- DB sloupce `has_bridge_page` a `bridge_page_config` (nullable) - umožní snadné znovupřidání
 
-### 1. Frontend komponenty
-- **CreateLinkModal** - Odebrat toggle "Bridge Page" a celou sekci
-- **EditLinkModal** - Odebrat BridgePagePreview komponent, bridge page nastavení a Live Preview sekci
-- **LinkTable** - Odebrat badge "Bridge" u linků
+## 🔜 Další kroky
 
-### 2. Typy a datové struktury
-- **src/types/index.ts** - Odebrat `BridgePageConfig` interface a `hasBridgePages` z tier definice
+### Před vydáním v1
+- [ ] Otestovat vytváření a editaci linků
+- [ ] Otestovat redirect funkcionalitu
+- [ ] Mobile audit (UX na mobilech)
 
-### 3. Hook logika
-- **useLinks.ts** - Odebrat zpracování bridge page config z addLink a updateLink funkcí
+### v1.1 - Autentizace
+- [ ] Google OAuth přihlášení
+- [ ] Apple OAuth přihlášení
 
-### 4. Backend Edge Function
-- **supabase/functions/redirect/index.ts** - Zjednodušit na přímý redirect (odebrat generování HTML bridge page)
+### v1.2 - Analytics
+- [ ] Real analytics z databáze
+- [ ] Export do CSV
 
-### 5. Databáze (volitelné)
-- Sloupce `has_bridge_page` a `bridge_page_config` v tabulce `links` - můžeme ponechat (nullable), nebo odebrat migrací
-
-## Výhody zjednodušení
-
-| Aspekt | Před | Po |
-|--------|------|-----|
-| Modály | Komplexní s preview | Jednoduchý formulář |
-| Redirect funkce | ~240 řádků | ~100 řádků |
-| Editace | 2-sloupcový layout | Kompaktní formulář |
-| Tier logika | hasBridgePages check | Odstraněno |
-
-## Zachováme pro budoucnost
-
-- Databázové sloupce ponecháme (nullable) - umožní snadné znovupřidání funkce
-- Můžeš Bridge Pages přidat zpět jako premium feature v budoucích verzích
-
-## Pořadí implementace
-
-1. Zjednodušit `redirect` Edge Function (odebrat HTML generování)
-2. Aktualizovat `types/index.ts` (odebrat BridgePageConfig)
-3. Zjednodušit `CreateLinkModal` (odebrat bridge toggle)
-4. Přepsat `EditLinkModal` (kompaktní verze bez preview)
-5. Upravit `LinkTable` (odebrat bridge badge)
-6. Vyčistit `useLinks.ts` (odebrat bridge config logiku)
-7. Aktualizovat `Links.tsx` (odebrat bridge import)
+### v2.0 - Premium Features
+- [ ] Bridge Pages (jako premium feature)
+- [ ] Custom domains
+- [ ] Team collaboration

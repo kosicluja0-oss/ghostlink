@@ -15,13 +15,6 @@ interface LinkProfile {
   id: string;
   alias: string;
   targetUrl: string;
-  hasBridgePage: boolean;
-  bridgePageConfig?: {
-    headline: string;
-    description: string;
-    ctaText: string;
-    delaySeconds: number;
-  };
   status: 'active' | 'archived';
   daysActive: number;
   // Traffic profile
@@ -38,7 +31,6 @@ const LINK_PROFILES: LinkProfile[] = [
     id: 'mock-youtube',
     alias: 'my-youtube-channel',
     targetUrl: 'https://www.youtube.com/c/mychannel',
-    hasBridgePage: false,
     status: 'active',
     daysActive: 25,
     avgDailyClicks: 22,
@@ -51,13 +43,6 @@ const LINK_PROFILES: LinkProfile[] = [
     id: 'mock-ebook',
     alias: 'summer-ebook-promo',
     targetUrl: 'https://gumroad.com/l/my-ebook',
-    hasBridgePage: true,
-    bridgePageConfig: {
-      headline: 'Get Your Free E-book!',
-      description: 'Learn the secrets to success',
-      ctaText: 'Download Now',
-      delaySeconds: 3,
-    },
     status: 'active',
     daysActive: 20,
     avgDailyClicks: 18,
@@ -70,13 +55,6 @@ const LINK_PROFILES: LinkProfile[] = [
     id: 'mock-newsletter',
     alias: 'newsletter-signup',
     targetUrl: 'https://newsletter.example.com/signup',
-    hasBridgePage: true,
-    bridgePageConfig: {
-      headline: 'Join 10,000+ Subscribers',
-      description: 'Weekly insights delivered to your inbox',
-      ctaText: 'Subscribe Free',
-      delaySeconds: 2,
-    },
     status: 'active',
     daysActive: 15,
     avgDailyClicks: 20,
@@ -89,7 +67,6 @@ const LINK_PROFILES: LinkProfile[] = [
     id: 'mock-affiliate',
     alias: 'affiliate-product-x',
     targetUrl: 'https://affiliatesite.com/product-x?ref=ghost',
-    hasBridgePage: false,
     status: 'active',
     daysActive: 10,
     avgDailyClicks: 15,
@@ -102,7 +79,6 @@ const LINK_PROFILES: LinkProfile[] = [
     id: 'mock-old-campaign',
     alias: 'old-promo-archived',
     targetUrl: 'https://oldpromo.example.com',
-    hasBridgePage: false,
     status: 'archived',
     daysActive: 45,
     avgDailyClicks: 3,
@@ -217,8 +193,6 @@ const aggregateLinksFromHistory = (history: DailyLinkStats[]): GhostLink[] => {
       id: profile.id,
       alias: profile.alias,
       targetUrl: profile.targetUrl,
-      hasBridgePage: profile.hasBridgePage,
-      bridgePageConfig: profile.bridgePageConfig,
       clicks: totalClicks,
       leads: totalLeads,
       sales: totalSales,
