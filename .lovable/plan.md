@@ -1,37 +1,58 @@
-# GhostLink Project Plan
 
-## ✅ Completed - Bridge Pages Removal (Feb 2026)
+# Aktualizace Landing Page - Odstranění Bridge Pages
 
-Úspěšně odstraněna funkce Bridge Pages pro zjednodušení aplikace před vydáním v1.
+## Přehled změn
 
-### Co bylo provedeno:
-- ✅ Zjednodušena `redirect` Edge Function na přímý 302 redirect
-- ✅ Odstraněn `BridgePageConfig` interface z `types/index.ts`
-- ✅ Zjednodušen `CreateLinkModal` (odstraněn bridge toggle)
-- ✅ Zjednodušen `EditLinkModal` (kompaktní verze bez preview)
-- ✅ Odstraněn bridge badge z `LinkTable`
-- ✅ Vyčištěn `useLinks.ts` hook
-- ✅ Aktualizovány mock data soubory
+Odstraníme všechny zmínky o Bridge Pages z úvodní stránky, protože tato funkce byla zrušena.
 
-### Zachováno pro budoucnost:
-- DB sloupce `has_bridge_page` a `bridge_page_config` (nullable) - umožní snadné znovupřidání
+## Konkrétní úpravy
 
-## 🔜 Další kroky
+### 1. Features sekce (řádky 76-88)
+**Aktuální stav:**
+```javascript
+{
+  icon: Layers,
+  title: 'Smart Bridge Pages',
+  description: 'Increase conversions with pre-lander overlays...'
+}
+```
 
-### Před vydáním v1
-- [ ] Otestovat vytváření a editaci linků
-- [ ] Otestovat redirect funkcionalitu
-- [ ] Mobile audit (UX na mobilech)
+**Nový stav - nahradíme relevantní funkcí:**
+```javascript
+{
+  icon: BarChart,
+  title: 'Detailed Reporting',
+  description: 'Geographic insights, device breakdown, and traffic source analysis. Make data-driven decisions.'
+}
+```
 
-### v1.1 - Autentizace
-- [ ] Google OAuth přihlášení
-- [ ] Apple OAuth přihlášení
+### 2. Pricing - Pro plán (řádek 125)
+**Aktuální stav:**
+```javascript
+features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Bridge pages', 'Priority support']
+```
 
-### v1.2 - Analytics
-- [ ] Real analytics z databáze
-- [ ] Export do CSV
+**Nový stav:**
+```javascript
+features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Geographic insights', 'Priority support']
+```
 
-### v2.0 - Premium Features
-- [ ] Bridge Pages (jako premium feature)
-- [ ] Custom domains
-- [ ] Team collaboration
+### 3. FAQ sekce (řádky 168-170)
+**Odstranit celý objekt:**
+```javascript
+{
+  question: 'What are Bridge Pages?',
+  answer: 'Bridge pages are intermediate landing pages...'
+}
+```
+
+## Shrnutí změn
+
+| Sekce | Změna |
+|-------|-------|
+| Features | "Smart Bridge Pages" → "Detailed Reporting" |
+| Pro plán | "Bridge pages" → "Geographic insights" |
+| FAQ | Odstranit otázku "What are Bridge Pages?" |
+
+## Soubory k úpravě
+- `src/pages/Landing.tsx`
