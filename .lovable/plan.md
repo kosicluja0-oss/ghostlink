@@ -1,19 +1,49 @@
 
-# Bezpečnostní audit - DOKONČENO ✅
+# Odstranění Bridge Pages
 
-## Opraveno
-- ✅ **support_messages** - Přidána UPDATE politika pro adminy
-- ✅ **support_tickets** - Přidána DELETE politika pro adminy
-- ✅ **clicks/conversions** - INSERT politiky opraveny (WITH CHECK validace)
-- ✅ **Leaked Password Protection** - Zapnuto v backendu
+## Přehled změn
 
-## Záměrně blokované (bez explicitní politiky = zakázáno)
-- **clicks/conversions UPDATE/DELETE** - Data jsou immutable, žádné úpravy/mazání
-- **user_roles INSERT/UPDATE/DELETE** - Role spravuje pouze backend/admin přes SQL
-- **profiles DELETE** - Mazání účtu řešeno přes edge function `delete-account`
-- **support_messages DELETE** - Zprávy nelze mazat, jen označit jako přečtené
+Odstraníme kompletně funkci Bridge Pages, která umožňuje zobrazit mezistavovací stránku před přesměrováním. Tím zjednodušíme aplikaci pro první vydání.
 
-## Další kroky
-1. **Bridge Pages** - Implementovat funkční mezistavovací stránky
-2. **Google OAuth** - Přidat alternativní přihlášení
-3. **Mobile audit** - Zkontrolovat UX na mobilech
+## Co se odstraní
+
+### 1. Frontend komponenty
+- **CreateLinkModal** - Odebrat toggle "Bridge Page" a celou sekci
+- **EditLinkModal** - Odebrat BridgePagePreview komponent, bridge page nastavení a Live Preview sekci
+- **LinkTable** - Odebrat badge "Bridge" u linků
+
+### 2. Typy a datové struktury
+- **src/types/index.ts** - Odebrat `BridgePageConfig` interface a `hasBridgePages` z tier definice
+
+### 3. Hook logika
+- **useLinks.ts** - Odebrat zpracování bridge page config z addLink a updateLink funkcí
+
+### 4. Backend Edge Function
+- **supabase/functions/redirect/index.ts** - Zjednodušit na přímý redirect (odebrat generování HTML bridge page)
+
+### 5. Databáze (volitelné)
+- Sloupce `has_bridge_page` a `bridge_page_config` v tabulce `links` - můžeme ponechat (nullable), nebo odebrat migrací
+
+## Výhody zjednodušení
+
+| Aspekt | Před | Po |
+|--------|------|-----|
+| Modály | Komplexní s preview | Jednoduchý formulář |
+| Redirect funkce | ~240 řádků | ~100 řádků |
+| Editace | 2-sloupcový layout | Kompaktní formulář |
+| Tier logika | hasBridgePages check | Odstraněno |
+
+## Zachováme pro budoucnost
+
+- Databázové sloupce ponecháme (nullable) - umožní snadné znovupřidání funkce
+- Můžeš Bridge Pages přidat zpět jako premium feature v budoucích verzích
+
+## Pořadí implementace
+
+1. Zjednodušit `redirect` Edge Function (odebrat HTML generování)
+2. Aktualizovat `types/index.ts` (odebrat BridgePageConfig)
+3. Zjednodušit `CreateLinkModal` (odebrat bridge toggle)
+4. Přepsat `EditLinkModal` (kompaktní verze bez preview)
+5. Upravit `LinkTable` (odebrat bridge badge)
+6. Vyčistit `useLinks.ts` (odebrat bridge config logiku)
+7. Aktualizovat `Links.tsx` (odebrat bridge import)
