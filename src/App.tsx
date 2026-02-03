@@ -18,6 +18,7 @@ import AdminSupport from "./pages/AdminSupport";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import Report from "./pages/Report";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
           <Route path="/support/:ticketId" element={<ProtectedRoute><Support /></ProtectedRoute>} />
           <Route path="/admin/support" element={<ProtectedRoute><AdminSupport /></ProtectedRoute>} />
+          <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
