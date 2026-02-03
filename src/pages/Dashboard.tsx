@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
   MousePointer, Users, DollarSign, TrendingUp, Percent, 
-  Filter, CalendarDays, Search, Download, User, ExternalLink,
+  Filter, CalendarDays, Search, User, ExternalLink,
   MousePointerClick, Sparkles, ShoppingCart, Link2, Globe
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -46,13 +46,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { FileText, ChevronDown } from 'lucide-react';
 
 type TransactionType = 'click' | 'lead' | 'sale';
 type DateRange = '7d' | '30d' | '90d' | 'all';
@@ -398,58 +391,6 @@ const Dashboard = () => {
     }).format(value);
   };
 
-  // Export CSV functionality with branded header
-  const handleExportCSV = () => {
-    const now = new Date();
-    const dateRangeLabel = {
-      '7d': 'Last 7 days',
-      '30d': 'Last 30 days',
-      '90d': 'Last 90 days',
-      'all': 'All time',
-    }[dateRange];
-
-    const csvLines = [
-      '# GhostLink Performance Report',
-      `# Generated: ${format(now, 'yyyy-MM-dd HH:mm')}`,
-      `# Period: ${dateRangeLabel}`,
-      '',
-      '# Summary',
-      `Total Clicks,${clicksCount}`,
-      `Total Leads,${leadsCount}`,
-      `Total Sales,${salesCount}`,
-      `Total Revenue,"${formatCurrency(totalRevenue)}"`,
-      `Conversion Rate,${conversionRate}%`,
-      '',
-      '# Transactions',
-      'Time,Type,Description,Link,Source,Location,Amount',
-    ];
-    
-    const rows = filteredTransactions.map(tx => [
-      format(tx.date, 'yyyy-MM-dd HH:mm:ss'),
-      tx.type,
-      tx.description,
-      tx.linkAlias,
-      tx.placement || tx.source,
-      tx.location || '',
-      tx.amount !== null ? tx.amount.toFixed(2) : ''
-    ]);
-    
-    const csvContent = [
-      ...csvLines,
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `ghostlink-report-${format(now, 'yyyy-MM-dd')}.csv`;
-    link.click();
-  };
-
-  // Open report in new tab
-  const handleViewReport = () => {
-    window.open(`/report?period=${dateRange}`, '_blank');
-  };
 
   const getTypeBadge = (type: TransactionType) => {
     switch (type) {
@@ -723,31 +664,6 @@ const Dashboard = () => {
                     )}
                   </div>
 
-                  {/* Export Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        disabled={filteredTransactions.length === 0}
-                      >
-                        <Download className="w-4 h-4" />
-                        Export
-                        <ChevronDown className="w-3 h-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-popover">
-                      <DropdownMenuItem onClick={handleExportCSV} className="gap-2 cursor-pointer">
-                        <Download className="w-4 h-4" />
-                        Download CSV
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleViewReport} className="gap-2 cursor-pointer">
-                        <FileText className="w-4 h-4" />
-                        View Report
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
 
                 {/* Summary Strip */}
