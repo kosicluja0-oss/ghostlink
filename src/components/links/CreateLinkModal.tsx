@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { X, Link2, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { GhostLink, TierType } from '@/types';
 
@@ -26,11 +25,9 @@ export function CreateLinkModal({
 }: CreateLinkModalProps) {
   const [targetUrl, setTargetUrl] = useState('');
   const [alias, setAlias] = useState('');
-  const [hasBridgePage, setHasBridgePage] = useState(false);
   const [errors, setErrors] = useState<{ targetUrl?: string; alias?: string }>({});
 
   const canCreateLinks = currentLinkCount < maxLinks;
-  const canUseBridgePage = userTier !== 'free';
 
   const validateForm = () => {
     const newErrors: { targetUrl?: string; alias?: string } = {};
@@ -66,22 +63,12 @@ export function CreateLinkModal({
     onSubmit({
       alias: alias.toLowerCase().trim(),
       targetUrl: targetUrl.trim(),
-      hasBridgePage: canUseBridgePage ? hasBridgePage : false,
       status: 'active',
-      ...(hasBridgePage && canUseBridgePage && {
-        bridgePageConfig: {
-          headline: 'You\'re being redirected',
-          description: 'Click below to continue',
-          ctaText: 'Continue',
-          delaySeconds: 3,
-        },
-      }),
     });
 
     // Reset form
     setTargetUrl('');
     setAlias('');
-    setHasBridgePage(false);
     setErrors({});
     onOpenChange(false);
   };
@@ -145,33 +132,6 @@ export function CreateLinkModal({
               {errors.alias && (
                 <p className="text-xs text-destructive">{errors.alias}</p>
               )}
-            </div>
-
-            {/* Bridge Page Toggle */}
-            <div className="flex items-center justify-between p-4 rounded-lg bg-ghost-surface border border-ghost-border-subtle">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded bg-primary/10">
-                  <Link2 className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-foreground">Bridge Page</span>
-                    {!canUseBridgePage && (
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                        PRO
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    Add an intermediate landing page
-                  </span>
-                </div>
-              </div>
-              <Switch
-                checked={hasBridgePage}
-                onCheckedChange={setHasBridgePage}
-                disabled={!canUseBridgePage}
-              />
             </div>
 
             {/* Submit */}

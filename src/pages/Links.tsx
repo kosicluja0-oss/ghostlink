@@ -12,7 +12,7 @@ import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
-import type { GhostLink, BridgePageConfig } from '@/types';
+import type { GhostLink } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
 
@@ -46,7 +46,7 @@ const Links = () => {
 
   const handleSaveLink = useCallback(async (
     id: string, 
-    updates: { targetUrl: string; hasBridgePage: boolean; bridgePageConfig?: BridgePageConfig }
+    updates: { targetUrl: string }
   ) => {
     await updateLink(id, updates);
   }, [updateLink]);

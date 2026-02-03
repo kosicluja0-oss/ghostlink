@@ -42,15 +42,7 @@ export function LinkCard({
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-foreground">{fullUrl}</span>
-            {link.hasBridgePage && (
-              <span className="bridge-indicator" title="Bridge Page Active">
-                <Link2 className="h-3 w-3" />
-                Bridge
-              </span>
-            )}
-          </div>
+          <span className="text-sm font-semibold text-foreground">{fullUrl}</span>
         </div>
         <Button 
           variant="ghost" 
