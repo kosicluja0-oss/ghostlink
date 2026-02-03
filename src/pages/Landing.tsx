@@ -82,9 +82,9 @@ const features = [{
   title: 'Conversion Tracking',
   description: 'Postback URL support for Leads & Sales. Know exactly which campaigns are printing money.'
 }, {
-  icon: Layers,
-  title: 'Smart Bridge Pages',
-  description: 'Increase conversions with pre-lander overlays. Warm up your audience before the offer.'
+  icon: BarChart,
+  title: 'Detailed Reporting',
+  description: 'Geographic insights, device breakdown, and traffic source analysis. Make data-driven decisions.'
 }];
 
 // Pricing data with Stripe-ready structure
@@ -122,7 +122,7 @@ const pricingPlans: Record<string, PricingPlan> = {
       monthly: 'price_1SqvwMR7WITbhBZj8cbrc0Zz',
       yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN'
     },
-    features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Bridge pages', 'Priority support'],
+    features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Geographic insights', 'Priority support'],
     highlighted: false
   },
   business: {
@@ -164,9 +164,6 @@ const faqs = [{
 }, {
   question: 'Can I migrate from another tracker?',
   answer: 'Yes! We support CSV imports for your existing links. Your historical data can be imported, and we\'ll help you set up redirects from your old tracking domains.'
-}, {
-  question: 'What are Bridge Pages?',
-  answer: 'Bridge pages are intermediate landing pages that appear before redirecting to your offer. They help warm up cold traffic, improve ad compliance, and increase conversion rates.'
 }];
 
 // Animated price component with count-up effect
