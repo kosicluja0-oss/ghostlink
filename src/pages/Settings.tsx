@@ -359,44 +359,44 @@ const Settings = () => {
           <SidebarInset className="flex-1">
             <main className="p-4 lg:p-6 max-w-7xl mx-auto">
               {/* Header */}
-              <section className="mb-4">
+              <section className="mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10">
-                    <SettingsIcon className="w-4 h-4 text-primary" />
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+                    <SettingsIcon className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-foreground">Settings</h1>
-                    <p className="text-xs text-muted-foreground">
+                    <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+                    <p className="text-sm text-muted-foreground">
                       Manage your account preferences and subscription
                     </p>
                   </div>
                 </div>
               </section>
 
-              <div className="w-full max-w-2xl mx-auto space-y-2">
+              <div className="w-full max-w-2xl mx-auto space-y-3">
                 {/* 1. Profile Section - Always visible */}
                 <Card className="bg-card border-border">
-                  <CardHeader className="py-3 px-4">
+                  <CardHeader className="py-4 px-5">
                     <CardTitle className="flex items-center gap-2 text-foreground text-base">
-                      <User className="w-4 h-4 text-primary" />
+                      <User className="w-5 h-5 text-primary" />
                       Profile
                     </CardTitle>
-                    <CardDescription className="text-xs">
+                    <CardDescription className="text-sm">
                       Your personal information and avatar
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3 px-4 pb-4 pt-0">
-                    {profileLoading ? <div className="flex items-center justify-center py-4">
+                  <CardContent className="space-y-4 px-5 pb-5 pt-0">
+                    {profileLoading ? <div className="flex items-center justify-center py-6">
                         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                       </div> : <>
                         {/* Avatar */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-5">
                           <div className="relative group">
-                            <Avatar className="h-16 w-16 border-2 border-border shadow-md">
+                            <Avatar className="h-20 w-20 border-2 border-border shadow-md">
                               {profile?.avatar_url ? (
                                 <AvatarImage src={profile.avatar_url} alt="Profile" />
                               ) : (
-                                <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-xl font-bold`}>
+                                <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-2xl font-bold`}>
                                   {userInitial}
                                 </AvatarFallback>
                               )}
@@ -420,24 +420,23 @@ const Settings = () => {
                               className="hidden"
                             />
                           </div>
-                          <div className="space-y-1 flex-1">
-                            <p className="text-base font-semibold text-foreground">{displayName || 'Set your name'}</p>
-                            <p className="text-xs text-muted-foreground">{user?.email}</p>
+                          <div className="space-y-1.5 flex-1">
+                            <p className="text-lg font-semibold text-foreground">{displayName || 'Set your name'}</p>
+                            <p className="text-sm text-muted-foreground">{user?.email}</p>
                             <Button 
                               variant="outline" 
                               size="sm" 
                               onClick={() => avatarInputRef.current?.click()}
                               disabled={avatarUploading}
-                              className="h-7 text-xs"
                             >
                               {avatarUploading ? (
                                 <>
-                                  <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                   Uploading...
                                 </>
                               ) : (
                                 <>
-                                  <Upload className="w-3 h-3 mr-1.5" />
+                                  <Upload className="w-4 h-4 mr-2" />
                                   Change Photo
                                 </>
                               )}
@@ -446,15 +445,15 @@ const Settings = () => {
                         </div>
 
                         {/* Name & Email */}
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="displayName" className="text-xs">Display Name</Label>
-                            <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name" className="bg-input h-9" />
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label htmlFor="displayName">Display Name</Label>
+                            <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name" className="bg-input" />
                           </div>
-                          <div className="space-y-1.5">
-                            <Label htmlFor="email" className="text-xs">Email</Label>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
                             <div className="relative">
-                              <Input id="email" value={user?.email || ''} disabled className="bg-muted text-muted-foreground pr-10 h-9" />
+                              <Input id="email" value={user?.email || ''} disabled className="bg-muted text-muted-foreground pr-10" />
                               <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             </div>
                           </div>
@@ -462,21 +461,20 @@ const Settings = () => {
 
                         {/* Unsaved changes indicator */}
                         {hasUnsavedChanges && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20 text-warning animate-fade-in">
-                            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                            <span className="text-xs font-medium">You have unsaved changes</span>
+                          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning animate-fade-in">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-sm font-medium">You have unsaved changes</span>
                           </div>
                         )}
 
                         <Button 
                           onClick={handleSaveProfile} 
-                          size="sm"
                           className="w-full sm:w-auto" 
                           disabled={isUpdating || !hasUnsavedChanges}
                           variant={hasUnsavedChanges ? "default" : "secondary"}
                         >
                           {isUpdating ? <>
-                              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Saving...
                             </> : hasUnsavedChanges ? 'Save Changes' : 'No Changes'}
                         </Button>
@@ -485,24 +483,24 @@ const Settings = () => {
                 </Card>
 
                 {/* Collapsible Sections */}
-                <Accordion type="multiple" className="space-y-1">
+                <Accordion type="multiple" className="space-y-2">
                   {/* 2. Preferences */}
-                  <AccordionItem value="preferences" className="bg-card border border-border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline py-2.5">
-                      <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-primary" />
+                  <AccordionItem value="preferences" className="bg-card border border-border rounded-lg px-5">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-5 h-5 text-primary" />
                         <div className="text-left">
-                          <p className="font-medium text-foreground text-sm">Preferences</p>
-                          <p className="text-xs text-muted-foreground font-normal">Customize your experience</p>
+                          <p className="font-medium text-foreground">Preferences</p>
+                          <p className="text-sm text-muted-foreground font-normal">Customize your experience</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="grid gap-3 sm:grid-cols-2 pt-1">
-                        <div className="space-y-1.5">
-                          <Label htmlFor="currency" className="text-xs">Default Currency</Label>
+                    <AccordionContent className="pb-5">
+                      <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="currency">Default Currency</Label>
                           <Select value={currency} onValueChange={setCurrency}>
-                            <SelectTrigger className="bg-input h-9">
+                            <SelectTrigger className="bg-input">
                               <SelectValue placeholder="Select currency" />
                             </SelectTrigger>
                             <SelectContent>
@@ -513,10 +511,10 @@ const Settings = () => {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-1.5">
-                          <Label htmlFor="timezone" className="text-xs">Timezone</Label>
+                        <div className="space-y-2">
+                          <Label htmlFor="timezone">Timezone</Label>
                           <Select value={timezone} onValueChange={setTimezone}>
-                            <SelectTrigger className="bg-input h-9">
+                            <SelectTrigger className="bg-input">
                               <SelectValue placeholder="Select timezone" />
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px]">
@@ -540,24 +538,24 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* 3. Notifications */}
-                  <AccordionItem value="notifications" className="bg-card border border-border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline py-2.5">
-                      <div className="flex items-center gap-2">
-                        <Bell className="w-4 h-4 text-primary" />
+                  <AccordionItem value="notifications" className="bg-card border border-border rounded-lg px-5">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-3">
+                        <Bell className="w-5 h-5 text-primary" />
                         <div className="text-left">
-                          <p className="font-medium text-foreground text-sm">Notifications</p>
-                          <p className="text-xs text-muted-foreground font-normal">Email notification preferences</p>
+                          <p className="font-medium text-foreground">Notifications</p>
+                          <p className="text-sm text-muted-foreground font-normal">Email notification preferences</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="space-y-3 pt-1">
+                    <AccordionContent className="pb-5">
+                      <div className="space-y-4 pt-2">
                         <div className="flex items-center justify-between">
-                          <div className="space-y-0">
-                            <Label htmlFor="marketing-emails" className="text-xs font-medium">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="marketing-emails" className="text-sm font-medium">
                               Marketing Emails
                             </Label>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               Tips, news, and special offers
                             </p>
                           </div>
@@ -569,11 +567,11 @@ const Settings = () => {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="space-y-0">
-                            <Label htmlFor="security-alerts" className="text-xs font-medium">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="security-alerts" className="text-sm font-medium">
                               Security Alerts
                             </Label>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               Login alerts and password changes
                             </p>
                           </div>
@@ -589,13 +587,13 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* 4. Security */}
-                  <AccordionItem value="security" className="bg-card border border-border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline py-2.5">
-                      <div className="flex items-center gap-2">
-                        <Lock className="w-4 h-4 text-primary" />
+                  <AccordionItem value="security" className="bg-card border border-border rounded-lg px-5">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-3">
+                        <Lock className="w-5 h-5 text-primary" />
                         <div className="text-left">
-                          <p className="font-medium text-foreground text-sm">Security</p>
-                          <p className="text-xs text-muted-foreground font-normal">Password and account security</p>
+                          <p className="font-medium text-foreground">Security</p>
+                          <p className="text-sm text-muted-foreground font-normal">Password and account security</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -774,110 +772,110 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* 5. Billing */}
-                  <AccordionItem value="billing" className="bg-card border border-border rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline py-2.5">
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="w-4 h-4 text-primary" />
+                  <AccordionItem value="billing" className="bg-card border border-border rounded-lg px-5">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="w-5 h-5 text-primary" />
                         <div className="text-left">
-                          <p className="font-medium text-foreground text-sm">Billing & Subscription</p>
-                          <p className="text-xs text-muted-foreground font-normal">Manage your plan and payment methods</p>
+                          <p className="font-medium text-foreground">Billing & Subscription</p>
+                          <p className="text-sm text-muted-foreground font-normal">Manage your plan and payment methods</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="pb-4">
-                      <div className="space-y-3 pt-1">
-                        {subscriptionLoading ? <div className="flex items-center justify-center py-4">
+                    <AccordionContent className="pb-5">
+                      <div className="space-y-4 pt-2">
+                        {subscriptionLoading ? <div className="flex items-center justify-center py-6">
                             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                           </div> : <>
                             {/* Current Plan */}
-                            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-ghost-surface">
-                              <div className="flex items-center gap-2">
-                                <div className={cn("flex items-center justify-center w-9 h-9 rounded-lg", tier === 'free' ? "bg-muted" : "bg-primary/10")}>
-                                  {tier !== 'free' ? <Crown className="w-4 h-4 text-primary" /> : <Shield className="w-4 h-4 text-muted-foreground" />}
+                            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-ghost-surface">
+                              <div className="flex items-center gap-3">
+                                <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg", tier === 'free' ? "bg-muted" : "bg-primary/10")}>
+                                  {tier !== 'free' ? <Crown className="w-5 h-5 text-primary" /> : <Shield className="w-5 h-5 text-muted-foreground" />}
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium text-foreground capitalize text-sm">
+                                    <span className="font-medium text-foreground capitalize">
                                       {tier} Plan
                                     </span>
                                     {getStatusBadge()}
                                   </div>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-sm text-muted-foreground">
                                     {currentTierData.price ? `$${currentTierData.price}/mo${billingCycle === 'yearly' ? ' (yearly)' : ''}` : 'No charge'}
                                   </p>
                                 </div>
                               </div>
-                              {isSubscribed || isPastDue ? <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                                  {portalLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <>
+                              {isSubscribed || isPastDue ? <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                                  {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>
                                       Manage
-                                      <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+                                      <ExternalLink className="w-4 h-4 ml-2" />
                                     </>}
-                                </Button> : <Button variant="default" size="sm" onClick={() => handleUpgrade('pro')} disabled={!!upgradeLoading}>
-                                  {upgradeLoading === 'pro' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Upgrade'}
+                                </Button> : <Button variant="default" onClick={() => handleUpgrade('pro')} disabled={!!upgradeLoading}>
+                                  {upgradeLoading === 'pro' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upgrade'}
                                 </Button>}
                             </div>
 
                             {/* Plan Features */}
-                            <div className="space-y-1.5">
-                              <p className="text-xs font-medium text-foreground">Your plan includes:</p>
-                              <ul className="grid gap-1 sm:grid-cols-2">
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-foreground">Your plan includes:</p>
+                              <ul className="grid gap-1.5 sm:grid-cols-2">
                                 {tier === 'free' && <>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> 25 active links
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> 25 active links
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Click tracking
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Click tracking
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Basic analytics
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Basic analytics
                                     </li>
                                   </>}
                                 {tier === 'pro' && <>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> 100 active links
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> 100 active links
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Advanced analytics
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Advanced analytics
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Bridge pages
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Bridge pages
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Priority support
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Priority support
                                     </li>
                                   </>}
                                 {tier === 'business' && <>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> 175 active links
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> 175 active links
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> All Pro features
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> All Pro features
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Team collaboration
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Team collaboration
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> API access
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> API access
                                     </li>
-                                    <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                      <Check className="w-3.5 h-3.5 text-success" /> Dedicated support
+                                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                                      <Check className="w-4 h-4 text-success" /> Dedicated support
                                     </li>
                                   </>}
                               </ul>
                             </div>
 
                             {/* Upgrade options for free users */}
-                            {tier === 'free' && <div className="pt-3 border-t border-border">
-                                <p className="text-xs font-medium text-foreground mb-2">
+                            {tier === 'free' && <div className="pt-4 border-t border-border">
+                                <p className="text-sm font-medium text-foreground mb-3">
                                   Upgrade your plan
                                 </p>
                                 <div className="flex gap-2">
-                                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleUpgrade('pro')} disabled={!!upgradeLoading}>
-                                    {upgradeLoading === 'pro' ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                                  <Button variant="outline" size="sm" onClick={() => handleUpgrade('pro')} disabled={!!upgradeLoading}>
+                                    {upgradeLoading === 'pro' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                     Pro - $10/mo
                                   </Button>
-                                  <Button variant="default" size="sm" className="h-7 text-xs" onClick={() => handleUpgrade('business')} disabled={!!upgradeLoading}>
-                                    {upgradeLoading === 'business' ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
+                                  <Button variant="default" size="sm" onClick={() => handleUpgrade('business')} disabled={!!upgradeLoading}>
+                                    {upgradeLoading === 'business' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                     Business - $15/mo
                                   </Button>
                                 </div>
@@ -889,46 +887,46 @@ const Settings = () => {
 
                   {/* Admin Developer Tools - Only visible to admins */}
                   {isAdmin && (
-                    <AccordionItem value="admin" className="bg-card border border-dashed border-warning/50 rounded-lg px-4">
-                      <AccordionTrigger className="hover:no-underline py-2.5">
-                        <div className="flex items-center gap-2">
-                          <Wrench className="w-4 h-4 text-warning" />
+                    <AccordionItem value="admin" className="bg-card border border-dashed border-warning/50 rounded-lg px-5">
+                      <AccordionTrigger className="hover:no-underline py-3">
+                        <div className="flex items-center gap-3">
+                          <Wrench className="w-5 h-5 text-warning" />
                           <div className="text-left">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium text-foreground text-sm">Developer Tools</p>
+                              <p className="font-medium text-foreground">Developer Tools</p>
                               <Badge variant="outline" className="text-xs border-warning/50 text-warning">
                                 Admin
                               </Badge>
                             </div>
-                            <p className="text-xs text-muted-foreground font-normal">Test different subscription tiers</p>
+                            <p className="text-sm text-muted-foreground font-normal">Test different subscription tiers</p>
                           </div>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="pb-4">
-                        <div className="space-y-2 pt-1">
+                      <AccordionContent className="pb-5">
+                        <div className="space-y-3 pt-2">
                           <div className="space-y-2">
-                            <Label className="text-xs">Test Tier Switching</Label>
+                            <Label>Test Tier Switching</Label>
                             <div className="flex gap-2">
                               <Select value={selectedTier} onValueChange={(value: TierType) => setSelectedTier(value)}>
-                                <SelectTrigger className="w-[160px] bg-input h-8 text-xs">
+                                <SelectTrigger className="w-[180px] bg-input">
                                   <SelectValue placeholder="Select tier" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="free">
-                                    <span className="flex items-center gap-1.5 text-xs">
-                                      <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <span className="flex items-center gap-2">
+                                      <Shield className="w-4 h-4 text-muted-foreground" />
                                       Free (25 links)
                                     </span>
                                   </SelectItem>
                                   <SelectItem value="pro">
-                                    <span className="flex items-center gap-1.5 text-xs">
-                                      <Crown className="w-3.5 h-3.5 text-primary" />
+                                    <span className="flex items-center gap-2">
+                                      <Crown className="w-4 h-4 text-primary" />
                                       Pro (100 links)
                                     </span>
                                   </SelectItem>
                                   <SelectItem value="business">
-                                    <span className="flex items-center gap-1.5 text-xs">
-                                      <Crown className="w-3.5 h-3.5 text-warning" />
+                                    <span className="flex items-center gap-2">
+                                      <Crown className="w-4 h-4 text-warning" />
                                       Business (175 links)
                                     </span>
                                   </SelectItem>
@@ -938,12 +936,10 @@ const Settings = () => {
                                 onClick={handleAdminTierChange}
                                 disabled={isChangingTier || selectedTier === tier}
                                 variant="outline"
-                                size="sm"
-                                className="h-8"
                               >
                                 {isChangingTier ? (
                                   <>
-                                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Applying...
                                   </>
                                 ) : (
@@ -951,12 +947,11 @@ const Settings = () => {
                                 )}
                               </Button>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs">
+                            <div className="flex items-center gap-2 text-sm">
                               <span className="text-muted-foreground">Current tier:</span>
                               <Badge 
                                 variant="secondary" 
                                 className={cn(
-                                  "text-xs",
                                   tier === 'free' && "bg-muted text-muted-foreground",
                                   tier === 'pro' && "bg-primary/10 text-primary",
                                   tier === 'business' && "bg-warning/10 text-warning"
@@ -964,7 +959,7 @@ const Settings = () => {
                               >
                                 {tier.toUpperCase()}
                               </Badge>
-                              {tier !== 'free' && <Check className="w-3.5 h-3.5 text-success" />}
+                              {tier !== 'free' && <Check className="w-4 h-4 text-success" />}
                             </div>
                           </div>
                         </div>
@@ -974,29 +969,28 @@ const Settings = () => {
                 </Accordion>
 
                 {/* 6. Footer Actions - GDPR Export & Delete Account */}
-                <div className="pt-1 flex justify-center gap-2">
+                <div className="pt-3 flex justify-center gap-3">
                   <Button 
                     variant="ghost" 
-                    size="sm"
                     onClick={exportData}
                     disabled={isExporting}
-                    className="text-muted-foreground hover:text-foreground hover:bg-muted/50 text-xs h-8"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   >
                     {isExporting ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Exporting...
                       </>
                     ) : (
                       <>
-                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                        <Download className="w-4 h-4 mr-2" />
                         Download My Data
                       </>
                     )}
                   </Button>
                   <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-muted/50 text-xs h-8">
+                      <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted/50">
                         Delete Account
                       </Button>
                     </AlertDialogTrigger>
