@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle, Download, FileJson } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { TIMEZONES, TIMEZONE_GROUPS } from '@/lib/timezone';
+import { useDataExport } from '@/hooks/useDataExport';
 const Settings = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -49,6 +50,7 @@ const Settings = () => {
   } = useSubscription();
   const openTicketsCount = useOpenTicketsCount();
   const { isAdmin } = useUserRole();
+  const { exportData, isExporting } = useDataExport();
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
   const [timezone, setTimezone] = useState('Europe/Prague');
@@ -884,6 +886,60 @@ const Settings = () => {
                         onCheckedChange={(checked) => handleNotificationChange('security_alerts', checked)}
                         disabled={isUpdating}
                       />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Data & Privacy Section */}
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground">
+                      <Shield className="w-5 h-5 text-primary" />
+                      Data & Privacy
+                    </CardTitle>
+                    <CardDescription>
+                      Your data rights under GDPR
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-4 rounded-lg bg-muted/50 border border-border">
+                        <div className="flex items-start gap-3">
+                          <FileJson className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-foreground">
+                              Download Your Data
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Export all your personal data in JSON format. This includes your profile, 
+                              preferences, links, and aggregated statistics.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={exportData}
+                        disabled={isExporting}
+                        className="w-full sm:w-auto"
+                      >
+                        {isExporting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Preparing Export...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download My Data
+                          </>
+                        )}
+                      </Button>
+
+                      <p className="text-xs text-muted-foreground">
+                        In compliance with GDPR Article 15 (right of access) and Article 20 (data portability).
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
