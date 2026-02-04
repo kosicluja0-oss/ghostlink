@@ -373,7 +373,7 @@ const Settings = () => {
                 </div>
               </section>
 
-              <div className="max-w-2xl mx-auto space-y-6">
+              <div className="w-full max-w-2xl mx-auto space-y-6">
                 {/* 1. Profile Section - Always visible */}
                 <Card className="bg-card border-border">
                   <CardHeader>
