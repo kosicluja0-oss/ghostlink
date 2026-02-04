@@ -11,7 +11,6 @@ import {
 import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
 import type { AnalyticsData } from '@/types';
 import { 
-  format, 
   subMinutes, 
   subHours, 
   subDays, 
@@ -28,6 +27,7 @@ import {
   startOfMonth,
 } from 'date-fns';
 import { Ghost } from 'lucide-react';
+import { useTimezone } from '@/hooks/useTimezone';
 
 // Generate all time points in a range for continuous timeline
 function generateTimePoints(range: TimeRange): Date[] {
@@ -137,40 +137,45 @@ function getDateRangeStart(range: TimeRange): Date {
   }
 }
 
-function formatDateForRange(date: Date, range: TimeRange): string {
-  switch (range) {
-    case '30m':
-    case '6h':
-    case '1d':
-      return format(date, 'HH:mm');
-    case '1w':
-      return format(date, 'EEE d');
-    case '1m':
-      return format(date, 'MMM d');
-    case '1y':
-      return format(date, 'MMM');
-    case '3y':
-      return format(date, 'MMM yyyy');
-    default:
-      return format(date, 'MMM d');
-  }
+// Timezone-aware formatting functions
+function createFormatDateForRange(formatInTimezone: (date: Date | string | number, formatStr: string) => string) {
+  return (date: Date, range: TimeRange): string => {
+    switch (range) {
+      case '30m':
+      case '6h':
+      case '1d':
+        return formatInTimezone(date, 'HH:mm');
+      case '1w':
+        return formatInTimezone(date, 'EEE d');
+      case '1m':
+        return formatInTimezone(date, 'MMM d');
+      case '1y':
+        return formatInTimezone(date, 'MMM');
+      case '3y':
+        return formatInTimezone(date, 'MMM yyyy');
+      default:
+        return formatInTimezone(date, 'MMM d');
+    }
+  };
 }
 
-function formatTooltipDate(date: Date, range: TimeRange): string {
-  switch (range) {
-    case '30m':
-    case '6h':
-    case '1d':
-      return format(date, 'd MMM yyyy, HH:mm');
-    case '1w':
-    case '1m':
-      return format(date, 'd MMM yyyy');
-    case '1y':
-    case '3y':
-      return format(date, 'MMM yyyy');
-    default:
-      return format(date, 'd MMM yyyy');
-  }
+function createFormatTooltipDate(formatInTimezone: (date: Date | string | number, formatStr: string) => string) {
+  return (date: Date, range: TimeRange): string => {
+    switch (range) {
+      case '30m':
+      case '6h':
+      case '1d':
+        return formatInTimezone(date, 'd MMM yyyy, HH:mm');
+      case '1w':
+      case '1m':
+        return formatInTimezone(date, 'd MMM yyyy');
+      case '1y':
+      case '3y':
+        return formatInTimezone(date, 'MMM yyyy');
+      default:
+        return formatInTimezone(date, 'd MMM yyyy');
+    }
+  };
 }
 
 // Memoized main chart component
@@ -319,6 +324,18 @@ export function AnalyticsChart({
   onClearSelection,
   links = [],
 }: AnalyticsChartProps) {
+  const { formatInTimezone, timezone } = useTimezone();
+  
+  // Create timezone-aware formatting functions
+  const formatDateForRange = useMemo(
+    () => createFormatDateForRange(formatInTimezone),
+    [formatInTimezone, timezone]
+  );
+  const formatTooltipDate = useMemo(
+    () => createFormatTooltipDate(formatInTimezone),
+    [formatInTimezone, timezone]
+  );
+  
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
     clicks: true,
