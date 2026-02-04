@@ -1,65 +1,102 @@
 
-# Vylepšení rozložení Settings stránky
+# Přidání sekce Email Notifikací do Settings
 
-## Současný problém
-- Všechny sekce jsou v jednom úzkém sloupci (`max-w-4xl`)
-- Uživatel musí scrollovat dolů pro zobrazení všech sekcí
-- Plýtvání horizontálním prostorem na větších obrazovkách
+## Přehled
+Přidáme novou sekci pro správu email notifikací s možností zapnout/vypnout:
+- **Marketing emails** - novinky, tipy, speciální nabídky
+- **Security alerts** - přihlášení z nového zařízení, změny hesla, podezřelá aktivita
 
-## Navrhované řešení
+## Technické změny
 
-Přepracovat layout na **dvousloupcové rozložení** na větších obrazovkách:
+### 1. Databázová migrace
+Přidáme dva nové sloupce do tabulky `profiles`:
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  Settings                                                        │
-│  Manage your account preferences and subscription               │
-├────────────────────────────────┬────────────────────────────────┤
-│                                │                                │
-│  ┌──────────────────────────┐  │  ┌──────────────────────────┐  │
-│  │ 👤 Profile               │  │  │ 💳 Billing & Subscription│  │
-│  │   Avatar, Name, Email    │  │  │   Current plan, Features │  │
-│  │   Save Changes button    │  │  │   Upgrade/Manage button  │  │
-│  └──────────────────────────┘  │  └──────────────────────────┘  │
-│                                │                                │
-│  ┌──────────────────────────┐  │  ┌──────────────────────────┐  │
-│  │ 🌐 Preferences           │  │  │ 🗑️ Delete Account        │  │
-│  │   Currency, Timezone     │  │  │   Danger zone button     │  │
-│  └──────────────────────────┘  │  └──────────────────────────┘  │
-│                                │                                │
-│  ┌──────────────────────────┐  │  ┌──────────────────────────┐  │
-│  │ 🔒 Security              │  │  │ 🔧 Developer Tools       │  │
-│  │   Change Password        │  │  │   (only for admin)       │  │
-│  └──────────────────────────┘  │  └──────────────────────────┘  │
-│                                │                                │
-└────────────────────────────────┴────────────────────────────────┘
+```sql
+ALTER TABLE profiles 
+ADD COLUMN marketing_emails boolean DEFAULT true,
+ADD COLUMN security_alerts boolean DEFAULT true;
 ```
 
-### Klíčové změny
+### 2. Aktualizace useProfile hook
+**Soubor:** `src/hooks/useProfile.ts`
 
-| Změna | Popis |
-|-------|-------|
-| Šířka kontejneru | `max-w-4xl` → `max-w-7xl` (více prostoru) |
-| Layout | Jednoduchý `space-y-6` → CSS Grid `grid-cols-1 lg:grid-cols-2` |
-| Responzivita | Na mobilu zůstane jeden sloupec, na desktopu dva |
-| Logické seskupení | Levý sloupec: osobní údaje / Pravý sloupec: billing a admin |
+Rozšíříme interface `Profile` a `ProfileUpdate` o nová pole:
+```typescript
+export interface Profile {
+  // ... existující pole
+  marketing_emails: boolean | null;
+  security_alerts: boolean | null;
+}
 
-### Responzivní chování
-- **Mobil (< 1024px)**: Jeden sloupec, klasické vertikální scrollování
-- **Desktop (≥ 1024px)**: Dva sloupce vedle sebe, minimální scrollování
+export interface ProfileUpdate {
+  // ... existující pole
+  marketing_emails?: boolean;
+  security_alerts?: boolean;
+}
+```
 
-## Technická implementace
+### 3. Nová sekce v Settings
+**Soubor:** `src/pages/Settings.tsx`
 
-### Soubor k úpravě
-`src/pages/Settings.tsx`
+Přidáme novou kartu "Notifications" do pravého sloupce (mezi Billing a Delete Account):
 
-### Hlavní změny v kódu
-1. Změnit `max-w-4xl` na `max-w-7xl` pro širší kontejner
-2. Zabalit sekce do CSS Grid s `grid-cols-1 lg:grid-cols-2 gap-6`
-3. Levý sloupec: Profile, Preferences, Security
-4. Pravý sloupec: Billing, Delete Account, Developer Tools (admin)
+```text
+┌────────────────────────────────┐
+│ 🔔 Notifications               │
+│                                │
+│ Marketing Emails        [ON]   │
+│ Tips, news, special offers     │
+│                                │
+│ Security Alerts         [ON]   │
+│ Login alerts, password changes │
+└────────────────────────────────┘
+```
 
-## Výsledek
-- Všechny sekce viditelné bez scrollování na desktopu
-- Efektivnější využití horizontálního prostoru
-- Zachována plná funkčnost na mobilních zařízeních
+**Komponenty:**
+- Import `Switch` z `@/components/ui/switch`
+- Import `Bell` ikony z `lucide-react`
+- Dva Switch toggly s popisky
+- Automatické ukládání při změně (real-time update)
+
+### 4. Implementační detaily
+
+**State management:**
+```typescript
+const [marketingEmails, setMarketingEmails] = useState(true);
+const [securityAlerts, setSecurityAlerts] = useState(true);
+```
+
+**Sync s profilem:**
+```typescript
+useEffect(() => {
+  if (profile) {
+    setMarketingEmails(profile.marketing_emails ?? true);
+    setSecurityAlerts(profile.security_alerts ?? true);
+  }
+}, [profile]);
+```
+
+**Handler pro změnu:**
+```typescript
+const handleNotificationChange = (field: 'marketing_emails' | 'security_alerts', value: boolean) => {
+  updateProfile({ [field]: value });
+  // Optimistic update
+  if (field === 'marketing_emails') setMarketingEmails(value);
+  else setSecurityAlerts(value);
+};
+```
+
+## Výsledná UI struktura
+
+```text
+Pravý sloupec Settings:
+├── 💳 Billing & Subscription
+├── 🔔 Notifications          ← NOVÁ SEKCE
+├── 🔧 Developer Tools (admin)
+└── 🗑️ Delete Account
+```
+
+## Soubory k úpravě
+1. **Databáze** - migrace pro přidání sloupců
+2. `src/hooks/useProfile.ts` - rozšíření interfaces
+3. `src/pages/Settings.tsx` - přidání Notifications sekce s Switch komponentami
