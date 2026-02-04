@@ -1,102 +1,105 @@
 
-# Přidání sekce Email Notifikací do Settings
+# Oprava Timezone Implementace
 
-## Přehled
-Přidáme novou sekci pro správu email notifikací s možností zapnout/vypnout:
-- **Marketing emails** - novinky, tipy, speciální nabídky
-- **Security alerts** - přihlášení z nového zařízení, změny hesla, podezřelá aktivita
+## Identifikované problémy
 
-## Technické změny
+### 1. AnalyticsChart nepoužívá timezone
+Soubor `src/components/analytics/AnalyticsChart.tsx` (řádky 140-174) používá plain `format()` z date-fns místo timezone-aware verze:
 
-### 1. Databázová migrace
-Přidáme dva nové sloupce do tabulky `profiles`:
-
-```sql
-ALTER TABLE profiles 
-ADD COLUMN marketing_emails boolean DEFAULT true,
-ADD COLUMN security_alerts boolean DEFAULT true;
-```
-
-### 2. Aktualizace useProfile hook
-**Soubor:** `src/hooks/useProfile.ts`
-
-Rozšíříme interface `Profile` a `ProfileUpdate` o nová pole:
 ```typescript
-export interface Profile {
-  // ... existující pole
-  marketing_emails: boolean | null;
-  security_alerts: boolean | null;
-}
-
-export interface ProfileUpdate {
-  // ... existující pole
-  marketing_emails?: boolean;
-  security_alerts?: boolean;
+// PROBLÉM - ignoruje uživatelův timezone
+function formatDateForRange(date: Date, range: TimeRange): string {
+  return format(date, 'HH:mm'); // Vždy v browser timezone!
 }
 ```
 
-### 3. Nová sekce v Settings
+### 2. Query cache nemusí být aktuální
+Při změně timezone v Settings a návratu na Dashboard nemusí být profile query dostatečně rychle obnovena.
+
+### 3. Sample data v Dashboard
+Vzorová data (řádky 84-180) se generují lokálně a zobrazují se ve špatném timezone.
+
+## Řešení
+
+### Krok 1: Aktualizovat AnalyticsChart
+**Soubor:** `src/components/analytics/AnalyticsChart.tsx`
+
+Přidat timezone-aware formátování:
+```typescript
+import { useTimezone } from '@/hooks/useTimezone';
+
+// V komponentě
+const { formatInTimezone, timezone } = useTimezone();
+
+function formatDateForRange(date: Date, range: TimeRange): string {
+  switch (range) {
+    case '30m':
+    case '6h':
+    case '1d':
+      return formatInTimezone(date, 'HH:mm');
+    case '1w':
+      return formatInTimezone(date, 'EEE d');
+    // ...
+  }
+}
+```
+
+### Krok 2: Přidat explicitní cache invalidaci
 **Soubor:** `src/pages/Settings.tsx`
 
-Přidáme novou kartu "Notifications" do pravého sloupce (mezi Billing a Delete Account):
-
-```text
-┌────────────────────────────────┐
-│ 🔔 Notifications               │
-│                                │
-│ Marketing Emails        [ON]   │
-│ Tips, news, special offers     │
-│                                │
-│ Security Alerts         [ON]   │
-│ Login alerts, password changes │
-└────────────────────────────────┘
-```
-
-**Komponenty:**
-- Import `Switch` z `@/components/ui/switch`
-- Import `Bell` ikony z `lucide-react`
-- Dva Switch toggly s popisky
-- Automatické ukládání při změně (real-time update)
-
-### 4. Implementační detaily
-
-**State management:**
+Po uložení timezone invalidovat všechny relevantní queries:
 ```typescript
-const [marketingEmails, setMarketingEmails] = useState(true);
-const [securityAlerts, setSecurityAlerts] = useState(true);
-```
+import { useQueryClient } from '@tanstack/react-query';
 
-**Sync s profilem:**
-```typescript
-useEffect(() => {
-  if (profile) {
-    setMarketingEmails(profile.marketing_emails ?? true);
-    setSecurityAlerts(profile.security_alerts ?? true);
-  }
-}, [profile]);
-```
+const queryClient = useQueryClient();
 
-**Handler pro změnu:**
-```typescript
-const handleNotificationChange = (field: 'marketing_emails' | 'security_alerts', value: boolean) => {
-  updateProfile({ [field]: value });
-  // Optimistic update
-  if (field === 'marketing_emails') setMarketingEmails(value);
-  else setSecurityAlerts(value);
+const handleTimezoneChange = async (newTimezone: string) => {
+  await updateProfile({ timezone: newTimezone });
+  // Force refetch všech dat závislých na timezone
+  queryClient.invalidateQueries({ queryKey: ['profile'] });
 };
 ```
 
-## Výsledná UI struktura
+### Krok 3: Aktualizovat useTimezone hook
+**Soubor:** `src/hooks/useTimezone.ts`
 
-```text
-Pravý sloupec Settings:
-├── 💳 Billing & Subscription
-├── 🔔 Notifications          ← NOVÁ SEKCE
-├── 🔧 Developer Tools (admin)
-└── 🗑️ Delete Account
+Odstranit problematický useMemo a přidat debug logging:
+```typescript
+export function useTimezone() {
+  const { profile, isLoading } = useProfile();
+  const timezone = profile?.timezone || getBrowserTimezone();
+  
+  // Vytvořit funkce přímo (bez memoizace pro spolehlivost)
+  return {
+    timezone,
+    isLoading,
+    formatDate: (date: Date | string | number) => formatDate(date, timezone),
+    formatDateTime: (date: Date | string | number) => formatDateTime(date, timezone),
+    formatTime: (date: Date | string | number) => formatTime(date, timezone),
+    formatInTimezone: (date: Date | string | number, formatStr: string) => 
+      formatInTimezone(date, formatStr, timezone),
+    formatRelative,
+  };
+}
+```
+
+### Krok 4: Přidat timezone indikátor do Dashboard
+Pro lepší UX přidat malý indikátor aktuálního timezone:
+```typescript
+<span className="text-xs text-muted-foreground">
+  Časy zobrazeny v {getTimezoneLabel(timezone)}
+</span>
 ```
 
 ## Soubory k úpravě
-1. **Databáze** - migrace pro přidání sloupců
-2. `src/hooks/useProfile.ts` - rozšíření interfaces
-3. `src/pages/Settings.tsx` - přidání Notifications sekce s Switch komponentami
+1. `src/hooks/useTimezone.ts` - odstranit useMemo
+2. `src/components/analytics/AnalyticsChart.tsx` - přidat timezone formátování
+3. `src/pages/Settings.tsx` - přidat cache invalidaci
+4. `src/pages/Dashboard.tsx` - přidat timezone indikátor (volitelné)
+
+## Testování
+Po implementaci:
+1. Změnit timezone v Settings na jiný (např. Tokyo)
+2. Přejít na Dashboard
+3. Ověřit že časy v tabulce Recent Activity jsou v novém timezone
+4. Ověřit že tooltip na grafu zobrazuje správný čas
