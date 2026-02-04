@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -49,6 +50,8 @@ const Settings = () => {
   const { isAdmin } = useUserRole();
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
+  const [marketingEmails, setMarketingEmails] = useState(true);
+  const [securityAlerts, setSecurityAlerts] = useState(true);
   
   // Admin tier switcher state
   const [selectedTier, setSelectedTier] = useState<TierType>(tier);
@@ -102,8 +105,19 @@ const Settings = () => {
     if (profile) {
       setDisplayName(profile.display_name || '');
       setCurrency(profile.currency || 'usd');
+      setMarketingEmails(profile.marketing_emails ?? true);
+      setSecurityAlerts(profile.security_alerts ?? true);
     }
   }, [profile]);
+
+  // Handler for notification toggle changes
+  const handleNotificationChange = (field: 'marketing_emails' | 'security_alerts', value: boolean) => {
+    // Optimistic update
+    if (field === 'marketing_emails') setMarketingEmails(value);
+    else setSecurityAlerts(value);
+    
+    updateProfile({ [field]: value });
+  };
   
   // Sync selected tier with current tier
   useEffect(() => {
@@ -780,6 +794,53 @@ const Settings = () => {
                             </div>
                           </div>}
                       </>}
+                  </CardContent>
+                </Card>
+
+                {/* Notifications Section */}
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground">
+                      <Bell className="w-5 h-5 text-primary" />
+                      Notifications
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your email notification preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="marketing-emails" className="text-sm font-medium">
+                          Marketing Emails
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Tips, news, and special offers
+                        </p>
+                      </div>
+                      <Switch
+                        id="marketing-emails"
+                        checked={marketingEmails}
+                        onCheckedChange={(checked) => handleNotificationChange('marketing_emails', checked)}
+                        disabled={isUpdating}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="security-alerts" className="text-sm font-medium">
+                          Security Alerts
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Login alerts and password changes
+                        </p>
+                      </div>
+                      <Switch
+                        id="security-alerts"
+                        checked={securityAlerts}
+                        onCheckedChange={(checked) => handleNotificationChange('security_alerts', checked)}
+                        disabled={isUpdating}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
 

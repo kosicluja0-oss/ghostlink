@@ -116,6 +116,8 @@ export type Database = {
           currency: string | null
           display_name: string | null
           id: string
+          marketing_emails: boolean | null
+          security_alerts: boolean | null
           stripe_customer_id: string | null
           subscription_id: string | null
           subscription_status: string | null
@@ -130,6 +132,8 @@ export type Database = {
           currency?: string | null
           display_name?: string | null
           id: string
+          marketing_emails?: boolean | null
+          security_alerts?: boolean | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
           subscription_status?: string | null
@@ -144,6 +148,8 @@ export type Database = {
           currency?: string | null
           display_name?: string | null
           id?: string
+          marketing_emails?: boolean | null
+          security_alerts?: boolean | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
           subscription_status?: string | null
