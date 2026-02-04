@@ -9,6 +9,8 @@ export interface Profile {
   avatar_url: string | null;
   currency: string | null;
   timezone: string | null;
+  marketing_emails: boolean | null;
+  security_alerts: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -18,6 +20,8 @@ export interface ProfileUpdate {
   avatar_url?: string;
   currency?: string;
   timezone?: string;
+  marketing_emails?: boolean;
+  security_alerts?: boolean;
 }
 
 export function useProfile() {
