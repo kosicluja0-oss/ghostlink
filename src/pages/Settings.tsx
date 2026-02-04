@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { TIMEZONES, TIMEZONE_GROUPS } from '@/lib/timezone';
 const Settings = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -50,6 +51,7 @@ const Settings = () => {
   const { isAdmin } = useUserRole();
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
+  const [timezone, setTimezone] = useState('Europe/Prague');
   const [marketingEmails, setMarketingEmails] = useState(true);
   const [securityAlerts, setSecurityAlerts] = useState(true);
   
@@ -105,6 +107,7 @@ const Settings = () => {
     if (profile) {
       setDisplayName(profile.display_name || '');
       setCurrency(profile.currency || 'usd');
+      setTimezone(profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
       setMarketingEmails(profile.marketing_emails ?? true);
       setSecurityAlerts(profile.security_alerts ?? true);
     }
@@ -151,7 +154,8 @@ const Settings = () => {
   const handleSaveProfile = () => {
     updateProfile({
       display_name: displayName,
-      currency
+      currency,
+      timezone
     });
   };
 
@@ -484,10 +488,26 @@ const Settings = () => {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Timezone</Label>
-                        <div className="px-3 py-2 rounded-md bg-muted text-muted-foreground text-sm">
-                          {profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
-                        </div>
+                        <Label htmlFor="timezone">Timezone</Label>
+                        <Select value={timezone} onValueChange={setTimezone}>
+                          <SelectTrigger className="bg-input">
+                            <SelectValue placeholder="Select timezone" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {Object.entries(TIMEZONE_GROUPS).map(([region, timezones]) => (
+                              <div key={region}>
+                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                  {region}
+                                </div>
+                                {timezones.map((tz) => (
+                                  <SelectItem key={tz.value} value={tz.value}>
+                                    {tz.label}
+                                  </SelectItem>
+                                ))}
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CardContent>
