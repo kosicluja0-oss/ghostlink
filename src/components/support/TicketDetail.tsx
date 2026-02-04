@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, Send, Clock, User, Shield, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,7 @@ import { useSupportTickets, SupportTicket, SupportMessage } from '@/hooks/useSup
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useTimezone } from '@/hooks/useTimezone';
 
 interface TicketDetailProps {
   ticketId: string;
@@ -40,6 +41,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
   const queryClient = useQueryClient();
   const { fetchTicket, fetchMessages, createMessage, isCreatingMessage, updateTicketStatus, isUpdatingStatus } = useSupportTickets(isAdmin);
   const { markAsRead } = useUnreadMessages();
+  const { formatDateTime } = useTimezone();
   
   const [newMessage, setNewMessage] = useState('');
 
@@ -245,7 +247,7 @@ export function TicketDetail({ ticketId, isAdmin = false, onBack }: TicketDetail
                       <p className="text-sm">{message.message}</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(message.created_at), 'MMM d, yyyy HH:mm')}
+                      {formatDateTime(message.created_at)}
                     </p>
                   </div>
                 </div>

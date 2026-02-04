@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
 import { 
   MousePointer, Users, DollarSign, TrendingUp, Percent, 
   Filter, CalendarDays, Search, User, ExternalLink,
@@ -26,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useTimezone } from '@/hooks/useTimezone';
 import type { TierType, AnalyticsData } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -184,6 +184,7 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { tier: subscriptionTier } = useSubscription();
+  const { formatInTimezone } = useTimezone();
   
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -789,7 +790,7 @@ const Dashboard = () => {
                             {/* Date Column */}
                             <TableCell className="text-right py-4">
                               <span className="text-sm text-muted-foreground font-mono whitespace-nowrap">
-                                {format(tx.date, 'MMM d, HH:mm')}
+                                {formatInTimezone(tx.date, 'MMM d, HH:mm')}
                               </span>
                             </TableCell>
                           </TableRow>

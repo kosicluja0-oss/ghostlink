@@ -1,6 +1,7 @@
 import { Link2, ExternalLink, Archive, RotateCcw, MousePointer, Users, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTimezone } from '@/hooks/useTimezone';
 import type { GhostLink, TierType } from '@/types';
 
 interface LinkCardProps {
@@ -22,6 +23,7 @@ export function LinkCard({
 }: LinkCardProps) {
   const isFreeTier = userTier === 'free';
   const fullUrl = `ghost.link/${link.alias}`;
+  const { formatDate } = useTimezone();
 
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger selection if clicking on buttons or links
@@ -92,7 +94,7 @@ export function LinkCard({
       {/* Actions */}
       <div className="flex items-center justify-between pt-2 border-t border-border">
         <span className="text-[10px] text-muted-foreground">
-          Created {link.createdAt.toLocaleDateString()}
+          Created {formatDate(link.createdAt)}
         </span>
         
         {link.status === 'active' ? (
