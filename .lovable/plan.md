@@ -1,36 +1,55 @@
 
-# Minimalizace GDPR Export sekce
+# Collapsible sekce v Settings
 
 ## Cíl
-Přesunout GDPR export z velké karty do nenápadného řádku přímo nad "Delete Account" tlačítko - obojí bude vizuálně podobné (ghost buttons).
+Převést sekce Preferences, Notifications, Security a Billing na vysouvací (accordion), aby stránka Settings byla kompaktnější a nepotřebovala scroll.
 
-## Změny
-
-### Odstranění
-- Celá "Data & Privacy" Card sekce (velká karta s ikonou, popisem a tlačítkem)
-
-### Přidání
-- Malé ghost tlačítko "Download My Data" na stejném řádku nebo těsně nad "Delete Account"
-- Vizuálně podobný styl jako Delete Account (ghost, šedý text)
-
-## Výsledný layout
+## Výsledná struktura
 
 ```text
 ┌─────────────────────────────────────────┐
-│         ... ostatní sekce ...           │
-│                                         │
-│    [Download My Data]  [Delete Account] │
-│         (ghost btn)       (ghost btn)   │
+│  Settings Header                        │
+├─────────────────────────────────────────┤
+│  Profile (vždy viditelný)               │
+│  - Avatar, jméno, email                 │
+│  - Save button                          │
+├─────────────────────────────────────────┤
+│  ▸ Preferences                    [+]   │
+├─────────────────────────────────────────┤
+│  ▸ Notifications                  [+]   │
+├─────────────────────────────────────────┤
+│  ▸ Security                       [+]   │
+├─────────────────────────────────────────┤
+│  ▸ Billing & Subscription         [+]   │
+├─────────────────────────────────────────┤
+│  [Download My Data]  [Delete Account]   │
 └─────────────────────────────────────────┘
 ```
 
-## Technické detaily
+## Technické změny
 
 **Soubor:** `src/pages/Settings.tsx`
 
-1. Odstranit Card s Data & Privacy (cca řádky 894-945)
-2. Upravit footer div (řádek 1026) aby obsahoval dva ghost buttony vedle sebe:
-   - "Download My Data" s ikonou Download
-   - "Delete Account" (stávající)
+1. Import Accordion komponenty
+2. Profile sekce zůstane jako samostatná Card (bez změny)
+3. Sekce 2-5 zabalit do `<Accordion type="multiple">`:
+   - Každá sekce bude `AccordionItem` s:
+     - `AccordionTrigger` - obsahuje ikonu + název sekce
+     - `AccordionContent` - obsahuje původní CardContent
+4. Zachovat vizuální styl (ikony, barvy) v triggerech
+5. Admin Developer Tools (pokud je uživatel admin) - také jako accordion item
+6. Footer akce zůstanou nezměněny
 
-Oba budou mít stejný vizuální styl - nenápadné, šedé, ale funkční pro právní compliance.
+## Vizuální design accordion triggerů
+
+Každý trigger bude obsahovat:
+- Ikonu sekce (Globe, Bell, Lock, CreditCard)
+- Název sekce
+- Popisek (menší text)
+- Chevron pro indikaci stavu (automaticky z Accordion komponenty)
+
+## Výhody
+- Stránka se vejde na obrazovku bez scrollování
+- Uživatel vidí přehled všech sekcí najednou
+- Může otevřít více sekcí současně (`type="multiple"`)
+- Profile s avatarem je vždy viditelný (nejčastější interakce)
