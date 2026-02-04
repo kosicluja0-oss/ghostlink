@@ -1,62 +1,75 @@
 
-# Upozornění na neuložené změny v Settings
 
-## Popis
-Přidáme vizuální indikátor, který uživateli připomene, že provedl změny v profilu nebo preferencích a musí kliknout na "Save Changes" pro jejich uložení.
+# GDPR Export osobních dat
 
-## Navrhované řešení
+## Přehled
+Implementace funkce pro stažení všech osobních dat uživatele ve formátu JSON, v souladu s GDPR článkem 15 (právo na přístup) a článkem 20 (právo na přenositelnost dat).
 
-### Přístup: Kontextový indikátor u tlačítka Save
-Nejlepší UX je zobrazit malé upozornění přímo u tlačítka "Save Changes" - uživatel tak okamžitě vidí, že má neuložené změny a kde je uložit.
+## Co bude exportováno
 
-### Vizuální návrh
+| Kategorie | Data |
+|-----------|------|
+| Profil | Jméno, email, avatar URL, měna, timezone, preference emailů |
+| Linky | Všechny vytvořené linky s aliasy a cílovými URL |
+| Statistiky | Agregovaná data kliknutí a konverzí per link |
+| Metadata | Datum registrace, poslední aktualizace profilu |
+
+## Implementace
+
+### 1. Nová sekce v Settings
+Přidání "Data & Privacy" sekce mezi stávající karty s:
+- Popis jaká data jsou ukládána
+- Tlačítko "Download My Data" 
+- Formát JSON (čitelný i strojově zpracovatelný)
+
+### 2. Export funkce
+Klientská funkce která:
+1. Načte všechna data z Supabase (profiles, links, clicks, conversions)
+2. Agreguje statistiky per link
+3. Vytvoří strukturovaný JSON objekt
+4. Stáhne jako soubor `ghostlink-data-export-{datum}.json`
+
+### 3. Struktura exportu
+
 ```text
-┌─────────────────────────────────────────────┐
-│  Profile                                    │
-│  ─────────────────────────────────────────  │
-│  [Avatar]  Display Name: John              │
-│            Email: john@example.com          │
-│                                             │
-│  ┌─────────────────────────────────────┐   │
-│  │ ● You have unsaved changes          │   │
-│  └─────────────────────────────────────┘   │
-│                                             │
-│  [ Save Changes ]                           │
-└─────────────────────────────────────────────┘
+{
+  "exportedAt": "2026-02-04T...",
+  "account": {
+    "email": "user@example.com",
+    "displayName": "John",
+    "createdAt": "2025-01-01T..."
+  },
+  "preferences": {
+    "currency": "usd",
+    "timezone": "Europe/Prague"
+  },
+  "links": [
+    {
+      "alias": "my-link",
+      "targetUrl": "https://...",
+      "createdAt": "...",
+      "totalClicks": 150,
+      "totalConversions": 12
+    }
+  ],
+  "totalStats": {
+    "links": 5,
+    "clicks": 500,
+    "conversions": 45
+  }
+}
 ```
 
-## Technická implementace
+## Umístění v UI
+Nová karta "Data & Privacy" v Settings s ikonou Shield/Download, obsahující:
+- Informační text o GDPR právech
+- Tlačítko pro export
+- Loading stav během generování
 
-### Krok 1: Detekce změn
-Přidáme computed hodnotu `hasUnsavedChanges` která porovná:
-- `displayName` vs `profile.display_name`
-- `currency` vs `profile.currency`  
-- `timezone` vs `profile.timezone`
+## Technické detaily
 
-```typescript
-const hasUnsavedChanges = 
-  displayName !== (profile?.display_name || '') ||
-  currency !== (profile?.currency || 'usd') ||
-  timezone !== (profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
-```
+- Použije existující Supabase queries (RLS zajistí že uživatel vidí jen svá data)
+- Export probíhá kompletně na klientu - žádná nová edge function
+- Soubor se generuje v paměti a stahuje přes `Blob` + `URL.createObjectURL`
+- Agregace statistik probíhá v JS (ne v SQL) pro jednoduchost
 
-### Krok 2: UI komponenta
-Zobrazíme malý alert box nad tlačítkem Save s:
-- Žlutou/oranžovou barvou (warning)
-- Ikonou tečky nebo varování
-- Textem "You have unsaved changes"
-- Animací fade-in pro plynulý přechod
-
-### Krok 3: Vylepšení tlačítka
-Tlačítko "Save Changes" bude:
-- Zvýrazněné (primary color) když jsou změny
-- Šedé/disabled vzhled když nejsou změny k uložení
-
-## Soubory k úpravě
-- `src/pages/Settings.tsx` - přidání detekce změn a UI indikátoru
-
-## Výsledek
-Uživatel vždy jasně uvidí:
-1. Zda provedl nějaké změny
-2. Kde tyto změny uložit
-3. Vizuální feedback po úspěšném uložení (zmizení indikátoru)
