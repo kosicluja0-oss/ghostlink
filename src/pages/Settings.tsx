@@ -371,10 +371,8 @@ const Settings = () => {
                 </div>
               </section>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {/* Left Column - Profile, Preferences, Security */}
-                <div className="space-y-6">
-                {/* Profile Section */}
+              <div className="max-w-2xl mx-auto space-y-6">
+                {/* 1. Profile Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-foreground">
@@ -486,7 +484,7 @@ const Settings = () => {
                   </CardContent>
                 </Card>
 
-                {/* Preferences Section */}
+                {/* 2. Preferences Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-foreground">
@@ -539,7 +537,54 @@ const Settings = () => {
                   </CardContent>
                 </Card>
 
-                  {/* Security Section */}
+                {/* 3. Notifications Section */}
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-foreground">
+                      <Bell className="w-5 h-5 text-primary" />
+                      Notifications
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your email notification preferences
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="marketing-emails" className="text-sm font-medium">
+                          Marketing Emails
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Tips, news, and special offers
+                        </p>
+                      </div>
+                      <Switch
+                        id="marketing-emails"
+                        checked={marketingEmails}
+                        onCheckedChange={(checked) => handleNotificationChange('marketing_emails', checked)}
+                        disabled={isUpdating}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="security-alerts" className="text-sm font-medium">
+                          Security Alerts
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Login alerts and password changes
+                        </p>
+                      </div>
+                      <Switch
+                        id="security-alerts"
+                        checked={securityAlerts}
+                        onCheckedChange={(checked) => handleNotificationChange('security_alerts', checked)}
+                        disabled={isUpdating}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 4. Security Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-foreground">
@@ -721,11 +766,8 @@ const Settings = () => {
                     )}
                   </CardContent>
                 </Card>
-                </div>
 
-                {/* Right Column - Billing, Delete Account, Developer Tools */}
-                <div className="space-y-6">
-                  {/* Billing Section */}
+                {/* 5. Billing Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-foreground">
@@ -780,10 +822,7 @@ const Settings = () => {
                                   <Check className="w-4 h-4 text-success" /> Click tracking
                                 </li>
                                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Check className="w-4 h-4 text-success" /> Basic dashboard
-                                </li>
-                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Check className="w-4 h-4 text-success" /> Community support
+                                  <Check className="w-4 h-4 text-success" /> Basic analytics
                                 </li>
                               </>}
                             {tier === 'pro' && <>
@@ -791,10 +830,7 @@ const Settings = () => {
                                   <Check className="w-4 h-4 text-success" /> 100 active links
                                 </li>
                                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Check className="w-4 h-4 text-success" /> Leads & Sales tracking
-                                </li>
-                                <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Check className="w-4 h-4 text-success" /> Full analytics
+                                  <Check className="w-4 h-4 text-success" /> Advanced analytics
                                 </li>
                                 <li className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <Check className="w-4 h-4 text-success" /> Bridge pages
@@ -842,54 +878,6 @@ const Settings = () => {
                       </>}
                   </CardContent>
                 </Card>
-
-                {/* Notifications Section */}
-                <Card className="bg-card border-border">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-foreground">
-                      <Bell className="w-5 h-5 text-primary" />
-                      Notifications
-                    </CardTitle>
-                    <CardDescription>
-                      Manage your email notification preferences
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="marketing-emails" className="text-sm font-medium">
-                          Marketing Emails
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Tips, news, and special offers
-                        </p>
-                      </div>
-                      <Switch
-                        id="marketing-emails"
-                        checked={marketingEmails}
-                        onCheckedChange={(checked) => handleNotificationChange('marketing_emails', checked)}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label htmlFor="security-alerts" className="text-sm font-medium">
-                          Security Alerts
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Login alerts and password changes
-                        </p>
-                      </div>
-                      <Switch
-                        id="security-alerts"
-                        checked={securityAlerts}
-                        onCheckedChange={(checked) => handleNotificationChange('security_alerts', checked)}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
 
                 {/* Admin Developer Tools - Only visible to admins */}
                 {isAdmin && (
@@ -969,7 +957,7 @@ const Settings = () => {
                   </Card>
                 )}
 
-                {/* Footer Actions - GDPR Export & Delete Account */}
+                {/* 6. Footer Actions - GDPR Export & Delete Account */}
                 <div className="pt-4 flex justify-center gap-3">
                   <Button 
                     variant="ghost" 
@@ -1032,7 +1020,6 @@ const Settings = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                </div>
                 </div>
               </div>
             </main>
