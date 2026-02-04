@@ -151,8 +151,8 @@ const Settings = () => {
   };
   const userInitial = displayName ? displayName.charAt(0).toUpperCase() : user?.email ? user.email.charAt(0).toUpperCase() : 'U';
   const currentTierData = TIERS[tier];
-  const handleSaveProfile = () => {
-    updateProfile({
+  const handleSaveProfile = async () => {
+    await updateProfile({
       display_name: displayName,
       currency,
       timezone
