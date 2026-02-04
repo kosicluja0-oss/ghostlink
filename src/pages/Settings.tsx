@@ -324,7 +324,7 @@ const Settings = () => {
           <AppSidebar userEmail={user?.email} userTier={tier} onOpenSettings={() => {}} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
           
           <SidebarInset className="flex-1">
-            <main className="p-4 lg:p-6 max-w-4xl mx-auto">
+            <main className="p-4 lg:p-6 max-w-7xl mx-auto">
               {/* Header */}
               <section className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
@@ -340,7 +340,9 @@ const Settings = () => {
                 </div>
               </section>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                {/* Left Column - Profile, Preferences, Security */}
+                <div className="space-y-6">
                 {/* Profile Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
@@ -477,7 +479,7 @@ const Settings = () => {
                   </CardContent>
                 </Card>
 
-                {/* Security Section */}
+                  {/* Security Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-foreground">
@@ -659,8 +661,11 @@ const Settings = () => {
                     )}
                   </CardContent>
                 </Card>
+                </div>
 
-                {/* Billing Section */}
+                {/* Right Column - Billing, Delete Account, Developer Tools */}
+                <div className="space-y-6">
+                  {/* Billing Section */}
                 <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-foreground">
@@ -901,6 +906,7 @@ const Settings = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                </div>
                 </div>
               </div>
             </main>
