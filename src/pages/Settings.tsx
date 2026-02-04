@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -83,6 +83,17 @@ const Settings = () => {
 
   const passwordsMatch = confirmPassword.length > 0 && newPassword === confirmPassword;
   const isPasswordValid = passwordStrength.isStrong && passwordsMatch && currentPassword.length > 0;
+
+  // Detect unsaved changes in profile/preferences
+  const hasUnsavedChanges = useMemo(() => {
+    if (!profile) return false;
+    const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return (
+      displayName !== (profile.display_name || '') ||
+      currency !== (profile.currency || 'usd') ||
+      timezone !== (profile.timezone || defaultTimezone)
+    );
+  }, [displayName, currency, timezone, profile]);
 
   // Handle checkout redirect result
   useEffect(() => {
@@ -450,11 +461,24 @@ const Settings = () => {
                           </div>
                         </div>
 
-                        <Button onClick={handleSaveProfile} className="w-full sm:w-auto" disabled={isUpdating}>
+                        {/* Unsaved changes indicator */}
+                        {hasUnsavedChanges && (
+                          <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20 text-warning animate-fade-in">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                            <span className="text-sm font-medium">You have unsaved changes</span>
+                          </div>
+                        )}
+
+                        <Button 
+                          onClick={handleSaveProfile} 
+                          className="w-full sm:w-auto" 
+                          disabled={isUpdating || !hasUnsavedChanges}
+                          variant={hasUnsavedChanges ? "default" : "secondary"}
+                        >
                           {isUpdating ? <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Saving...
-                            </> : 'Save Changes'}
+                            </> : hasUnsavedChanges ? 'Save Changes' : 'No Changes'}
                         </Button>
                       </>}
                   </CardContent>
