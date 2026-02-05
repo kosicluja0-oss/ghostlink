@@ -155,6 +155,7 @@ const Dashboard = () => {
   const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [showSampleData, setShowSampleData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(10); // Pagination state
   
   // Use real data hooks
   const { links, refetch: refetchLinks } = useLinks();
@@ -307,6 +308,22 @@ const Dashboard = () => {
 
     return filtered;
   }, [transactions, typeFilter, dateRange, searchQuery]);
+
+  // Paginated transactions for display
+  const paginatedTransactions = useMemo(() => {
+    return filteredTransactions.slice(0, visibleCount);
+  }, [filteredTransactions, visibleCount]);
+
+  const hasMoreTransactions = filteredTransactions.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 10);
+  };
+
+  // Reset visible count when filters change
+  useMemo(() => {
+    setVisibleCount(10);
+  }, [typeFilter, dateRange, searchQuery]);
 
   // Calculate stats based on filtered data (time range)
   const displayStats = useMemo(() => {
@@ -679,7 +696,7 @@ const Dashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTransactions.map((tx) => (
+                        {paginatedTransactions.map((tx) => (
                           <TableRow 
                             key={tx.id} 
                             className="border-border hover:bg-muted/50 transition-colors h-14"
@@ -753,6 +770,20 @@ const Dashboard = () => {
                         ))}
                       </TableBody>
                     </Table>
+                    
+                    {/* Load More Button */}
+                    {hasMoreTransactions && (
+                      <div className="flex items-center justify-center py-3 border-t border-border bg-muted/20">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleLoadMore}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          Load more ({filteredTransactions.length - visibleCount} remaining)
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
 

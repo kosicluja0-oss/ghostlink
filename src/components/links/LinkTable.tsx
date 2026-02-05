@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ExternalLink, Pencil, Search, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ExternalLink, Pencil, Search, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -29,7 +29,11 @@ import {
 import { cn } from '@/lib/utils';
 import { getTrackingUrl, getDisplayUrl } from '@/lib/trackingUrl';
 import { useMultipleLinksClickHistory } from '@/hooks/useClickHistory';
+import { LinksEmptyState } from './LinksEmptyState';
 import type { GhostLink, TierType } from '@/types';
+
+type SortField = 'clicks' | 'leads' | 'sales' | 'createdAt';
+type SortDirection = 'asc' | 'desc';
 
 interface LinkTableProps {
   links: GhostLink[];
@@ -38,6 +42,7 @@ interface LinkTableProps {
   onEditLink?: (link: GhostLink) => void;
   activeLinkId?: string | null;
   onLinkSelect?: (linkId: string) => void;
+  onCreateLink?: () => void;
 }
 
 interface LinkRowProps {
@@ -48,6 +53,42 @@ interface LinkRowProps {
   isSelected?: boolean;
   onSelect?: (linkId: string) => void;
   sparklineData: number[];
+}
+
+// Sortable header button component
+function SortableHeader({ 
+  label, 
+  field, 
+  currentSort, 
+  onSort 
+}: { 
+  label: string; 
+  field: SortField; 
+  currentSort: { field: SortField; direction: SortDirection }; 
+  onSort: (field: SortField) => void;
+}) {
+  const isActive = currentSort.field === field;
+  
+  return (
+    <button
+      onClick={() => onSort(field)}
+      className={cn(
+        "flex items-center gap-1 text-right w-14 hover:text-foreground transition-colors",
+        isActive && "text-foreground"
+      )}
+    >
+      <span className="flex-1 text-right">{label}</span>
+      {isActive ? (
+        currentSort.direction === 'desc' ? (
+          <ArrowDown className="w-3 h-3" />
+        ) : (
+          <ArrowUp className="w-3 h-3" />
+        )
+      ) : (
+        <ArrowUpDown className="w-3 h-3 opacity-50" />
+      )}
+    </button>
+  );
 }
 
 // Extract domain from URL for favicon
@@ -268,15 +309,28 @@ export function LinkTable({
   onDeleteLink,
   onEditLink,
   activeLinkId,
-  onLinkSelect
+  onLinkSelect,
+  onCreateLink
 }: LinkTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [sort, setSort] = useState<{ field: SortField; direction: SortDirection }>({
+    field: 'createdAt',
+    direction: 'desc',
+  });
 
   // Fetch real click history for sparklines
   const linkIds = useMemo(() => links.map(l => l.id), [links]);
   const { sparklineDataByLink } = useMultipleLinksClickHistory(linkIds, 24);
 
-  const filteredLinks = useMemo(() => {
+  // Handle sort toggle
+  const handleSort = (field: SortField) => {
+    setSort(prev => ({
+      field,
+      direction: prev.field === field && prev.direction === 'desc' ? 'asc' : 'desc',
+    }));
+  };
+
+  const filteredAndSortedLinks = useMemo(() => {
     let filtered = links;
     
     // Filter by search query
@@ -288,13 +342,38 @@ export function LinkTable({
       );
     }
     
-    return filtered;
-  }, [links, searchQuery]);
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      let comparison = 0;
+      switch (sort.field) {
+        case 'clicks':
+          comparison = a.clicks - b.clicks;
+          break;
+        case 'leads':
+          comparison = a.leads - b.leads;
+          break;
+        case 'sales':
+          comparison = a.sales - b.sales;
+          break;
+        case 'createdAt':
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+      }
+      return sort.direction === 'desc' ? -comparison : comparison;
+    });
+    
+    return sorted;
+  }, [links, searchQuery, sort]);
 
   const totalCount = links.length;
 
   // Default empty sparkline data
   const emptySparkline = Array(12).fill(0);
+
+  // Show enhanced empty state if no links at all
+  if (links.length === 0 && onCreateLink) {
+    return <LinksEmptyState onCreateLink={onCreateLink} />;
+  }
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
@@ -314,22 +393,22 @@ export function LinkTable({
         </span>
       </div>
 
-      {/* Table Header */}
+      {/* Table Header with Sortable Columns */}
       <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border/40 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
         <div className="flex-1">Link</div>
         <div className="w-16 shrink-0 hidden lg:block text-center">Trend</div>
         <div className="flex items-center gap-4 shrink-0">
-          <div className="text-right w-14">Clicks</div>
-          <div className="text-right w-14">Leads</div>
-          <div className="text-right w-14">Sales</div>
+          <SortableHeader label="Clicks" field="clicks" currentSort={sort} onSort={handleSort} />
+          <SortableHeader label="Leads" field="leads" currentSort={sort} onSort={handleSort} />
+          <SortableHeader label="Sales" field="sales" currentSort={sort} onSort={handleSort} />
         </div>
         <div className="w-20 shrink-0"></div>
       </div>
 
       {/* Rows */}
-      <div className="max-h-[260px] overflow-y-auto">
-        {filteredLinks.length > 0 ? (
-          filteredLinks.map((link) => (
+      <div className="max-h-[400px] overflow-y-auto">
+        {filteredAndSortedLinks.length > 0 ? (
+          filteredAndSortedLinks.map((link) => (
             <LinkRow
               key={link.id}
               link={link}
@@ -344,7 +423,7 @@ export function LinkTable({
         ) : (
           <div className="text-center py-8">
             <p className="text-[12px] text-muted-foreground">
-              {searchQuery ? 'No links match your search' : 'No links yet'}
+              No links match your search
             </p>
           </div>
         )}

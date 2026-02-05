@@ -7,48 +7,69 @@ Tři klíčové stránky aplikace potřebují systematické vylepšení od odstr
 
 ---
 
-## Fáze 1: Čištění a Stabilizace (Kritické) ✅ DOKONČENO
+## Fáze 1: Čištění a Stabilizace ✅ DOKONČENO
 
 ### 1.1 Dashboard - Odstranění fake dat ✅
-**Řešení implementováno:**
-- ✅ Vytvořen `useTrends` hook pro výpočet reálných trendů (porovnání 7 dní)
-- ✅ Odstraněna `generateSampleData()` funkce → nahrazena konstantou `SAMPLE_TRANSACTIONS`
-- ✅ Opraven `userTier` state → nyní používá `subscriptionTier` z hooku
-
-**Soubory:** `src/pages/Dashboard.tsx`, `src/hooks/useTrendCalculation.ts`
+- ✅ Vytvořen `useTrends` hook pro výpočet reálných trendů
+- ✅ Odstraněna `generateSampleData()` funkce
+- ✅ Opraven `userTier` state → používá `subscriptionTier`
 
 ### 1.2 Links - Reálné sparklines ✅
-**Řešení implementováno:**
-- ✅ Vytvořen `useClickHistory` hook pro jednotlivé linky
-- ✅ Vytvořen `useMultipleLinksClickHistory` hook pro efektivní batch loading
-- ✅ LinkTable nyní načítá skutečné hourly clicks z databáze
-- ✅ Fallback na prázdný graf pro nové linky
-
-**Soubory:** `src/components/links/LinkTable.tsx`, `src/hooks/useClickHistory.ts`
+- ✅ Vytvořeny `useClickHistory` a `useMultipleLinksClickHistory` hooky
+- ✅ LinkTable načítá skutečné hourly clicks z databáze
 
 ### 1.3 Dashboard - Modularizace ✅
-**Řešení implementováno:**
 - ✅ COUNTRIES mapping přesunut do `src/lib/countries.ts`
-- ⏳ RecentActivitySection extrakce - plánováno pro další iteraci
 
 ---
 
-## Fáze 2: UX Vylepšení
+## Fáze 2: UX Vylepšení ✅ DOKONČENO
 
-### 2.1 Links - Empty State & Onboarding
-**Problém:** Prázdný stav jen zobrazí "No links yet" bez dalšího vedení.
+### 2.1 Links - Empty State & Onboarding ✅
+- ✅ Vytvořena `LinksEmptyState` komponenta s CTA a feature pills
+- ✅ Tlačítka "Create Link" a "Watch Tutorial"
+- ✅ Pro tip o Smart Copy funkci
+
+### 2.2 Links - Rozšířené funkce ✅
+- ✅ **Sorting:** Klikatelné hlavičky (Clicks, Leads, Sales) s šipkami
+- ✅ Výchozí řazení podle data vytvoření (nejnovější první)
+- ✅ Zvětšena max výška tabulky na 400px
+
+### 2.3 Dashboard - Activity tabulka ✅
+- ✅ Odstraněn fixní max-h → dynamická výška
+- ✅ **Pagination:** "Load more" pattern (10 položek, pak načíst další)
+- ✅ Reset stránkování při změně filtrů
+
+---
+
+## Fáze 3: Integrations - Skutečná funkcionalita
+
+### 3.1 Persistence připojení
+**Problém:** `handleConfirmConnection` pouze nastaví lokální "pending" status.
 
 **Řešení:**
-```text
-┌─────────────────────────────────────────────┐
-│  🔗 Create Your First Tracking Link         │
-│                                             │
-│  "Start tracking your affiliate sales       │
-│   and leads in real-time"                   │
-│                                             │
-│  [+ Create Link]    [Watch Tutorial]        │
-└─────────────────────────────────────────────┘
-```
+- Vytvořit tabulku `integrations` v databázi
+- Ukládat skutečný stav připojení
+- Zobrazovat reálný status při načtení stránky
+
+### 3.2 Webhook verifikace
+- Endpoint pro testovací ping od služeb
+- Automatická změna statusu `pending` → `connected`
+
+### 3.3 Stripe Integration (priorita)
+- Propojit s Integrations stránkou
+- Zobrazit skutečný stav Stripe subscription
+
+---
+
+## Fáze 4: Advanced Analytics
+
+### 4.1 Per-Link Analytics Detail
+Kliknutím na link v tabulce otevřít detail panel s mini-chartem, Top Placements, Top Countries a Conversions funnel.
+
+### 4.2 Export & Reporting
+- CSV export pro vybrané období
+- Plánované email reporty
 
 ### 2.2 Links - Rozšířené funkce
 - **Sorting:** Klikatelné hlavičky (Clicks, Leads, Sales, Date)
