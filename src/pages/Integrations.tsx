@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Puzzle, CreditCard, Users, ShoppingBag, TrendingUp, Zap, Bell, Mail, ChevronDown } from 'lucide-react';
 
@@ -24,7 +24,10 @@ import { DeveloperWebhookCard } from '@/components/integrations/DeveloperWebhook
 import { useAuth } from '@/hooks/useAuth';
 import { useLinks } from '@/hooks/useLinks';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
-import type { TierType } from '@/types';
+import { useIntegrations } from '@/hooks/useIntegrations';
+import { useSubscription } from '@/hooks/useSubscription';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 // Integration data with reliable SimpleIcons CDN logos
 const INTEGRATIONS: Integration[] = [
@@ -288,10 +291,15 @@ const Integrations = () => {
   const { user, signOut } = useAuth();
   const { links } = useLinks();
   const openTicketsCount = useOpenTicketsCount();
+  const { tier: userTier, isSubscribed } = useSubscription();
+  const { 
+    getIntegrationStatus, 
+    connect, 
+    isConnecting,
+    isLoading: integrationsLoading 
+  } = useIntegrations();
   
-  const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [integrations, setIntegrations] = useState<Integration[]>(INTEGRATIONS);
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -311,35 +319,67 @@ const Integrations = () => {
     [links]
   );
 
+  // Map static integrations with real status from database/subscription
+  const integrationsWithStatus = useMemo(() => {
+    return INTEGRATIONS.map(integration => ({
+      ...integration,
+      status: getIntegrationStatus(integration.id),
+    }));
+  }, [getIntegrationStatus]);
+
   // Group integrations by category
   const groupedIntegrations = useMemo(() => {
     const grouped: Record<string, Integration[]> = {};
     CATEGORIES.forEach(cat => {
-      grouped[cat.id] = integrations.filter(i => i.category === cat.id);
+      grouped[cat.id] = integrationsWithStatus.filter(i => i.category === cat.id);
     });
     return grouped;
-  }, [integrations]);
+  }, [integrationsWithStatus]);
 
-  const handleConnect = (integrationId: string) => {
-    const integration = integrations.find(i => i.id === integrationId);
+  // Handle Stripe customer portal
+  const openCustomerPortal = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-portal-session');
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast.error('Failed to open billing portal');
+    }
+  }, []);
+
+  const handleConnect = useCallback((integrationId: string) => {
+    // Special case for Stripe
+    if (integrationId === 'stripe') {
+      if (isSubscribed) {
+        openCustomerPortal();
+      } else {
+        navigate('/settings');
+      }
+      return;
+    }
+
+    const integration = integrationsWithStatus.find(i => i.id === integrationId);
     if (integration && !integration.comingSoon) {
       setSelectedIntegration(integration);
       setConnectModalOpen(true);
     }
-  };
+  }, [integrationsWithStatus, isSubscribed, navigate, openCustomerPortal]);
 
-  const handleConfirmConnection = (integrationId: string, _linkId: string | null) => {
-    setIntegrations(prev => 
-      prev.map(i => 
-        i.id === integrationId 
-          ? { ...i, status: 'pending' as const }
-          : i
-      )
-    );
-  };
+  const handleConfirmConnection = useCallback(async (integrationId: string, _linkId: string | null) => {
+    try {
+      await connect({ serviceId: integrationId });
+      toast.success('Integration connected! Waiting for first event...');
+    } catch (error) {
+      console.error('Error connecting integration:', error);
+      toast.error('Failed to connect integration');
+    }
+  }, [connect]);
 
-  const connectedCount = integrations.filter(i => i.status === 'connected').length;
-  const pendingCount = integrations.filter(i => i.status === 'pending').length;
+  const connectedCount = integrationsWithStatus.filter(i => i.status === 'connected').length;
+  const pendingCount = integrationsWithStatus.filter(i => i.status === 'pending').length;
 
   return (
     <TooltipProvider>
@@ -386,7 +426,7 @@ const Integrations = () => {
               </section>
 
               {/* Connected Ecosystem Bar */}
-              <ConnectedEcosystemBar integrations={integrations} />
+              <ConnectedEcosystemBar integrations={integrationsWithStatus} />
 
               {/* Integration Categories */}
               {CATEGORIES.map(category => {
@@ -464,7 +504,7 @@ const Integrations = () => {
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           userTier={userTier}
-          onChangeTier={setUserTier}
+          onChangeTier={() => {}}
         />
 
         <ConnectServiceModal
