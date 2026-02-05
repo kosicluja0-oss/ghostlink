@@ -1,8 +1,8 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   MousePointer, Users, DollarSign, TrendingUp, Percent, 
-  Filter, CalendarDays, Search, User, ExternalLink,
+  Filter, CalendarDays, Search, User,
   MousePointerClick, Sparkles, ShoppingCart, Link2, Globe
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -26,8 +26,9 @@ import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTimezone } from '@/hooks/useTimezone';
-import type { TierType, AnalyticsData } from '@/types';
-import { TIERS } from '@/types';
+import { useTrends } from '@/hooks/useTrendCalculation';
+import { COUNTRIES } from '@/lib/countries';
+import type { AnalyticsData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -61,123 +62,77 @@ interface Transaction {
   linkId: string;
   linkAlias: string;
   location?: string;
-  placement?: string; // Tracking parameter (e.g., 'ig-story', 'tt-bio')
+  placement?: string;
 }
 
-// Country data with flags and full names
-const COUNTRIES: Record<string, { flag: string; name: string }> = {
-  US: { flag: '🇺🇸', name: 'United States' },
-  UK: { flag: '🇬🇧', name: 'United Kingdom' },
-  DE: { flag: '🇩🇪', name: 'Germany' },
-  FR: { flag: '🇫🇷', name: 'France' },
-  CA: { flag: '🇨🇦', name: 'Canada' },
-  AU: { flag: '🇦🇺', name: 'Australia' },
-  JP: { flag: '🇯🇵', name: 'Japan' },
-  BR: { flag: '🇧🇷', name: 'Brazil' },
-  ES: { flag: '🇪🇸', name: 'Spain' },
-  IT: { flag: '🇮🇹', name: 'Italy' },
-  NL: { flag: '🇳🇱', name: 'Netherlands' },
-  CZ: { flag: '🇨🇿', name: 'Czechia' },
-};
-
-// Sample mock data generator with placement data
-const generateSampleData = (): Transaction[] => {
-  const sampleTransactions: Transaction[] = [
-    {
-      id: 'sample-1',
-      date: new Date(Date.now() - 1000 * 60 * 30),
-      type: 'sale',
-      description: 'Yuki Tanada',
-      amount: 49.00,
-      source: 'Gumroad',
-      sourceIcon: 'gumroad',
-      linkId: '1',
-      linkAlias: 'ebook',
-      location: 'JP',
-      placement: 'ig-story',
-    },
-    {
-      id: 'sample-2',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      type: 'lead',
-      description: 'newsletter@email.com',
-      amount: null,
-      source: 'Direct Link',
-      sourceIcon: 'direct',
-      linkId: '2',
-      linkAlias: 'signup',
-      location: 'DE',
-      placement: 'tt-bio',
-    },
-    {
-      id: 'sample-3',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 3),
-      type: 'sale',
-      description: 'Marcus Chen',
-      amount: 199.00,
-      source: 'Stripe',
-      sourceIcon: 'stripe',
-      linkId: '3',
-      linkAlias: 'course',
-      location: 'US',
-      placement: 'yt-shorts',
-    },
-    {
-      id: 'sample-4',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 5),
-      type: 'click',
-      description: 'visitor@gmail.com',
-      amount: null,
-      source: 'Direct Link',
-      sourceIcon: 'direct',
-      linkId: '1',
-      linkAlias: 'promo',
-      location: 'FR',
-      placement: 'ig-story',
-    },
-    {
-      id: 'sample-5',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 8),
-      type: 'sale',
-      description: 'Sarah Johnson',
-      amount: 79.00,
-      source: 'Lemon Squeezy',
-      sourceIcon: 'lemon',
-      linkId: '2',
-      linkAlias: 'bundle',
-      location: 'CA',
-      placement: 'ig-story',
-    },
-    {
-      id: 'sample-6',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 10),
-      type: 'click',
-      description: 'john.doe@example.com',
-      amount: null,
-      source: 'Direct Link',
-      sourceIcon: 'direct',
-      linkId: '3',
-      linkAlias: 'course',
-      location: 'UK',
-      placement: undefined, // Direct/Other
-    },
-    {
-      id: 'sample-7',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 12),
-      type: 'lead',
-      description: 'Emma Wilson',
-      amount: null,
-      source: 'Webhook',
-      sourceIcon: 'direct',
-      linkId: '1',
-      linkAlias: 'ebook',
-      location: 'AU',
-      placement: 'ig-reels',
-    },
-  ];
-
-  return sampleTransactions;
-};
+// Sample mock data for demo purposes (shown only when user has no real data)
+const SAMPLE_TRANSACTIONS: Transaction[] = [
+  {
+    id: 'sample-1',
+    date: new Date(Date.now() - 1000 * 60 * 30),
+    type: 'sale',
+    description: 'Yuki Tanada',
+    amount: 49.00,
+    source: 'Gumroad',
+    sourceIcon: 'gumroad',
+    linkId: '1',
+    linkAlias: 'ebook',
+    location: 'JP',
+    placement: 'ig-story',
+  },
+  {
+    id: 'sample-2',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 2),
+    type: 'lead',
+    description: 'newsletter@email.com',
+    amount: null,
+    source: 'Direct Link',
+    sourceIcon: 'direct',
+    linkId: '2',
+    linkAlias: 'signup',
+    location: 'DE',
+    placement: 'tt-bio',
+  },
+  {
+    id: 'sample-3',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 3),
+    type: 'sale',
+    description: 'Marcus Chen',
+    amount: 199.00,
+    source: 'Stripe',
+    sourceIcon: 'stripe',
+    linkId: '3',
+    linkAlias: 'course',
+    location: 'US',
+    placement: 'yt-shorts',
+  },
+  {
+    id: 'sample-4',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 5),
+    type: 'click',
+    description: 'visitor@gmail.com',
+    amount: null,
+    source: 'Direct Link',
+    sourceIcon: 'direct',
+    linkId: '1',
+    linkAlias: 'promo',
+    location: 'FR',
+    placement: 'ig-story',
+  },
+  {
+    id: 'sample-5',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 8),
+    type: 'sale',
+    description: 'Sarah Johnson',
+    amount: 79.00,
+    source: 'Lemon Squeezy',
+    sourceIcon: 'lemon',
+    linkId: '2',
+    linkAlias: 'bundle',
+    location: 'CA',
+    placement: 'ig-story',
+  },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -185,8 +140,8 @@ const Dashboard = () => {
   const { profile } = useProfile();
   const { tier: subscriptionTier } = useSubscription();
   const { formatInTimezone } = useTimezone();
+  const { clicksTrend, leadsTrend, salesTrend, conversionTrend, epcTrend } = useTrends(7);
   
-  const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
@@ -242,7 +197,8 @@ const Dashboard = () => {
     return 'Ghost';
   }, [profile, user]);
   
-  const isFreeTier = userTier === 'free';
+  // Determine if user is on free tier
+  const isFreeTier = subscriptionTier === 'free';
 
   // Build transactions from clicks and conversions
   const realTransactions: Transaction[] = useMemo(() => {
@@ -301,7 +257,7 @@ const Dashboard = () => {
   // Combine real data with sample data if enabled
   const transactions = useMemo(() => {
     if (showSampleData && realTransactions.length === 0) {
-      return generateSampleData();
+      return SAMPLE_TRANSACTIONS;
     }
     return realTransactions;
   }, [realTransactions, showSampleData]);
@@ -513,7 +469,7 @@ const Dashboard = () => {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar
             userEmail={user?.email}
-            userTier={userTier}
+            userTier={subscriptionTier}
             onOpenSettings={() => setSettingsOpen(true)}
             onOpenDataIntegration={() => setDataIntegrationOpen(true)}
             onSignOut={signOut}
@@ -529,7 +485,7 @@ const Dashboard = () => {
                     label="Total Clicks"
                     value={displayStats.totalClicks.toLocaleString()}
                     icon={MousePointer}
-                    trend={{ value: 12.5, isPositive: true }}
+                    trend={clicksTrend ?? undefined}
                     accentColor="primary"
                     compact
                   />
@@ -537,7 +493,7 @@ const Dashboard = () => {
                     label="Total Leads"
                     value={displayStats.totalLeads.toLocaleString()}
                     icon={Users}
-                    trend={{ value: 8.3, isPositive: true }}
+                    trend={leadsTrend ?? undefined}
                     isLocked={isFreeTier}
                     accentColor="warning"
                     compact
@@ -546,7 +502,7 @@ const Dashboard = () => {
                     label="Total Sales"
                     value={displayStats.totalSales.toLocaleString()}
                     icon={DollarSign}
-                    trend={{ value: 15.2, isPositive: true }}
+                    trend={salesTrend ?? undefined}
                     isLocked={isFreeTier}
                     accentColor="success"
                     compact
@@ -555,7 +511,7 @@ const Dashboard = () => {
                     label="Conversion Rate"
                     value={`${displayStats.conversionRate.toFixed(2)}%`}
                     icon={Percent}
-                    trend={{ value: 2.1, isPositive: true }}
+                    trend={conversionTrend ?? undefined}
                     isLocked={isFreeTier}
                     accentColor="chart-conversions"
                     compact
@@ -564,7 +520,7 @@ const Dashboard = () => {
                     label="EPC"
                     value={formatCurrency(displayStats.earningsPerClick)}
                     icon={TrendingUp}
-                    trend={{ value: 5.7, isPositive: true }}
+                    trend={epcTrend ?? undefined}
                     isLocked={isFreeTier}
                     accentColor="success"
                     compact
@@ -822,8 +778,8 @@ const Dashboard = () => {
         <SettingsDrawer
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
-          userTier={userTier}
-          onChangeTier={setUserTier}
+          userTier={subscriptionTier}
+          onChangeTier={() => {}} // Tier is managed by subscription
         />
 
         <DataIntegrationModal

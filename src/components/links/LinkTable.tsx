@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { getTrackingUrl, getDisplayUrl } from '@/lib/trackingUrl';
+import { useMultipleLinksClickHistory } from '@/hooks/useClickHistory';
 import type { GhostLink, TierType } from '@/types';
 
 interface LinkTableProps {
@@ -46,6 +47,7 @@ interface LinkRowProps {
   onEdit?: (link: GhostLink) => void;
   isSelected?: boolean;
   onSelect?: (linkId: string) => void;
+  sparklineData: number[];
 }
 
 // Extract domain from URL for favicon
@@ -114,21 +116,13 @@ function LinkRow({
   onDelete,
   onEdit,
   isSelected = false,
-  onSelect
+  onSelect,
+  sparklineData
 }: LinkRowProps) {
   const isFreeTier = userTier === 'free';
   const displayUrl = getDisplayUrl(link.alias);
   const trackingUrl = getTrackingUrl(link.alias);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  
-  // Generate mock sparkline data (last 24 hours trend)
-  const sparklineData = useMemo(() => {
-    // Simple mock: create 12 data points based on clicks with some variance
-    const baseValue = link.clicks / 24;
-    return Array.from({ length: 12 }, (_, i) => 
-      Math.max(0, Math.round(baseValue * (0.5 + Math.random())))
-    );
-  }, [link.clicks]);
 
   // handleCopyLink removed - now handled by SmartCopyMenu
 
@@ -278,6 +272,10 @@ export function LinkTable({
 }: LinkTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Fetch real click history for sparklines
+  const linkIds = useMemo(() => links.map(l => l.id), [links]);
+  const { sparklineDataByLink } = useMultipleLinksClickHistory(linkIds, 24);
+
   const filteredLinks = useMemo(() => {
     let filtered = links;
     
@@ -294,6 +292,9 @@ export function LinkTable({
   }, [links, searchQuery]);
 
   const totalCount = links.length;
+
+  // Default empty sparkline data
+  const emptySparkline = Array(12).fill(0);
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
@@ -337,6 +338,7 @@ export function LinkTable({
               onEdit={onEditLink}
               isSelected={activeLinkId === link.id}
               onSelect={onLinkSelect}
+              sparklineData={sparklineDataByLink[link.id] || emptySparkline}
             />
           ))
         ) : (

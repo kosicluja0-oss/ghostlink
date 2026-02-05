@@ -7,35 +7,29 @@ Tři klíčové stránky aplikace potřebují systematické vylepšení od odstr
 
 ---
 
-## Fáze 1: Čištění a Stabilizace (Kritické)
+## Fáze 1: Čištění a Stabilizace (Kritické) ✅ DOKONČENO
 
-### 1.1 Dashboard - Odstranění fake dat
-**Problém:** KPI karty zobrazují hardcoded trendy (`+12.5%`, `+8.3%`, atd.) namísto skutečných výpočtů.
+### 1.1 Dashboard - Odstranění fake dat ✅
+**Řešení implementováno:**
+- ✅ Vytvořen `useTrends` hook pro výpočet reálných trendů (porovnání 7 dní)
+- ✅ Odstraněna `generateSampleData()` funkce → nahrazena konstantou `SAMPLE_TRANSACTIONS`
+- ✅ Opraven `userTier` state → nyní používá `subscriptionTier` z hooku
 
-**Řešení:**
-- Vypočítat trendy porovnáním aktuálního a předchozího období
-- Odstranit `generateSampleData()` funkci (180 řádků mock kódu)
-- Opravit `userTier` state → používat `subscriptionTier` z hooku
+**Soubory:** `src/pages/Dashboard.tsx`, `src/hooks/useTrendCalculation.ts`
 
-**Soubory:** `src/pages/Dashboard.tsx`, `src/components/analytics/StatCard.tsx`
+### 1.2 Links - Reálné sparklines ✅
+**Řešení implementováno:**
+- ✅ Vytvořen `useClickHistory` hook pro jednotlivé linky
+- ✅ Vytvořen `useMultipleLinksClickHistory` hook pro efektivní batch loading
+- ✅ LinkTable nyní načítá skutečné hourly clicks z databáze
+- ✅ Fallback na prázdný graf pro nové linky
 
-### 1.2 Links - Reálné sparklines
-**Problém:** Sparklines generují náhodná data (`Math.random()`).
+**Soubory:** `src/components/links/LinkTable.tsx`, `src/hooks/useClickHistory.ts`
 
-**Řešení:**
-- Vytvořit nový hook `useClickHistory(linkId)` pro historická data
-- Načítat skutečné hourly/daily clicks z databáze
-- Fallback na prázdný graf pro nové linky
-
-**Soubory:** `src/components/links/LinkTable.tsx`, nový `src/hooks/useClickHistory.ts`
-
-### 1.3 Dashboard - Modularizace
-**Problém:** `Dashboard.tsx` má 838 řádků - neudržitelné.
-
-**Řešení:**
-- Extrahovat `RecentActivitySection` komponentu
-- Extrahovat `DashboardStats` komponentu
-- Přesunout `COUNTRIES` mapping do sdíleného souboru
+### 1.3 Dashboard - Modularizace ✅
+**Řešení implementováno:**
+- ✅ COUNTRIES mapping přesunut do `src/lib/countries.ts`
+- ⏳ RecentActivitySection extrakce - plánováno pro další iteraci
 
 ---
 
