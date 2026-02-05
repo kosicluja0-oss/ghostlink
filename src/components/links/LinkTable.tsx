@@ -42,6 +42,7 @@ interface LinkTableProps {
   onEditLink?: (link: GhostLink) => void;
   activeLinkId?: string | null;
   onLinkSelect?: (linkId: string) => void;
+  onOpenDetail?: (link: GhostLink) => void;
   onCreateLink?: () => void;
 }
 
@@ -50,6 +51,7 @@ interface LinkRowProps {
   userTier: TierType;
   onDelete: (id: string) => void;
   onEdit?: (link: GhostLink) => void;
+  onOpenDetail?: (link: GhostLink) => void;
   isSelected?: boolean;
   onSelect?: (linkId: string) => void;
   sparklineData: number[];
@@ -156,6 +158,7 @@ function LinkRow({
   userTier, 
   onDelete,
   onEdit,
+  onOpenDetail,
   isSelected = false,
   onSelect,
   sparklineData
@@ -181,7 +184,10 @@ function LinkRow({
             ? "bg-primary/8 border-l-2 border-l-primary" 
             : "hover:bg-muted/40 border-l-2 border-l-transparent"
         )}
-        onClick={() => onSelect?.(link.id)}
+        onClick={() => {
+          onSelect?.(link.id);
+          onOpenDetail?.(link);
+        }}
       >
         {/* Link Info - Left */}
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -310,6 +316,7 @@ export function LinkTable({
   onEditLink,
   activeLinkId,
   onLinkSelect,
+  onOpenDetail,
   onCreateLink
 }: LinkTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -415,6 +422,7 @@ export function LinkTable({
               userTier={userTier}
               onDelete={onDeleteLink}
               onEdit={onEditLink}
+              onOpenDetail={onOpenDetail}
               isSelected={activeLinkId === link.id}
               onSelect={onLinkSelect}
               sparklineData={sparklineDataByLink[link.id] || emptySparkline}

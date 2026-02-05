@@ -8,6 +8,7 @@ import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { EditLinkModal } from '@/components/links/EditLinkModal';
+import { LinkDetailPanel } from '@/components/links/LinkDetailPanel';
 import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -26,6 +27,8 @@ const Links = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<GhostLink | null>(null);
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
+  const [detailLink, setDetailLink] = useState<GhostLink | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   
   // Use real data hooks
   const { links, addLink, updateLink, deleteLink } = useLinks();
@@ -37,6 +40,12 @@ const Links = () => {
   // Handle link selection
   const handleLinkSelect = useCallback((linkId: string) => {
     setActiveLinkId(prev => prev === linkId ? null : linkId);
+  }, []);
+
+  const handleOpenDetail = useCallback((link: GhostLink) => {
+    setDetailLink(link);
+    setDetailOpen(true);
+    setActiveLinkId(link.id);
   }, []);
 
   const handleEditLink = useCallback((link: GhostLink) => {
@@ -102,6 +111,7 @@ const Links = () => {
                   onEditLink={handleEditLink}
                   activeLinkId={activeLinkId}
                   onLinkSelect={handleLinkSelect}
+                  onOpenDetail={handleOpenDetail}
                   onCreateLink={() => setCreateModalOpen(true)}
                 />
               </section>
@@ -132,6 +142,12 @@ const Links = () => {
           link={editingLink}
           userTier={userTier}
           onSave={handleSaveLink}
+        />
+
+        <LinkDetailPanel
+          link={detailLink}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
         />
       </SidebarProvider>
     </TooltipProvider>
