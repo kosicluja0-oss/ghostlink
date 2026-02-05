@@ -26,7 +26,6 @@ import { useLinks } from '@/hooks/useLinks';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { useIntegrations } from '@/hooks/useIntegrations';
 import { useSubscription } from '@/hooks/useSubscription';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Integration data with reliable SimpleIcons CDN logos
@@ -291,7 +290,7 @@ const Integrations = () => {
   const { user, signOut } = useAuth();
   const { links } = useLinks();
   const openTicketsCount = useOpenTicketsCount();
-  const { tier: userTier, isSubscribed } = useSubscription();
+  const { tier: userTier } = useSubscription();
   const { 
     getIntegrationStatus, 
     connect, 
@@ -319,7 +318,7 @@ const Integrations = () => {
     [links]
   );
 
-  // Map static integrations with real status from database/subscription
+  // Map static integrations with real status from database
   const integrationsWithStatus = useMemo(() => {
     return INTEGRATIONS.map(integration => ({
       ...integration,
@@ -336,41 +335,18 @@ const Integrations = () => {
     return grouped;
   }, [integrationsWithStatus]);
 
-  // Handle Stripe customer portal
-  const openCustomerPortal = useCallback(async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('create-portal-session');
-      if (error) throw error;
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening customer portal:', error);
-      toast.error('Failed to open billing portal');
-    }
-  }, []);
-
+  // Uniform connect handler — same for all integrations including Stripe
   const handleConnect = useCallback((integrationId: string) => {
-    // Special case for Stripe
-    if (integrationId === 'stripe') {
-      if (isSubscribed) {
-        openCustomerPortal();
-      } else {
-        navigate('/settings');
-      }
-      return;
-    }
-
     const integration = integrationsWithStatus.find(i => i.id === integrationId);
     if (integration && !integration.comingSoon) {
       setSelectedIntegration(integration);
       setConnectModalOpen(true);
     }
-  }, [integrationsWithStatus, isSubscribed, navigate, openCustomerPortal]);
+  }, [integrationsWithStatus]);
 
-  const handleConfirmConnection = useCallback(async (integrationId: string, _linkId: string | null) => {
+  const handleConfirmConnection = useCallback(async (integrationId: string, linkId: string | null, _webhookToken: string) => {
     try {
-      await connect({ serviceId: integrationId });
+      await connect({ serviceId: integrationId, linkId });
       toast.success('Integration connected! Waiting for first event...');
     } catch (error) {
       console.error('Error connecting integration:', error);

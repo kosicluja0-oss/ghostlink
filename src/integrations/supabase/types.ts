@@ -85,9 +85,11 @@ export type Database = {
           created_at: string
           id: string
           last_verified_at: string | null
+          link_id: string | null
           service_id: string
           status: string
           user_id: string
+          webhook_token: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -96,9 +98,11 @@ export type Database = {
           created_at?: string
           id?: string
           last_verified_at?: string | null
+          link_id?: string | null
           service_id: string
           status?: string
           user_id: string
+          webhook_token?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -107,12 +111,22 @@ export type Database = {
           created_at?: string
           id?: string
           last_verified_at?: string | null
+          link_id?: string | null
           service_id?: string
           status?: string
           user_id?: string
+          webhook_token?: string | null
           webhook_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "integrations_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       links: {
         Row: {
