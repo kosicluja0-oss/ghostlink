@@ -1,263 +1,133 @@
 
-# Fáze 3: Integrations - Persistence a Skutečná Funkcionalita
 
-## Přehled
+# Oprava Conversion Tracking -- Link-Level Attribution
 
-Tato fáze zavede databázovou persistenci pro integrace třetích stran a propojí existující Stripe subscription stav s UI. Stripe bude speciální případ - využije existující data z `profiles` tabulky.
+## Problem
+
+Soucasny postback endpoint vyzaduje `click_id` (UUID), ktery zna pouze Ghost Link. Externi platformy jako Gumroad, Stripe ci Lemon Squeezy posilaji sve vlastni payload formaty a `click_id` neznaji. Vysledek: 90% integraci na strance nefunguje.
+
+## Reseni
+
+Prechod z **click-level attribution** na **link-level attribution** s podporou unikatnich tokenu pro kazdeho uzivatele a sluzbu.
 
 ---
 
-## 3.1 Databázová tabulka pro integrace
+## 1. Databazova zmena -- pridani tokenu
 
-### SQL Migrace
+Pridame sloupec `webhook_token` do existujici tabulky `integrations` a sloupec `link_id` pro prirazeni ke konkretnimu linku.
 
 ```sql
-CREATE TABLE public.integrations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  service_id TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  webhook_url TEXT,
-  config JSONB DEFAULT '{}',
-  connected_at TIMESTAMPTZ,
-  last_verified_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  
-  UNIQUE(user_id, service_id)
-);
-
--- RLS politiky
-ALTER TABLE public.integrations ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their own integrations"
-  ON public.integrations FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own integrations"
-  ON public.integrations FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own integrations"
-  ON public.integrations FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own integrations"
-  ON public.integrations FOR DELETE
-  USING (auth.uid() = user_id);
+ALTER TABLE public.integrations
+  ADD COLUMN IF NOT EXISTS webhook_token TEXT UNIQUE,
+  ADD COLUMN IF NOT EXISTS link_id UUID REFERENCES public.links(id) ON DELETE SET NULL;
 ```
 
-**Sloupce:**
-- `service_id` - identifikátor služby (např. "gumroad", "discord", "zapier")
-- `status` - stav připojení: `pending` | `connected` | `error`
-- `webhook_url` - vygenerovaná URL pro danou integraci
-- `config` - JSONB pro dodatečná nastavení (API klíče, channel IDs apod.)
-- `last_verified_at` - poslední úspěšný ping/verifikace
+Token bude nahodny retezec (ne UUID, aby vypadal jinak nez click_id), napr. `gl_a7x9k2m4p1`.
 
 ---
 
-## 3.2 Hook: useIntegrations()
+## 2. Uprava postback Edge Function
 
-### Nový soubor: `src/hooks/useIntegrations.ts`
+Soucasna funkce podporuje pouze:
+```
+GET /postback?click_id=UUID&type=sale&value=49.99
+```
+
+Nova funkce bude podporovat DVA rezimy:
+
+**Rezim A -- Token (pro integrace)**
+```
+POST /postback?token=gl_a7x9k2m4p1
+```
+- Prijme JAKYKOLI payload (Gumroad, Stripe, cokoliv)
+- Vyhleda token v tabulce `integrations` -> ziska `user_id`, `service_id`, `link_id`
+- Pokusi se z payloadu extrahovat castku (hledane klice: `price`, `amount`, `value`, `total`)
+- Vytvori zaznam v `conversions` prirazeny k poslednimu kliku na danem linku
+- Pokud zadny klik neexistuje, vytvori "virtualni" klik pro evidenci
+
+**Rezim B -- Click ID (pro affiliate site a developery)**
+```
+GET /postback?click_id=UUID&type=sale&value=49.99
+```
+- Funguje presne jako dnes, zadna zmena
+- Pro ClickBank, Digistore24 a vlastni implementace
+
+Logika v kodu:
+```text
+if (token parameter exists) -> Rezim A (link-level)
+else if (click_id parameter exists) -> Rezim B (click-level, beze zmeny)
+else -> 400 error
+```
+
+---
+
+## 3. Uprava useIntegrations hooku
+
+- Odstranit Stripe vyjimku (Stripe = stejna integrace jako Gumroad)
+- Pri `connect()` generovat nahodny `webhook_token`
+- Ukladat `link_id` z modalu (Step 3)
+- Webhook URL bude: `https://PROJECT.supabase.co/functions/v1/postback?token={webhook_token}`
 
 ```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { useSubscription } from './useSubscription';
-
-export type IntegrationStatus = 'not_connected' | 'pending' | 'connected' | 'error';
-
-export interface UserIntegration {
-  id: string;
-  serviceId: string;
-  status: IntegrationStatus;
-  webhookUrl: string | null;
-  config: Record<string, unknown>;
-  connectedAt: string | null;
-  lastVerifiedAt: string | null;
+// Generovani tokenu
+function generateToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let token = 'gl_';
+  for (let i = 0; i < 10; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
 }
 
-export function useIntegrations() {
-  const { user } = useAuth();
-  const { isSubscribed, tier } = useSubscription();
-  const queryClient = useQueryClient();
-
-  // Fetch user's integrations from database
-  const { data: dbIntegrations, isLoading } = useQuery({
-    queryKey: ['integrations', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('integrations')
-        .select('*')
-        .eq('user_id', user!.id);
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user?.id,
-  });
-
-  // Get integration status for a service (including Stripe special case)
-  const getIntegrationStatus = (serviceId: string): IntegrationStatus => {
-    // Special case: Stripe uses subscription data from profiles
-    if (serviceId === 'stripe') {
-      return isSubscribed ? 'connected' : 'not_connected';
-    }
-    
-    const integration = dbIntegrations?.find(i => i.service_id === serviceId);
-    return (integration?.status as IntegrationStatus) || 'not_connected';
-  };
-
-  // Connect a new integration
-  const connectMutation = useMutation({
-    mutationFn: async ({ serviceId, config }: { serviceId: string; config?: Record<string, unknown> }) => {
-      const webhookUrl = generateWebhookUrl(serviceId, user!.id);
-      
-      const { data, error } = await supabase
-        .from('integrations')
-        .upsert({
-          user_id: user!.id,
-          service_id: serviceId,
-          status: 'pending',
-          webhook_url: webhookUrl,
-          config: config || {},
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['integrations'] });
-    },
-  });
-
-  // Disconnect an integration
-  const disconnectMutation = useMutation({
-    mutationFn: async (serviceId: string) => {
-      const { error } = await supabase
-        .from('integrations')
-        .delete()
-        .eq('user_id', user!.id)
-        .eq('service_id', serviceId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['integrations'] });
-    },
-  });
-
-  return {
-    integrations: dbIntegrations || [],
-    isLoading,
-    getIntegrationStatus,
-    connect: connectMutation.mutate,
-    disconnect: disconnectMutation.mutate,
-    isConnecting: connectMutation.isPending,
-    // Stripe-specific data
-    stripeConnected: isSubscribed,
-    stripeTier: tier,
-  };
-}
-
-// Generate unique webhook URL for each service
-function generateWebhookUrl(serviceId: string, userId: string): string {
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  return `https://${projectId}.supabase.co/functions/v1/postback?source=${serviceId}&user_id=${userId}`;
+// Webhook URL uz nebude obsahovat placeholdery
+function getWebhookUrl(token: string): string {
+  return `https://${projectId}.supabase.co/functions/v1/postback?token=${token}`;
 }
 ```
 
 ---
 
-## 3.3 Úprava Integrations stránky
+## 4. Uprava ConnectServiceModal
 
-### Změny v `src/pages/Integrations.tsx`
-
-```typescript
-// Import nového hooku
-import { useIntegrations } from '@/hooks/useIntegrations';
-import { useSubscription } from '@/hooks/useSubscription';
-
-const Integrations = () => {
-  // Nové hooky
-  const { 
-    getIntegrationStatus, 
-    connect, 
-    disconnect,
-    isLoading: integrationsLoading 
-  } = useIntegrations();
-  
-  const { tier, isSubscribed } = useSubscription();
-
-  // Dynamicky přiřadit status z databáze/subscription
-  const integrationsWithStatus = useMemo(() => {
-    return INTEGRATIONS.map(integration => ({
-      ...integration,
-      status: getIntegrationStatus(integration.id),
-    }));
-  }, [getIntegrationStatus, INTEGRATIONS]);
-
-  // Handler pro connect - speciální logika pro Stripe
-  const handleConnect = (integrationId: string) => {
-    if (integrationId === 'stripe') {
-      // Přesměrovat na ceník nebo billing portal
-      if (isSubscribed) {
-        openCustomerPortal(); // Existující funkce
-      } else {
-        navigate('/settings'); // Nebo modal s plány
-      }
-      return;
-    }
-    
-    // Pro ostatní služby - otevřít modal
-    const integration = integrationsWithStatus.find(i => i.id === integrationId);
-    if (integration) {
-      setSelectedIntegration(integration);
-      setConnectModalOpen(true);
-    }
-  };
-
-  // Handler po potvrzení v modalu - uložit do DB
-  const handleConfirmConnection = async (integrationId: string, _linkId: string | null) => {
-    await connect({ serviceId: integrationId });
-  };
-};
-```
+- Step 2 (Copy URL): Zobrazit **unikatni** URL s tokenem (ne genericku)
+- Step 3 (Assign Link): Link prirazeni se ulozi do `integrations.link_id`
+- Po potvrzeni: ulozit do DB vcetne tokenu, link_id, a webhook_url
+- Tip text zmenit na: "Paste this URL in [Platform]. Any sale will be automatically tracked."
 
 ---
 
-## 3.4 Vizuální úpravy IntegrationCard pro Stripe
+## 5. Uprava IntegrationCard
 
-### Speciální zobrazení pro Stripe kartu:
-
-Když je Stripe `connected`:
-- Zobrazit aktuální tier (Pro/Business) jako badge
-- Tlačítko "Manage" místo "Connect"
-- Zelený glow efekt (již implementováno)
-
-Když není connected:
-- Tlačítko "Upgrade" s přesměrováním na plány
+- Odstranit VESKEROU specialni logiku pro Stripe
+- Stripe = stejna karta jako Gumroad, Lemon Squeezy atd.
+- Zadne "Upgrade" tlacitko, zadne tier badge
+- Pouze: Connect / Pending / Live / Manage (stejne jako vsechny ostatni)
 
 ---
 
-## Souhrn změn
+## 6. Uprava Integrations.tsx
+
+- Odstranit `openCustomerPortal` logiku pro Stripe
+- Odstranit import `useSubscription` (pokud neni potreba jinde)
+- `handleConnect` -- jednotna logika pro vsechny platformy vcetne Stripe
+
+---
+
+## Souhrn zmen
 
 | Soubor | Akce |
 |--------|------|
-| `supabase/migrations/xxx_create_integrations.sql` | Nový - tabulka + RLS |
-| `src/hooks/useIntegrations.ts` | Nový - CRUD hook |
-| `src/pages/Integrations.tsx` | Upravit - použít hook, dynamické statusy |
-| `src/components/integrations/IntegrationCard.tsx` | Upravit - speciální UI pro Stripe |
-| `src/integrations/supabase/types.ts` | Auto-generováno po migraci |
+| `supabase/migrations/xxx_add_webhook_token.sql` | Nova migrace -- token + link_id sloupce |
+| `supabase/functions/postback/index.ts` | Pridat Rezim A (token-based attribution) |
+| `src/hooks/useIntegrations.ts` | Odstranit Stripe vyjimku, generovat tokeny |
+| `src/components/integrations/ConnectServiceModal.tsx` | Unikatni URL s tokenem |
+| `src/components/integrations/IntegrationCard.tsx` | Odstranit Stripe specialni UI |
+| `src/pages/Integrations.tsx` | Odstranit Stripe specialni logiku |
 
----
+## Poznamky
 
-## Poznámky k implementaci
+- **Zpetna kompatibilita**: Rezim B (click_id) zustava beze zmeny, takze existujici Developer webhook a affiliate site funguji dal.
+- **Bezpecnost**: Token je nahodny a unikatni, bez nej nelze zapsat konverzi. RLS na tabulce integrations zarucuje, ze uzivatel vidi jen sve tokeny.
+- **Parsovani payloadu**: Rezim A se pokusi inteligentne extrahovat castku z jakehokoli JSON payloadu. Pokud se to nepodari, zapise konverzi s hodnotou 0 (uzivatel ji muze upravit pozdeji).
+- **Jednoduchost pro uzivatele**: Influencer pripoji platformu, zkopiruje URL, vlozi ji do nastaveni platformy, vybere link -- hotovo. Zadne technicke znalosti nejsou potreba.
 
-1. **Stripe je výjimka** - neukládá se do `integrations` tabulky, využívá existující `profiles.subscription_status`
-
-2. **Webhook URL generování** - každá integrace dostane unikátní URL s `source` parametrem pro identifikaci služby
-
-3. **Verifikace** - bod 3.2 z původní roadmapy (webhook ping) bude implementován ve Fázi 4, protože vyžaduje edge function pro každou službu
