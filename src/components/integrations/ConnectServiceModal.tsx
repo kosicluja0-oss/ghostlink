@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Check, ChevronRight, ExternalLink, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Integration } from './IntegrationCard';
+import { useIntegrations } from '@/hooks/useIntegrations';
 
 interface Link {
   id: string;
@@ -29,7 +30,7 @@ interface ConnectServiceModalProps {
   onOpenChange: (open: boolean) => void;
   integration: Integration | null;
   links: Link[];
-  onConfirmConnection: (integrationId: string, linkId: string | null) => void;
+  onConfirmConnection: (integrationId: string, linkId: string | null, webhookToken: string) => void;
 }
 
 // Service-specific instructions
@@ -316,6 +317,16 @@ const serviceInstructions: Record<string, {
   },
 };
 
+// Generate a preview token (gl_ + 10 random chars) for display before saving
+function generatePreviewToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let token = 'gl_';
+  for (let i = 0; i < 10; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
+}
+
 export function ConnectServiceModal({
   open,
   onOpenChange,
@@ -326,11 +337,22 @@ export function ConnectServiceModal({
   const [copied, setCopied] = useState(false);
   const [selectedLinkId, setSelectedLinkId] = useState<string>('all');
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [previewToken, setPreviewToken] = useState('');
 
   const supabaseProjectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'mlgrbwkddyrazysxrlvo';
+
+  // Generate a new preview token each time the modal opens with a new integration
+  useEffect(() => {
+    if (open && integration) {
+      setPreviewToken(generatePreviewToken());
+      setStep(1);
+      setSelectedLinkId('all');
+      setCopied(false);
+    }
+  }, [open, integration?.id]);
   
-  // Simplified webhook URL for beginners (no placeholders visible)
-  const webhookUrl = `https://${supabaseProjectId}.supabase.co/functions/v1/postback`;
+  // Build the unique webhook URL with this token
+  const webhookUrl = `https://${supabaseProjectId}.supabase.co/functions/v1/postback?token=${previewToken}`;
 
   const instructions = integration ? serviceInstructions[integration.id] : null;
 
@@ -347,7 +369,11 @@ export function ConnectServiceModal({
 
   const handleConfirm = () => {
     if (integration) {
-      onConfirmConnection(integration.id, selectedLinkId === 'all' ? null : selectedLinkId);
+      onConfirmConnection(
+        integration.id, 
+        selectedLinkId === 'all' ? null : selectedLinkId,
+        previewToken
+      );
       onOpenChange(false);
       setStep(1);
       toast.success(`${integration.name} connection initiated!`, {
@@ -476,7 +502,7 @@ export function ConnectServiceModal({
                 <div className="flex items-start gap-2 mt-3 p-2 rounded bg-primary/5 border border-primary/10">
                   <Info className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                   <p className="text-[11px] text-muted-foreground">
-                    This URL automatically tracks sales and leads from {integration.name}.
+                    Paste this URL in {integration.name}. Any sale will be automatically tracked.
                   </p>
                 </div>
               </div>
@@ -510,7 +536,7 @@ export function ConnectServiceModal({
                     3
                   </div>
                   <p className="text-sm font-medium text-foreground">
-                    Assign sales to a tracking link (optional)
+                    Assign sales to a tracking link
                   </p>
                 </div>
 

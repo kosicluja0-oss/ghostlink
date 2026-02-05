@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { useSubscription } from './useSubscription';
 
 export type IntegrationStatus = 'not_connected' | 'pending' | 'connected' | 'error';
 
@@ -11,26 +10,37 @@ export interface UserIntegration {
   service_id: string;
   status: IntegrationStatus;
   webhook_url: string | null;
+  webhook_token: string | null;
+  link_id: string | null;
   config: Record<string, unknown>;
   connected_at: string | null;
   last_verified_at: string | null;
   created_at: string;
 }
 
-// Generate unique webhook URL for each service
-function generateWebhookUrl(serviceId: string, userId: string): string {
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  return `https://${projectId}.supabase.co/functions/v1/postback?source=${serviceId}&user_id=${userId}`;
+// Generate a unique webhook token (gl_ prefix + 10 random chars)
+function generateToken(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let token = 'gl_';
+  for (let i = 0; i < 10; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
 }
 
-// Helper to execute raw queries on the integrations table
+// Build the webhook URL from a token
+function getWebhookUrl(token: string): string {
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  return `https://${projectId}.supabase.co/functions/v1/postback?token=${token}`;
+}
+
+// Helper to execute queries on the integrations table
 async function queryIntegrations(
   userId: string,
   method: 'select' | 'upsert' | 'update' | 'delete',
   options?: {
     serviceId?: string;
     data?: Record<string, unknown>;
-    returnData?: boolean;
   }
 ): Promise<{ data: UserIntegration[] | UserIntegration | null; error: Error | null }> {
   const client = supabase as unknown as {
@@ -82,7 +92,6 @@ async function queryIntegrations(
 
 export function useIntegrations() {
   const { user } = useAuth();
-  const { isSubscribed, tier } = useSubscription();
   const queryClient = useQueryClient();
 
   // Fetch user's integrations from database
@@ -96,13 +105,8 @@ export function useIntegrations() {
     enabled: !!user?.id,
   });
 
-  // Get integration status for a service (including Stripe special case)
+  // Get integration status for a service — no special cases
   const getIntegrationStatus = (serviceId: string): IntegrationStatus => {
-    // Special case: Stripe uses subscription data from profiles
-    if (serviceId === 'stripe') {
-      return isSubscribed ? 'connected' : 'not_connected';
-    }
-    
     const integration = dbIntegrations?.find(i => i.service_id === serviceId);
     return (integration?.status as IntegrationStatus) || 'not_connected';
   };
@@ -112,12 +116,13 @@ export function useIntegrations() {
     return dbIntegrations?.find(i => i.service_id === serviceId);
   };
 
-  // Connect a new integration
+  // Connect a new integration — generates unique token and assigns link
   const connectMutation = useMutation({
-    mutationFn: async ({ serviceId, config }: { serviceId: string; config?: Record<string, unknown> }) => {
+    mutationFn: async ({ serviceId, linkId, config }: { serviceId: string; linkId?: string | null; config?: Record<string, unknown> }) => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      const webhookUrl = generateWebhookUrl(serviceId, user.id);
+      const webhookToken = generateToken();
+      const webhookUrl = getWebhookUrl(webhookToken);
       
       const { data, error } = await queryIntegrations(user.id, 'upsert', {
         data: {
@@ -125,6 +130,8 @@ export function useIntegrations() {
           service_id: serviceId,
           status: 'pending',
           webhook_url: webhookUrl,
+          webhook_token: webhookToken,
+          link_id: linkId || null,
           config: config || {},
         }
       });
@@ -184,8 +191,5 @@ export function useIntegrations() {
     disconnect: disconnectMutation.mutateAsync,
     isConnecting: connectMutation.isPending,
     isDisconnecting: disconnectMutation.isPending,
-    // Stripe-specific data
-    stripeConnected: isSubscribed,
-    stripeTier: tier,
   };
 }

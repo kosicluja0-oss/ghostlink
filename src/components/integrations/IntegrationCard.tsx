@@ -10,7 +10,6 @@ export interface Integration {
   status: 'connected' | 'not_connected' | 'pending' | 'error';
   category: 'payment' | 'ecommerce' | 'creator' | 'affiliate' | 'automation' | 'developer' | 'marketing' | 'communication';
   comingSoon?: boolean;
-  tier?: string; // For Stripe - shows current tier when connected
 }
 
 interface IntegrationCardProps {
@@ -24,7 +23,6 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
   const isPending = integration.status === 'pending';
   const isError = integration.status === 'error';
   const isComingSoon = integration.comingSoon;
-  const isStripe = integration.id === 'stripe';
 
   // Generate initials for fallback
   const initials = integration.name
@@ -58,7 +56,7 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
       {isConnected && !isComingSoon && (
         <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-success/10 text-success text-xs font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-          {isStripe && integration.tier ? integration.tier.charAt(0).toUpperCase() + integration.tier.slice(1) : 'Live'}
+          Live
         </div>
       )}
       {isPending && !isComingSoon && (
@@ -105,7 +103,7 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
         </div>
       )}
 
-      {/* Action */}
+      {/* Action — uniform for all integrations */}
       {isComingSoon ? (
         <div className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-muted text-muted-foreground">
           <Clock className="w-4 h-4" />
@@ -122,29 +120,18 @@ export function IntegrationCard({ integration, onConnect }: IntegrationCardProps
               ? "bg-warning/10 text-warning hover:bg-warning/20"
               : isError
               ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
-              : isStripe && !isConnected
-              ? "bg-[#635BFF] text-white hover:bg-[#635BFF]/90"
               : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]"
           )}
         >
           {isConnected ? (
-            <>
-              Manage
-            </>
+            <>Manage</>
           ) : isPending ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               Awaiting Data
             </>
           ) : isError ? (
-            <>
-              Reconnect
-            </>
-          ) : isStripe ? (
-            <>
-              Upgrade
-              <ExternalLink className="w-3.5 h-3.5" />
-            </>
+            <>Reconnect</>
           ) : (
             <>
               Connect
