@@ -102,6 +102,7 @@ const Links = () => {
                   onEditLink={handleEditLink}
                   activeLinkId={activeLinkId}
                   onLinkSelect={handleLinkSelect}
+                  onCreateLink={() => setCreateModalOpen(true)}
                 />
               </section>
             </main>
