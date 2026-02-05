@@ -78,6 +78,42 @@ export type Database = {
           },
         ]
       }
+      integrations: {
+        Row: {
+          config: Json | null
+          connected_at: string | null
+          created_at: string
+          id: string
+          last_verified_at: string | null
+          service_id: string
+          status: string
+          user_id: string
+          webhook_url: string | null
+        }
+        Insert: {
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          service_id: string
+          status?: string
+          user_id: string
+          webhook_url?: string | null
+        }
+        Update: {
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string
+          id?: string
+          last_verified_at?: string | null
+          service_id?: string
+          status?: string
+          user_id?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       links: {
         Row: {
           bridge_page_config: Json | null
