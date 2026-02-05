@@ -1,133 +1,122 @@
 
 
-# Oprava Conversion Tracking -- Link-Level Attribution
+# Phase 4: Per-Link Analytics Detail Panel
 
-## Problem
+## Co se zmeni
 
-Soucasny postback endpoint vyzaduje `click_id` (UUID), ktery zna pouze Ghost Link. Externi platformy jako Gumroad, Stripe ci Lemon Squeezy posilaji sve vlastni payload formaty a `click_id` neznaji. Vysledek: 90% integraci na strance nefunguje.
+Kliknuti na radek linku v tabulce na strance `/links` otevre bocni panel (Sheet) s detailni analytikou pro dany link. Panel ukazuje:
 
-## Reseni
+- Mini KPI pruh (Clicks, Leads, Sales, EPC, CR)
+- 30-denni area chart kliku
+- Top Placements (odkud prichazi traffic)
+- Top Countries (geografie)
+- Conversion Funnel (Clicks -> Leads -> Sales)
 
-Prechod z **click-level attribution** na **link-level attribution** s podporou unikatnich tokenu pro kazdeho uzivatele a sluzbu.
-
----
-
-## 1. Databazova zmena -- pridani tokenu
-
-Pridame sloupec `webhook_token` do existujici tabulky `integrations` a sloupec `link_id` pro prirazeni ke konkretnimu linku.
-
-```sql
-ALTER TABLE public.integrations
-  ADD COLUMN IF NOT EXISTS webhook_token TEXT UNIQUE,
-  ADD COLUMN IF NOT EXISTS link_id UUID REFERENCES public.links(id) ON DELETE SET NULL;
-```
-
-Token bude nahodny retezec (ne UUID, aby vypadal jinak nez click_id), napr. `gl_a7x9k2m4p1`.
+Zadne zmeny v databazi nejsou potreba -- vsechna data uz existuji v tabulkach `clicks` a `conversions`.
 
 ---
 
-## 2. Uprava postback Edge Function
+## Nove soubory
 
-Soucasna funkce podporuje pouze:
-```
-GET /postback?click_id=UUID&type=sale&value=49.99
-```
+### 1. `src/hooks/useLinkAnalytics.ts`
 
-Nova funkce bude podporovat DVA rezimy:
+Dedikovaný hook, ktery pro zadane `linkId` nacte vsechna data jednim efektivnim dotazem:
 
-**Rezim A -- Token (pro integrace)**
-```
-POST /postback?token=gl_a7x9k2m4p1
-```
-- Prijme JAKYKOLI payload (Gumroad, Stripe, cokoliv)
-- Vyhleda token v tabulce `integrations` -> ziska `user_id`, `service_id`, `link_id`
-- Pokusi se z payloadu extrahovat castku (hledane klice: `price`, `amount`, `value`, `total`)
-- Vytvori zaznam v `conversions` prirazeny k poslednimu kliku na danem linku
-- Pokud zadny klik neexistuje, vytvori "virtualni" klik pro evidenci
+- Nacte kliky za poslednich 30 dni (`clicks` tabulka, filtrovano podle `link_id`)
+- Nacte konverze pres join s `clicks` tabulkou
+- Vypocita:
+  - Denni pocty kliku pro area chart (30 datovych bodu)
+  - Placement breakdown (top 5) z pole `source` na clicks
+  - Country breakdown (top 5) z pole `country` na clicks
+  - Funnel stats: celkove kliky, leads, sales, EPC, conversion rate
+- Pouzije `@tanstack/react-query` s klicem `['link-analytics', linkId]`
+- Maximalne 2 databazove dotazy (clicks + conversions)
 
-**Rezim B -- Click ID (pro affiliate site a developery)**
-```
-GET /postback?click_id=UUID&type=sale&value=49.99
-```
-- Funguje presne jako dnes, zadna zmena
-- Pro ClickBank, Digistore24 a vlastni implementace
+### 2. `src/components/links/LinkDetailPanel.tsx`
 
-Logika v kodu:
+Hlavni komponenta -- bocni Sheet panel:
+
+- Pouzije existujici `Sheet` komponentu (side="right"), sirsi nez default: `sm:max-w-lg`
+- Header: favicon + alias + target URL
+- KPI strip: 5 mini stat boxu v radku (Clicks, Leads, Sales, EPC, CR)
+- 30-denni area chart (jednoduchy, jen clicks, bez navigatoru)
+- Dva sloupce: Top Placements (levy) + Top Countries (pravy)
+- Conversion Funnel (spodni cast)
+- Pouzije `useLinkAnalytics` hook pro vsechna data
+- Skeleton loading stavy pri nacitani
+
+### 3. `src/components/analytics/MiniAreaChart.tsx`
+
+Kompaktni area chart pro detail panel:
+
+- Jedina metrika (clicks) s gradient fillem
+- Zadna interaktivita (bez zoomu, bez navigatoru)
+- 30-denni casovy rozsah, denni granularita
+- Minimalni popisky os (jen datumy)
+- Vyska ~120px
+- Pouzije stejny gradient styling jako hlavni `AnalyticsChart`
+- Jednoduchý Recharts `AreaChart` s `ResponsiveContainer`
+
+### 4. `src/components/analytics/ConversionFunnel.tsx`
+
+Horizontalni funnel vizualizace:
+
+- Tri propojene segmenty: Clicks -> Leads -> Sales
+- Kazdy segment ukazuje absolutni cislo a procentualni drop-off
+- Barevne kodovani: Primary (clicks), Warning/Yellow (leads), Success/Green (sales)
+- Sirka segmentu proporcionalni poctu
+- Minimalisticky design odpovidajici zbytku aplikace
+
+---
+
+## Upravene soubory
+
+### 5. `src/pages/Links.tsx`
+
+- Pridat stav `detailLink` (typ `GhostLink | null`) pro otevreny detail panel
+- Pridat stav `detailOpen` (boolean)
+- Upravit `handleLinkSelect` tak, aby pri kliku nastavil `detailLink` a otevrel Sheet
+- Renderovat `LinkDetailPanel` v JSX
+
+### 6. `src/components/links/LinkTable.tsx`
+
+- Pridat novou prop `onOpenDetail?: (link: GhostLink) => void`
+- Propagovat ji do `LinkRow`
+- V `LinkRow` pri kliku na radek zavolat `onOpenDetail(link)` misto puvodniho `onSelect`
+- Zachovat vizualni zvyrazneni vybraneho radku
+
+---
+
+## Technicke detaily
+
+### Data flow
+
 ```text
-if (token parameter exists) -> Rezim A (link-level)
-else if (click_id parameter exists) -> Rezim B (click-level, beze zmeny)
-else -> 400 error
+LinkTable (klik na radek)
+  -> Links.tsx (setDetailLink + setDetailOpen)
+    -> LinkDetailPanel (prijme GhostLink)
+      -> useLinkAnalytics(link.id)
+        -> Supabase: clicks WHERE link_id = X AND last 30 days
+        -> Supabase: conversions JOIN clicks WHERE link_id = X
+      -> MiniAreaChart (denni data)
+      -> TopPlacementsCard (existujici komponenta, reuse)
+      -> TopCountriesCard (existujici komponenta, reuse)
+      -> ConversionFunnel (nove)
 ```
 
----
+### Reuse existujicich komponent
 
-## 3. Uprava useIntegrations hooku
+- `TopPlacementsCard` -- uz existuje, prijima pole placement dat, pouzije se primo
+- `TopCountriesCard` -- uz existuje, prijima pole country dat, pouzije se primo
+- `parsePlacement()` z `PlacementBadge.tsx` -- pro mapovani `source` parametru na platformu/placement
+- `getCountryInfo()` z `countries.ts` -- pro vlajky a nazvy zemi
+- `Sheet` + `SheetContent` + `SheetHeader` z UI knihovny
 
-- Odstranit Stripe vyjimku (Stripe = stejna integrace jako Gumroad)
-- Pri `connect()` generovat nahodny `webhook_token`
-- Ukladat `link_id` z modalu (Step 3)
-- Webhook URL bude: `https://PROJECT.supabase.co/functions/v1/postback?token={webhook_token}`
+### Pocet databazovych dotazu
 
-```typescript
-// Generovani tokenu
-function generateToken(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let token = 'gl_';
-  for (let i = 0; i < 10; i++) {
-    token += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return token;
-}
+Pro kazde otevreni panelu: 2 dotazy
+1. `clicks` -- vsechny kliky pro dany link za 30 dni (source, country, created_at)
+2. `conversions` -- vsechny konverze pro dany link pres click_id join
 
-// Webhook URL uz nebude obsahovat placeholdery
-function getWebhookUrl(token: string): string {
-  return `https://${projectId}.supabase.co/functions/v1/postback?token=${token}`;
-}
-```
-
----
-
-## 4. Uprava ConnectServiceModal
-
-- Step 2 (Copy URL): Zobrazit **unikatni** URL s tokenem (ne genericku)
-- Step 3 (Assign Link): Link prirazeni se ulozi do `integrations.link_id`
-- Po potvrzeni: ulozit do DB vcetne tokenu, link_id, a webhook_url
-- Tip text zmenit na: "Paste this URL in [Platform]. Any sale will be automatically tracked."
-
----
-
-## 5. Uprava IntegrationCard
-
-- Odstranit VESKEROU specialni logiku pro Stripe
-- Stripe = stejna karta jako Gumroad, Lemon Squeezy atd.
-- Zadne "Upgrade" tlacitko, zadne tier badge
-- Pouze: Connect / Pending / Live / Manage (stejne jako vsechny ostatni)
-
----
-
-## 6. Uprava Integrations.tsx
-
-- Odstranit `openCustomerPortal` logiku pro Stripe
-- Odstranit import `useSubscription` (pokud neni potreba jinde)
-- `handleConnect` -- jednotna logika pro vsechny platformy vcetne Stripe
-
----
-
-## Souhrn zmen
-
-| Soubor | Akce |
-|--------|------|
-| `supabase/migrations/xxx_add_webhook_token.sql` | Nova migrace -- token + link_id sloupce |
-| `supabase/functions/postback/index.ts` | Pridat Rezim A (token-based attribution) |
-| `src/hooks/useIntegrations.ts` | Odstranit Stripe vyjimku, generovat tokeny |
-| `src/components/integrations/ConnectServiceModal.tsx` | Unikatni URL s tokenem |
-| `src/components/integrations/IntegrationCard.tsx` | Odstranit Stripe specialni UI |
-| `src/pages/Integrations.tsx` | Odstranit Stripe specialni logiku |
-
-## Poznamky
-
-- **Zpetna kompatibilita**: Rezim B (click_id) zustava beze zmeny, takze existujici Developer webhook a affiliate site funguji dal.
-- **Bezpecnost**: Token je nahodny a unikatni, bez nej nelze zapsat konverzi. RLS na tabulce integrations zarucuje, ze uzivatel vidi jen sve tokeny.
-- **Parsovani payloadu**: Rezim A se pokusi inteligentne extrahovat castku z jakehokoli JSON payloadu. Pokud se to nepodari, zapise konverzi s hodnotou 0 (uzivatel ji muze upravit pozdeji).
-- **Jednoduchost pro uzivatele**: Influencer pripoji platformu, zkopiruje URL, vlozi ji do nastaveni platformy, vybere link -- hotovo. Zadne technicke znalosti nejsou potreba.
+Cachovano pres react-query s `staleTime: 5 minut`.
 
