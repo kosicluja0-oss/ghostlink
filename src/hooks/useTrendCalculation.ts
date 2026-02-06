@@ -16,13 +16,12 @@ export function calculateTrend(current: number, previous: number): TrendResult |
   if (previous === 0 && current === 0) return null;
   
   if (previous === 0) {
-    // If previous is 0 but current has value, show +100%
     return { value: 100, isPositive: true };
   }
   
   const percentChange = ((current - previous) / previous) * 100;
   return {
-    value: Math.abs(Math.round(percentChange * 10) / 10), // Round to 1 decimal
+    value: Math.abs(Math.round(percentChange * 10) / 10),
     isPositive: percentChange >= 0,
   };
 }
@@ -44,8 +43,8 @@ interface UseTrendsResult {
 }
 
 /**
- * Hook to calculate real trends by comparing current period vs previous period.
- * Period length defaults to 7 days.
+ * Hook to calculate real trends using server-side aggregation.
+ * Uses get_period_stats RPC to avoid downloading all clicks (fixes 1000-row limit).
  */
 export function useTrends(periodDays = 7): UseTrendsResult {
   const { user } = useAuth();
@@ -61,65 +60,49 @@ export function useTrends(periodDays = 7): UseTrendsResult {
       const currentPeriodStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
       const previousPeriodStart = new Date(now.getTime() - periodDays * 2 * 24 * 60 * 60 * 1000);
 
-      // Fetch user's links first
-      const { data: links } = await supabase
-        .from('links')
-        .select('id')
-        .eq('user_id', user.id);
+      // Use server-side aggregation instead of fetching all clicks
+      const [currentResult, previousResult] = await Promise.all([
+        supabase.rpc('get_period_stats', {
+          p_user_id: user.id,
+          p_start: currentPeriodStart.toISOString(),
+          p_end: now.toISOString(),
+        }),
+        supabase.rpc('get_period_stats', {
+          p_user_id: user.id,
+          p_start: previousPeriodStart.toISOString(),
+          p_end: currentPeriodStart.toISOString(),
+        }),
+      ]);
 
-      const linkIds = links?.map((l) => l.id) || [];
-
-      if (linkIds.length === 0) {
+      if (currentResult.error) {
+        console.error('Error fetching current period stats:', currentResult.error);
+        return { current: emptyStats(), previous: emptyStats() };
+      }
+      if (previousResult.error) {
+        console.error('Error fetching previous period stats:', previousResult.error);
         return { current: emptyStats(), previous: emptyStats() };
       }
 
-      // Fetch clicks for both periods
-      const [currentClicksResult, previousClicksResult] = await Promise.all([
-        supabase
-          .from('clicks')
-          .select('id, link_id, created_at')
-          .in('link_id', linkIds)
-          .gte('created_at', currentPeriodStart.toISOString()),
-        supabase
-          .from('clicks')
-          .select('id, link_id, created_at')
-          .in('link_id', linkIds)
-          .gte('created_at', previousPeriodStart.toISOString())
-          .lt('created_at', currentPeriodStart.toISOString()),
-      ]);
+      const current = currentResult.data as unknown as PeriodStats;
+      const previous = previousResult.data as unknown as PeriodStats;
 
-      const currentClicks = currentClicksResult.data || [];
-      const previousClicks = previousClicksResult.data || [];
-
-      // Fetch conversions for both periods
-      const currentClickIds = currentClicks.map((c) => c.id);
-      const previousClickIds = previousClicks.map((c) => c.id);
-
-      const [currentConversionsResult, previousConversionsResult] = await Promise.all([
-        currentClickIds.length > 0
-          ? supabase
-              .from('conversions')
-              .select('type, value')
-              .in('click_id', currentClickIds)
-          : Promise.resolve({ data: [] }),
-        previousClickIds.length > 0
-          ? supabase
-              .from('conversions')
-              .select('type, value')
-              .in('click_id', previousClickIds)
-          : Promise.resolve({ data: [] }),
-      ]);
-
-      const currentConversions = currentConversionsResult.data || [];
-      const previousConversions = previousConversionsResult.data || [];
-
-      const currentStats = calculatePeriodStats(currentClicks.length, currentConversions);
-      const previousStats = calculatePeriodStats(previousClicks.length, previousConversions);
-
-      return { current: currentStats, previous: previousStats };
+      return {
+        current: {
+          clicks: Number(current.clicks),
+          leads: Number(current.leads),
+          sales: Number(current.sales),
+          earnings: Number(current.earnings),
+        },
+        previous: {
+          clicks: Number(previous.clicks),
+          leads: Number(previous.leads),
+          sales: Number(previous.sales),
+          earnings: Number(previous.earnings),
+        },
+      };
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
     refetchInterval: 1000 * 60 * 5,
   });
 
@@ -136,13 +119,11 @@ export function useTrends(periodDays = 7): UseTrendsResult {
 
     const { current, previous } = data;
 
-    // Calculate conversion rates
     const currentConversionRate =
       current.clicks > 0 ? ((current.leads + current.sales) / current.clicks) * 100 : 0;
     const previousConversionRate =
       previous.clicks > 0 ? ((previous.leads + previous.sales) / previous.clicks) * 100 : 0;
 
-    // Calculate EPC
     const currentEPC = current.clicks > 0 ? current.earnings / current.clicks : 0;
     const previousEPC = previous.clicks > 0 ? previous.earnings / previous.clicks : 0;
 
@@ -163,24 +144,4 @@ export function useTrends(periodDays = 7): UseTrendsResult {
 
 function emptyStats(): PeriodStats {
   return { clicks: 0, leads: 0, sales: 0, earnings: 0 };
-}
-
-function calculatePeriodStats(
-  clickCount: number,
-  conversions: Array<{ type: string; value: number }>
-): PeriodStats {
-  let leads = 0;
-  let sales = 0;
-  let earnings = 0;
-
-  conversions.forEach((conv) => {
-    if (conv.type === 'lead') {
-      leads++;
-    } else if (conv.type === 'sale') {
-      sales++;
-      earnings += Number(conv.value) || 0;
-    }
-  });
-
-  return { clicks: clickCount, leads, sales, earnings };
 }

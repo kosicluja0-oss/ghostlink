@@ -316,6 +316,10 @@ export type Database = {
     }
     Functions: {
       can_create_link: { Args: { p_user_id: string }; Returns: boolean }
+      get_daily_analytics: {
+        Args: { p_days?: number; p_user_id: string }
+        Returns: Json
+      }
       get_link_limit_info: {
         Args: { p_user_id: string }
         Returns: {
@@ -324,6 +328,22 @@ export type Database = {
           tier: string
         }[]
       }
+      get_link_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_period_stats: {
+        Args: { p_end: string; p_start: string; p_user_id: string }
+        Returns: Json
+      }
+      get_recent_activity: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      get_traffic_distribution: { Args: { p_user_id: string }; Returns: Json }
+      get_user_stats: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
