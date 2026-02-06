@@ -143,6 +143,7 @@ const Dashboard = () => {
   } = useTrends(7);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
+  const [timeRangeOpen, setTimeRangeOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
 
   // Welcome wizard state
@@ -389,12 +390,12 @@ const Dashboard = () => {
                 <div>
                   <h1 className="text-foreground text-sm font-semibold">Overview</h1>
                   <div className="mt-1.5">
-                    <Popover>
+                    <Popover onOpenChange={setTimeRangeOpen}>
                       <PopoverTrigger asChild>
-                        <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-muted/30 border border-border/50">
+                        <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-md bg-card border border-border hover:bg-muted/50">
                           <CalendarDays className="w-3.5 h-3.5" />
                           {TIME_RANGE_LABELS[timeRange]}
-                          <ChevronDown className="w-3 h-3" />
+                          <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${timeRangeOpen ? 'rotate-180' : ''}`} />
                         </button>
                       </PopoverTrigger>
                       <PopoverContent align="start" className="w-auto p-1.5 bg-card border border-border">
