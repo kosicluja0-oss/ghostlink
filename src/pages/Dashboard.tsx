@@ -410,112 +410,104 @@ const Dashboard = () => {
                 </div>
               </section>
 
-              {/* Chart + Analytics Widgets Row */}
+              {/* Chart + Activity Table Row */}
               <section className="mb-5">
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                   <div className="lg:col-span-3">
                     <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={null} selectedLinkAlias={undefined} onClearSelection={() => {}} links={links} />
                   </div>
-                  <div className="lg:col-span-2 flex flex-col gap-4">
-                    <TopCountriesCard countries={countryAnalytics} />
-                    <TopPlacementsCard placements={placementAnalytics} />
+                  <div className="lg:col-span-2">
+                    {showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
+                    {filteredTransactions.length === 0 && !showSampleData ? (
+                      <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border rounded-xl bg-card/50 h-full">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                          <MousePointerClick className="w-6 h-6 text-primary" />
+                        </div>
+                        <h3 className="text-sm font-semibold text-foreground mb-1">No activity yet</h3>
+                        <p className="text-xs text-muted-foreground text-center max-w-xs mb-4">
+                          Once you start getting clicks and conversions, they'll appear here.
+                        </p>
+                        <Button variant="outline" size="sm" onClick={() => setShowSampleData(true)} className="gap-2">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Show Sample Data
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border border-border rounded-xl overflow-hidden bg-card h-full flex flex-col">
+                        <div className="flex-1 overflow-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="hover:bg-transparent border-border bg-muted/30">
+                                <TableHead className="text-muted-foreground font-medium text-xs px-3">Event</TableHead>
+                                <TableHead className="text-muted-foreground font-medium text-xs px-3">Link</TableHead>
+                                <TableHead className="text-muted-foreground font-medium text-xs px-3">Customer</TableHead>
+                                <TableHead className="text-muted-foreground font-medium text-xs px-3 text-right">Amount</TableHead>
+                                <TableHead className="text-muted-foreground font-medium text-xs px-3 text-right">Date</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {paginatedTransactions.map(tx => (
+                                <TableRow key={tx.id} className="border-border hover:bg-muted/50 transition-colors">
+                                  <TableCell className="py-2.5 px-3">{getTypeBadge(tx.type)}</TableCell>
+                                  <TableCell className="py-2.5 px-3">
+                                    <button className="flex items-center gap-1.5 text-xs text-foreground hover:text-primary transition-colors cursor-pointer group" onClick={() => navigate('/links')}>
+                                      <div className="w-5 h-5 rounded bg-muted flex items-center justify-center">
+                                        <Link2 className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                                      </div>
+                                      <span className="font-medium group-hover:underline truncate max-w-[80px]">/{tx.linkAlias}</span>
+                                    </button>
+                                  </TableCell>
+                                  <TableCell className="py-2.5 px-3">
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="w-6 h-6">
+                                        <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-medium">
+                                          {getCustomerInitials(tx.description)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <span className="text-xs text-foreground truncate max-w-[100px]">
+                                        {tx.description}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right py-2.5 px-3 font-mono text-xs">
+                                    {tx.amount !== null ? <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
+                                  </TableCell>
+                                  <TableCell className="text-right py-2.5 px-3">
+                                    <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+                                      {formatInTimezone(tx.date, 'MMM d, HH:mm')}
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                        {hasMoreTransactions && (
+                          <div className="flex items-center justify-center py-2 border-t border-border bg-muted/20">
+                            <Button variant="ghost" size="sm" onClick={handleLoadMore} className="text-xs text-muted-foreground hover:text-foreground">
+                              Load more
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {showSampleData && !hasRealData && (
+                      <div className="mt-3 flex items-center justify-center">
+                        <Button variant="ghost" size="sm" onClick={() => setShowSampleData(false)} className="text-xs text-muted-foreground">
+                          Hide Sample Data
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
 
-              {/* Recent Activity Section */}
-              <section>
-                {showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
-
-
-
-                {/* Data Table or Empty State */}
-                {filteredTransactions.length === 0 && !showSampleData ? <div className="flex flex-col items-center justify-center py-16 px-4 border border-dashed border-border rounded-xl bg-card/50">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <MousePointerClick className="w-8 h-8 text-primary" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">No activity yet</h3>
-                    <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
-                      Once you start getting clicks and conversions, they'll appear here in real-time.
-                    </p>
-                    <Button variant="outline" onClick={() => setShowSampleData(true)} className="gap-2">
-                      <Sparkles className="w-4 h-4" />
-                      Show Sample Data
-                    </Button>
-                  </div> : <div className="border border-border rounded-xl overflow-hidden bg-card">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-border bg-muted/30">
-                          <TableHead className="text-muted-foreground font-medium">Event</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Link</TableHead>
-                          <TableHead className="text-muted-foreground font-medium hidden sm:table-cell">Placement</TableHead>
-                          <TableHead className="text-muted-foreground font-medium">Customer</TableHead>
-                          <TableHead className="text-muted-foreground font-medium hidden md:table-cell">Country</TableHead>
-                          <TableHead className="text-muted-foreground font-medium text-right">Amount</TableHead>
-                          <TableHead className="text-muted-foreground font-medium text-right">Date</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {paginatedTransactions.map(tx => <TableRow key={tx.id} className="border-border hover:bg-muted/50 transition-colors h-14">
-                            <TableCell className="py-4">{getTypeBadge(tx.type)}</TableCell>
-                            <TableCell className="py-4">
-                              <button className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors cursor-pointer group" onClick={() => navigate('/links')}>
-                                <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
-                                  <Link2 className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                </div>
-                                <span className="font-medium group-hover:underline">ghost.link/{tx.linkAlias}</span>
-                              </button>
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell py-4">
-                              <PlacementBadge source={tx.placement} />
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
-                                    {getCustomerInitials(tx.description)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm text-foreground truncate max-w-[180px]">
-                                  {tx.description}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell py-4">
-                              {tx.location && COUNTRIES[tx.location] ? <div className="flex items-center gap-2">
-                                  <span className="text-base">{COUNTRIES[tx.location].flag}</span>
-                                  <span className="text-sm text-muted-foreground">{COUNTRIES[tx.location].name}</span>
-                                </div> : <div className="flex items-center gap-2 text-muted-foreground">
-                                  <Globe className="w-4 h-4" />
-                                  <span className="text-sm">Unknown</span>
-                                </div>}
-                            </TableCell>
-                            <TableCell className="text-right py-4 font-mono">
-                              {tx.amount !== null ? <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
-                            </TableCell>
-                            <TableCell className="text-right py-4">
-                              <span className="text-sm text-muted-foreground font-mono whitespace-nowrap">
-                                {formatInTimezone(tx.date, 'MMM d, HH:mm')}
-                              </span>
-                            </TableCell>
-                          </TableRow>)}
-                      </TableBody>
-                    </Table>
-                    
-                    {/* Load More Button */}
-                    {hasMoreTransactions && <div className="flex items-center justify-center py-3 border-t border-border bg-muted/20">
-                        <Button variant="ghost" size="sm" onClick={handleLoadMore} className="text-muted-foreground hover:text-foreground">
-                          Load more ({Math.max(0, filteredTransactions.length - visibleCount)} remaining)
-                        </Button>
-                      </div>}
-                  </div>}
-
-                {/* Sample Data Toggle */}
-                {showSampleData && !hasRealData && <div className="mt-4 flex items-center justify-center">
-                    <Button variant="ghost" size="sm" onClick={() => setShowSampleData(false)} className="text-muted-foreground">
-                      Hide Sample Data
-                    </Button>
-                  </div>}
+              {/* Countries + Placements Row */}
+              <section className="mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TopCountriesCard countries={countryAnalytics} />
+                  <TopPlacementsCard placements={placementAnalytics} />
+                </div>
               </section>
             </main>
           </SidebarInset>
