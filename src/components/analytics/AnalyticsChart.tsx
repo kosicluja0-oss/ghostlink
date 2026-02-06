@@ -105,6 +105,8 @@ function getTickInterval(range: TimeRange, dataLength: number): number {
   }
 }
 
+export type MetricKey = 'clicks' | 'leads' | 'sales' | 'revenue' | 'cr' | 'epc';
+
 interface AnalyticsChartProps {
   data: AnalyticsData[];
   showConversions?: boolean;
@@ -113,9 +115,9 @@ interface AnalyticsChartProps {
   selectedLinkAlias?: string;
   onClearSelection?: () => void;
   links?: import('@/types').GhostLink[];
+  activeMetric?: MetricKey;
+  onMetricChange?: (metric: MetricKey) => void;
 }
-
-type MetricKey = 'clicks' | 'leads' | 'sales' | 'revenue' | 'cr' | 'epc';
 
 const METRIC_LABELS: Record<MetricKey, string> = {
   clicks: 'Clicks',
@@ -345,6 +347,8 @@ export function AnalyticsChart({
   selectedLinkAlias,
   onClearSelection,
   links = [],
+  activeMetric: controlledMetric,
+  onMetricChange,
 }: AnalyticsChartProps) {
   const { formatInTimezone, timezone } = useTimezone();
   
@@ -358,7 +362,13 @@ export function AnalyticsChart({
     [formatInTimezone, timezone]
   );
   
-  const [activeMetric, setActiveMetric] = useState<MetricKey>('clicks');
+  // Support both controlled and uncontrolled metric state
+  const [internalMetric, setInternalMetric] = useState<MetricKey>('clicks');
+  const activeMetric = controlledMetric ?? internalMetric;
+  const setActiveMetric = (metric: MetricKey) => {
+    onMetricChange?.(metric);
+    setInternalMetric(metric);
+  };
   const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

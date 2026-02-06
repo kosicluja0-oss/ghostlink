@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
+import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -144,7 +145,8 @@ const Dashboard = () => {
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [timeRangeOpen, setTimeRangeOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
-
+  const [activeMetric, setActiveMetric] = useState<MetricKey>('clicks');
+  const handleMetricChange = useCallback((metric: MetricKey) => setActiveMetric(metric), []);
   // Welcome wizard state
   const [showWizard, setShowWizard] = useState(false);
   const [showLiveSignal, setShowLiveSignal] = useState(false);
@@ -320,26 +322,30 @@ const Dashboard = () => {
 
   // Placement analytics from server-side distribution
   const placementAnalytics = useMemo(() => {
-    const total = placementDistribution.reduce((sum, p) => sum + p.count, 0);
     return placementDistribution.map(p => {
       const parsed = parsePlacement(p.source === 'direct' || !p.source ? undefined : p.source);
       return {
         platform: parsed?.platform || 'direct',
         placement: parsed?.placement || 'Direct',
-        count: p.count,
-        percentage: total > 0 ? Math.round(p.count / total * 100) : 0
+        clicks: p.clicks,
+        leads: p.leads,
+        sales: p.sales,
+        earnings: Number(p.earnings),
       };
     });
   }, [placementDistribution]);
 
   // Country analytics from server-side distribution
   const countryAnalytics = useMemo(() => {
-    const total = countryDistribution.reduce((sum, c) => sum + c.count, 0);
-    return countryDistribution.filter(c => c.country !== 'UNKNOWN').map(c => ({
-      code: c.country,
-      count: c.count,
-      percentage: total > 0 ? Math.round(c.count / total * 100) : 0
-    }));
+    return countryDistribution
+      .filter(c => c.country !== 'UNKNOWN')
+      .map(c => ({
+        code: c.country,
+        clicks: c.clicks,
+        leads: c.leads,
+        sales: c.sales,
+        earnings: Number(c.earnings),
+      }));
   }, [countryDistribution]);
   return <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
@@ -402,7 +408,7 @@ const Dashboard = () => {
               <section className="mb-5">
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                   <div className="lg:col-span-3">
-                    <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={null} selectedLinkAlias={undefined} onClearSelection={() => {}} links={links} />
+                    <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={null} selectedLinkAlias={undefined} onClearSelection={() => {}} links={links} activeMetric={activeMetric} onMetricChange={handleMetricChange} />
                   </div>
                   <div className="lg:col-span-2">
                     {showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
@@ -486,9 +492,9 @@ const Dashboard = () => {
               {/* Countries + Placements + Links Row */}
               <section className="mb-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <TopCountriesCard countries={countryAnalytics} />
-                  <TopPlacementsCard placements={placementAnalytics} />
-                  <TopLinksCard links={links} />
+                  <TopCountriesCard countries={countryAnalytics} activeMetric={activeMetric} />
+                  <TopPlacementsCard placements={placementAnalytics} activeMetric={activeMetric} />
+                  <TopLinksCard links={links} activeMetric={activeMetric} />
                 </div>
               </section>
             </main>

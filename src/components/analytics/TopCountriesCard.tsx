@@ -3,67 +3,129 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe } from 'lucide-react';
 import { CircleFlag } from '@/components/ui/circle-flag';
 import { COUNTRIES } from '@/lib/countries';
+import { useMemo } from 'react';
+import type { MetricKey } from './AnalyticsChart';
+
 export interface CountryData {
   code: string;
-  count: number;
-  percentage: number;
+  clicks: number;
+  leads: number;
+  sales: number;
+  earnings: number;
 }
+
+const METRIC_LABELS: Record<MetricKey, string> = {
+  clicks: 'clicks',
+  leads: 'leads',
+  sales: 'sales',
+  revenue: 'revenue',
+  cr: 'CR',
+  epc: 'EPC',
+};
+
 interface TopCountriesCardProps {
   countries: CountryData[];
+  activeMetric?: MetricKey;
 }
-export const getCountryInfo = (code: string): {
-  name: string;
-} => {
+
+export const getCountryInfo = (code: string): { name: string } => {
   const upperCode = code?.toUpperCase() || '';
   if (!upperCode || upperCode === 'XX' || upperCode === 'UNKNOWN') {
-    return {
-      name: 'Unknown'
-    };
+    return { name: 'Unknown' };
   }
-  return COUNTRIES[upperCode] || {
-    name: code
-  };
+  return COUNTRIES[upperCode] || { name: code };
 };
-export const TopCountriesCard = ({
-  countries
-}: TopCountriesCardProps) => {
-  const topCountries = countries.slice(0, 5);
+
+function getMetricValue(country: CountryData, metric: MetricKey): number {
+  switch (metric) {
+    case 'clicks': return country.clicks;
+    case 'leads': return country.leads;
+    case 'sales': return country.sales;
+    case 'revenue': return country.earnings;
+    case 'cr': return country.clicks > 0 ? ((country.leads + country.sales) / country.clicks) * 100 : 0;
+    case 'epc': return country.clicks > 0 ? country.earnings / country.clicks : 0;
+    default: return country.clicks;
+  }
+}
+
+function formatValue(value: number, metric: MetricKey): string {
+  switch (metric) {
+    case 'revenue':
+    case 'epc':
+      return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    case 'cr':
+      return `${value.toFixed(1)}%`;
+    default:
+      return value.toLocaleString();
+  }
+}
+
+export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCountriesCardProps) => {
+  const topCountries = useMemo(() => {
+    // Re-sort by the active metric and compute percentages
+    const withValues = countries.map(c => ({
+      ...c,
+      metricValue: getMetricValue(c, activeMetric),
+    }));
+
+    const sorted = [...withValues]
+      .filter(c => c.metricValue > 0)
+      .sort((a, b) => b.metricValue - a.metricValue)
+      .slice(0, 5);
+
+    const maxValue = sorted.length > 0 ? sorted[0].metricValue : 1;
+
+    return sorted.map(c => ({
+      ...c,
+      percentage: maxValue > 0 ? Math.round((c.metricValue / maxValue) * 100) : 0,
+    }));
+  }, [countries, activeMetric]);
+
   if (topCountries.length === 0) {
-    return <Card className="bg-card border-border">
+    return (
+      <Card className="bg-card border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
-            
             Top Countries
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <p className="text-xs text-muted-foreground">No country data yet</p>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
-  return <Card className="bg-card border-border">
+
+  return (
+    <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
           <Globe className="w-4 h-4 text-primary" />
           Top Countries
+          <span className="text-[10px] text-muted-foreground/60 font-normal ml-auto">
+            by {METRIC_LABELS[activeMetric]}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         {topCountries.map(country => {
-        const {
-          name
-        } = getCountryInfo(country.code);
-        return <div key={country.code} className="space-y-1.5">
+          const { name } = getCountryInfo(country.code);
+          return (
+            <div key={country.code} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <CircleFlag code={country.code} size={18} />
                   <span className="text-foreground font-medium">{name}</span>
                 </div>
-                <span className="text-muted-foreground font-mono">{country.percentage}%</span>
+                <span className="text-muted-foreground font-mono">
+                  {formatValue(country.metricValue, activeMetric)}
+                </span>
               </div>
               <Progress value={country.percentage} className="h-1.5 bg-muted" />
-            </div>;
-      })}
+            </div>
+          );
+        })}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
