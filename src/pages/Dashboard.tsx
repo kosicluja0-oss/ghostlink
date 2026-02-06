@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MousePointer, Users, DollarSign, TrendingUp, Percent, Filter, CalendarDays, Search, User, MousePointerClick, Sparkles, ShoppingCart, Link2, Globe, LayoutDashboard } from 'lucide-react';
+import { MousePointer, Users, DollarSign, TrendingUp, Percent, Filter, Search, User, MousePointerClick, Sparkles, ShoppingCart, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
@@ -24,14 +25,23 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useTimezone } from '@/hooks/useTimezone';
 import { useTrends } from '@/hooks/useTrendCalculation';
 import { COUNTRIES } from '@/lib/countries';
-import type { AnalyticsData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 type TransactionType = 'click' | 'lead' | 'sale';
-type DateRange = '7d' | '30d' | '90d' | 'all';
+
+const TIME_RANGE_LABELS: Record<TimeRange, string> = {
+  '30m': '30 min',
+  '6h': '6 hours',
+  '1d': '1 day',
+  '1w': '1 week',
+  '1m': '1 month',
+  '1y': '1 year',
+  '3y': '3 years',
+};
+const TIME_RANGE_OPTIONS: TimeRange[] = ['30m', '6h', '1d', '1w', '1m', '1y', '3y'];
 interface Transaction {
   id: string;
   date: Date;
@@ -133,7 +143,7 @@ const Dashboard = () => {
   } = useTrends(7);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>('1m');
 
   // Welcome wizard state
   const [showWizard, setShowWizard] = useState(false);
@@ -141,7 +151,6 @@ const Dashboard = () => {
 
   // Activity filters
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
-  const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [showSampleData, setShowSampleData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(10);
@@ -222,6 +231,21 @@ const Dashboard = () => {
     }));
   }, [recentActivity, showSampleData]);
 
+  // Helper to get cutoff date from global timeRange
+  const timeRangeCutoff = useMemo(() => {
+    const now = new Date();
+    switch (timeRange) {
+      case '30m': return new Date(now.getTime() - 30 * 60 * 1000);
+      case '6h': return new Date(now.getTime() - 6 * 60 * 60 * 1000);
+      case '1d': return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      case '1w': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '1m': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case '1y': return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      case '3y': return new Date(now.getTime() - 3 * 365 * 24 * 60 * 60 * 1000);
+      default: return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+  }, [timeRange]);
+
   // Apply filters
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
@@ -231,26 +255,8 @@ const Dashboard = () => {
       filtered = filtered.filter(t => t.type === typeFilter);
     }
 
-    // Date range filter
-    const now = new Date();
-    let cutoffDate: Date | null = null;
-    switch (dateRange) {
-      case '7d':
-        cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '90d':
-        cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case 'all':
-        cutoffDate = null;
-        break;
-    }
-    if (cutoffDate) {
-      filtered = filtered.filter(t => t.date >= cutoffDate!);
-    }
+    // Global time range filter
+    filtered = filtered.filter(t => t.date >= timeRangeCutoff);
 
     // Search filter
     if (searchQuery.trim()) {
@@ -258,7 +264,7 @@ const Dashboard = () => {
       filtered = filtered.filter(t => t.description.toLowerCase().includes(query) || t.id.toLowerCase().includes(query) || t.linkAlias.toLowerCase().includes(query) || t.source.toLowerCase().includes(query));
     }
     return filtered;
-  }, [transactions, typeFilter, dateRange, searchQuery]);
+  }, [transactions, typeFilter, timeRangeCutoff, searchQuery]);
 
   // Paginated transactions for display
   const paginatedTransactions = useMemo(() => {
@@ -276,11 +282,11 @@ const Dashboard = () => {
   // FIX: useEffect instead of useMemo for side-effect (anti-pattern fix)
   useEffect(() => {
     setVisibleCount(10);
-  }, [typeFilter, dateRange, searchQuery]);
+  }, [typeFilter, timeRange, searchQuery]);
 
-  // Calculate stats based on chart time range selection
+  // Calculate stats based on global time range
   const displayStats = useMemo(() => {
-    const dataToUse = filteredData ?? chartData;
+    const dataToUse = chartData.filter(d => new Date(d.date) >= timeRangeCutoff);
     const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
     const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
@@ -299,10 +305,7 @@ const Dashboard = () => {
       conversionRate,
       earningsPerClick
     };
-  }, [filteredData, chartData, stats]);
-  const handleTimeRangeChange = (range: TimeRange, data: typeof chartData) => {
-    setFilteredData(data);
-  };
+  }, [timeRangeCutoff, chartData, stats]);
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -383,13 +386,36 @@ const Dashboard = () => {
             <main className="p-4 lg:p-6">
               {/* Page Header */}
               <section className="mb-5">
-                <div className="flex items-center gap-3">
-                  
+                <div className="flex items-center justify-between">
                   <div>
                     <h1 className="text-foreground text-sm font-semibold">Overview</h1>
-                    <p className="text-sm text-muted-foreground">
-                  </p>
                   </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-muted/30 border border-border/50">
+                        <CalendarDays className="w-3.5 h-3.5" />
+                        {TIME_RANGE_LABELS[timeRange]}
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-auto p-1.5 bg-card border border-border">
+                      <div className="flex flex-col gap-0.5">
+                        {TIME_RANGE_OPTIONS.map((range) => (
+                          <button
+                            key={range}
+                            onClick={() => setTimeRange(range)}
+                            className={`text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
+                              timeRange === range
+                                ? 'bg-primary text-primary-foreground font-medium'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                            }`}
+                          >
+                            {TIME_RANGE_LABELS[range]}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </section>
 
@@ -409,7 +435,7 @@ const Dashboard = () => {
               <section className="mb-5">
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                   <div className="lg:col-span-3">
-                    <AnalyticsChart data={chartData} showConversions={!isFreeTier} onTimeRangeChange={handleTimeRangeChange} activeLinkId={null} selectedLinkAlias={undefined} onClearSelection={() => {}} links={links} />
+                    <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={null} selectedLinkAlias={undefined} onClearSelection={() => {}} links={links} />
                   </div>
                   <div className="lg:col-span-2 flex flex-col gap-4">
                     <TopCountriesCard countries={countryAnalytics} />
@@ -447,28 +473,14 @@ const Dashboard = () => {
                       </SelectContent>
                     </Select>
 
-                    <Select value={dateRange} onValueChange={v => setDateRange(v as DateRange)}>
-                      <SelectTrigger className="w-[140px] h-9">
-                        <CalendarDays className="w-4 h-4 mr-2 text-muted-foreground" />
-                        <SelectValue placeholder="Date Range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="7d">Last 7 days</SelectItem>
-                        <SelectItem value="30d">Last 30 days</SelectItem>
-                        <SelectItem value="90d">Last 90 days</SelectItem>
-                        <SelectItem value="all">All time</SelectItem>
-                      </SelectContent>
-                    </Select>
-
                     {/* Search Bar */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input placeholder="Search email, ID..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 w-[180px] bg-background" />
                     </div>
 
-                    {(typeFilter !== 'all' || dateRange !== '7d' || searchQuery) && <Button variant="ghost" size="sm" onClick={() => {
+                    {(typeFilter !== 'all' || searchQuery) && <Button variant="ghost" size="sm" onClick={() => {
                     setTypeFilter('all');
-                    setDateRange('7d');
                     setSearchQuery('');
                   }} className="text-muted-foreground hover:text-foreground">
                         Reset
