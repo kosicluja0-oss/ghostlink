@@ -236,6 +236,7 @@ export function useClicksRealtime() {
           clicks: data.clicks,
           leads: data.leads,
           sales: data.sales,
+          earnings: 0,
           linkId,
         });
       });

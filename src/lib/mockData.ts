@@ -213,6 +213,7 @@ const aggregateAnalyticsFromHistory = (history: DailyLinkStats[]): AnalyticsData
     clicks: h.clicks,
     leads: h.leads,
     sales: h.sales,
+    earnings: 0,
     linkId: h.linkId,
   }));
 };

@@ -115,18 +115,36 @@ interface AnalyticsChartProps {
   links?: import('@/types').GhostLink[];
 }
 
-type MetricKey = 'clicks' | 'leads' | 'sales';
+type MetricKey = 'clicks' | 'leads' | 'sales' | 'revenue' | 'cr' | 'epc';
 
 const METRIC_LABELS: Record<MetricKey, string> = {
   clicks: 'Clicks',
   leads: 'Leads',
   sales: 'Sales',
+  revenue: 'Revenue',
+  cr: 'Conv. Rate',
+  epc: 'EPC',
 };
 
 const METRIC_COLORS: Record<MetricKey, string> = {
   clicks: 'hsl(var(--chart-clicks))',
   leads: 'hsl(var(--warning))',
   sales: 'hsl(var(--success))',
+  revenue: 'hsl(var(--success))',
+  cr: 'hsl(var(--primary))',
+  epc: 'hsl(var(--primary))',
+};
+
+// Metrics that require special Y-axis formatting
+type MetricFormat = 'number' | 'currency' | 'percentage';
+
+const METRIC_FORMAT: Record<MetricKey, MetricFormat> = {
+  clicks: 'number',
+  leads: 'number',
+  sales: 'number',
+  revenue: 'currency',
+  cr: 'percentage',
+  epc: 'currency',
 };
 
 function getDateRangeStart(range: TimeRange): Date {
@@ -184,6 +202,38 @@ function createFormatTooltipDate(formatInTimezone: (date: Date | string | number
   };
 }
 
+// Format value based on metric type
+function formatMetricValue(value: number, metric: MetricKey): string {
+  const fmt = METRIC_FORMAT[metric];
+  switch (fmt) {
+    case 'currency':
+      return value >= 1000
+        ? `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
+        : `$${value.toFixed(2)}`;
+    case 'percentage':
+      return `${value.toFixed(1)}%`;
+    default: {
+      const intValue = Math.round(value);
+      return intValue >= 1000
+        ? `${(intValue / 1000).toFixed(intValue >= 10000 ? 0 : 1)}k`
+        : intValue.toString();
+    }
+  }
+}
+
+// Format tooltip value with full precision
+function formatTooltipValue(value: number, metric: MetricKey): string {
+  const fmt = METRIC_FORMAT[metric];
+  switch (fmt) {
+    case 'currency':
+      return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    case 'percentage':
+      return `${value.toFixed(2)}%`;
+    default:
+      return value.toLocaleString();
+  }
+}
+
 // Memoized main chart component
 const MainChart = memo(({ 
   displayData, 
@@ -194,6 +244,8 @@ const MainChart = memo(({
   activeMetric: MetricKey;
   tickInterval: number;
 }) => {
+  const metricFormat = METRIC_FORMAT[activeMetric];
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0]?.payload;
@@ -209,9 +261,11 @@ const MainChart = memo(({
                   className="w-2 h-2 rounded-full" 
                   style={{ backgroundColor: entry.color }}
                 />
-                <span className="text-muted-foreground capitalize">{entry.dataKey}</span>
+                <span className="text-muted-foreground">{METRIC_LABELS[entry.dataKey as MetricKey] ?? entry.dataKey}</span>
               </div>
-              <span className="font-semibold text-foreground tabular-nums">{entry.value.toLocaleString()}</span>
+              <span className="font-semibold text-foreground tabular-nums">
+                {formatTooltipValue(entry.value, entry.dataKey as MetricKey)}
+              </span>
             </div>
           ))}
         </div>
@@ -252,16 +306,16 @@ const MainChart = memo(({
           tickLine={false}
           axisLine={false}
           dx={-10}
-          tickFormatter={(value) => {
-            const intValue = Math.round(value);
-            return intValue >= 1000 ? `${(intValue / 1000).toFixed(intValue >= 10000 ? 0 : 1)}k` : intValue.toString();
-          }}
+          tickFormatter={(value) => formatMetricValue(value, activeMetric)}
           domain={[0, (dataMax: number) => {
-            const minRange = 5;
+            if (metricFormat === 'percentage') {
+              return Math.min(100, Math.max(5, Math.ceil(dataMax * 1.15)));
+            }
+            const minRange = metricFormat === 'currency' ? 1 : 5;
             const paddedMax = Math.ceil(dataMax * 1.15);
             return Math.max(minRange, paddedMax);
           }]}
-          allowDecimals={false}
+          allowDecimals={metricFormat !== 'number'}
           tickCount={5}
         />
         <Tooltip content={<CustomTooltip />} />
@@ -310,7 +364,7 @@ export function AnalyticsChart({
 
   // Available metrics
   const availableMetrics: MetricKey[] = showConversions 
-    ? ['clicks', 'leads', 'sales'] 
+    ? ['clicks', 'leads', 'sales', 'revenue', 'cr', 'epc'] 
     : ['clicks'];
 
   // Other metrics (not currently active)
@@ -350,7 +404,7 @@ export function AnalyticsChart({
     }
     
     // Build a map of actual data keyed by time bucket
-    const dataMap = new Map<string, { clicks: number; leads: number; sales: number }>();
+    const dataMap = new Map<string, { clicks: number; leads: number; sales: number; earnings: number }>();
     
     filtered.forEach(item => {
       const key = getTimeKey(new Date(item.date), timeRange);
@@ -359,11 +413,13 @@ export function AnalyticsChart({
         existing.clicks += item.clicks;
         existing.leads += item.leads;
         existing.sales += item.sales;
+        existing.earnings += item.earnings;
       } else {
         dataMap.set(key, {
           clicks: item.clicks,
           leads: item.leads,
           sales: item.sales,
+          earnings: item.earnings,
         });
       }
     });
@@ -372,16 +428,25 @@ export function AnalyticsChart({
     const timePoints = generateTimePoints(timeRange);
     
     // Merge time points with actual data (fill gaps with zeros)
+    // Include computed metrics: revenue, cr (conversion rate), epc (earnings per click)
     return timePoints.map(date => {
       const key = getTimeKey(date, timeRange);
-      const existingData = dataMap.get(key);
+      const d = dataMap.get(key);
+      
+      const clicks = d?.clicks ?? 0;
+      const leads = d?.leads ?? 0;
+      const sales = d?.sales ?? 0;
+      const earnings = d?.earnings ?? 0;
       
       return {
         date: date.toISOString(),
         timestamp: date.getTime(),
-        clicks: existingData?.clicks ?? 0,
-        leads: existingData?.leads ?? 0,
-        sales: existingData?.sales ?? 0,
+        clicks,
+        leads,
+        sales,
+        revenue: earnings,
+        cr: clicks > 0 ? ((leads + sales) / clicks) * 100 : 0,
+        epc: clicks > 0 ? earnings / clicks : 0,
         dateFormatted: formatDateForRange(date, timeRange),
         tooltipDate: formatTooltipDate(date, timeRange),
       };

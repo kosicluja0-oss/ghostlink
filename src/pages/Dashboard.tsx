@@ -261,12 +261,12 @@ const Dashboard = () => {
     const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
     const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
-    const totalEarnings = stats.totalEarnings;
+    const totalEarnings = dataToUse.reduce((sum, d) => sum + d.earnings, 0);
     let conversionRate = 0;
     let earningsPerClick = 0;
     if (totalClicks > 0) {
       conversionRate = (totalLeads + totalSales) / totalClicks * 100;
-      earningsPerClick = stats.totalClicks > 0 ? totalEarnings / stats.totalClicks : 0;
+      earningsPerClick = totalEarnings / totalClicks;
     }
     return {
       totalClicks,
@@ -276,7 +276,7 @@ const Dashboard = () => {
       conversionRate,
       earningsPerClick
     };
-  }, [timeRangeCutoff, chartData, stats]);
+  }, [timeRangeCutoff, chartData]);
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
