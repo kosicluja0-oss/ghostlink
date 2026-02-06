@@ -522,11 +522,9 @@ const Dashboard = () => {
                       links={links}
                     />
                   </div>
-                  <div className="lg:col-span-1">
-                    <TopPlacementsCard placements={placementAnalytics} />
-                  </div>
-                  <div className="lg:col-span-1">
+                  <div className="lg:col-span-2 flex flex-col gap-4">
                     <TopCountriesCard countries={countryAnalytics} />
+                    <TopPlacementsCard placements={placementAnalytics} />
                   </div>
                 </div>
               </section>
