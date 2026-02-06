@@ -13,6 +13,7 @@ import { StatCard } from '@/components/analytics/StatCard';
 import { AnalyticsChart } from '@/components/analytics/AnalyticsChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
 import { TopCountriesCard } from '@/components/analytics/TopCountriesCard';
+import { TopLinksCard } from '@/components/analytics/TopLinksCard';
 import { PlacementBadge, parsePlacement } from '@/components/analytics/PlacementBadge';
 import { WelcomeWizard } from '@/components/wizard/WelcomeWizard';
 import { LiveSignalIndicator } from '@/components/wizard/LiveSignalIndicator';
@@ -482,11 +483,12 @@ const Dashboard = () => {
                 </div>
               </section>
 
-              {/* Countries + Placements Row */}
+              {/* Countries + Placements + Links Row */}
               <section className="mb-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <TopCountriesCard countries={countryAnalytics} />
                   <TopPlacementsCard placements={placementAnalytics} />
+                  <TopLinksCard links={links} />
                 </div>
               </section>
             </main>
