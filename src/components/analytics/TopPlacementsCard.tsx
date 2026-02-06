@@ -1,16 +1,7 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
-
-// Platform icons matching SmartCopyMenu
-const PLATFORM_ICONS: Record<string, string> = {
-  instagram: '📸',
-  tiktok: '🎵',
-  youtube: '▶️',
-  pinterest: '📌',
-  x: '𝕏',
-  direct: '🔗',
-};
+import { PlatformIcon } from '@/components/ui/platform-icon';
 
 interface PlacementData {
   platform: string;
@@ -56,7 +47,7 @@ export const TopPlacementsCard = ({ placements }: TopPlacementsCardProps) => {
           <div key={`${placement.platform}-${placement.placement}`} className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <span className="text-sm">{PLATFORM_ICONS[placement.platform] || '🔗'}</span>
+                <PlatformIcon platform={placement.platform} size={16} />
                 <span className="text-foreground font-medium capitalize">
                   {placement.platform === 'direct' ? 'Direct' : placement.placement}
                 </span>

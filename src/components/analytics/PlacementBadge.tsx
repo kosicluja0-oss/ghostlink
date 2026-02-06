@@ -1,14 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Link2 } from 'lucide-react';
-
-// Platform icons matching SmartCopyMenu
-const PLATFORM_ICONS: Record<string, string> = {
-  instagram: '📸',
-  tiktok: '🎵',
-  youtube: '▶️',
-  pinterest: '📌',
-  x: '𝕏',
-};
+import { PlatformIcon } from '@/components/ui/platform-icon';
 
 // Mapping from tracking param to platform and placement
 const PLACEMENT_MAP: Record<string, { platform: string; placement: string }> = {
@@ -50,11 +42,10 @@ export const PlacementBadge = ({ source }: PlacementBadgeProps) => {
   }
 
   const { platform, placement } = placementInfo;
-  const icon = PLATFORM_ICONS[platform] || '🔗';
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-sm">{icon}</span>
+      <PlatformIcon platform={platform} size={14} />
       <Badge 
         variant="secondary" 
         className="bg-primary/10 text-primary border-0 px-2 py-0.5 text-xs font-medium"
