@@ -419,7 +419,7 @@ export function AnalyticsChart({
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setMetricDropdownOpen(prev => !prev)}
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/30"
             >
               {METRIC_LABELS[activeMetric]}
               <ChevronLeft 
