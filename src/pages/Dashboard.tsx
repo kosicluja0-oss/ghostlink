@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MousePointer, Users, DollarSign, TrendingUp, Percent, Filter, Search, User, MousePointerClick, Sparkles, ShoppingCart, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
+import { MousePointer, Users, DollarSign, TrendingUp, Percent, Filter, Search, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -345,11 +345,6 @@ const Dashboard = () => {
     }
     return description.charAt(0).toUpperCase();
   };
-  const salesCount = filteredTransactions.filter(t => t.type === 'sale').length;
-  const leadsCount = filteredTransactions.filter(t => t.type === 'lead').length;
-  const clicksCount = filteredTransactions.filter(t => t.type === 'click').length;
-  const totalRevenue = filteredTransactions.filter(t => t.type === 'sale' && t.amount).reduce((sum, t) => sum + (t.amount || 0), 0);
-  const conversionRate = clicksCount > 0 ? (salesCount / clicksCount * 100).toFixed(1) : '0.0';
   const hasRealData = hasClicks;
 
   // Placement analytics from server-side distribution
@@ -489,25 +484,6 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                {/* Summary Strip */}
-                {filteredTransactions.length > 0 && <div className="flex items-center gap-6 px-4 py-3 bg-muted/30 rounded-lg border border-border mb-4">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-success" />
-                      <span className="text-sm text-muted-foreground">Total Revenue:</span>
-                      <span className="text-sm font-semibold text-success font-mono">${totalRevenue.toFixed(2)}</span>
-                    </div>
-                    <div className="h-4 w-px bg-border" />
-                    <div className="flex items-center gap-2">
-                      <ShoppingCart className="w-4 h-4 text-success" />
-                      <span className="text-sm text-muted-foreground">Total Sales:</span>
-                      <span className="text-sm font-semibold text-foreground font-mono">{salesCount}</span>
-                    </div>
-                    <div className="h-4 w-px bg-border" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">Conversion Rate:</span>
-                      <span className="text-sm font-semibold text-primary font-mono">{conversionRate}%</span>
-                    </div>
-                  </div>}
 
                 {/* Data Table or Empty State */}
                 {filteredTransactions.length === 0 && !showSampleData ? <div className="flex flex-col items-center justify-center py-16 px-4 border border-dashed border-border rounded-xl bg-card/50">
