@@ -117,6 +117,12 @@ interface AnalyticsChartProps {
 
 type MetricKey = 'clicks' | 'leads' | 'sales';
 
+const METRIC_LABELS: Record<MetricKey, string> = {
+  clicks: 'Clicks',
+  leads: 'Leads',
+  sales: 'Sales',
+};
+
 const METRIC_COLORS: Record<MetricKey, string> = {
   clicks: 'hsl(var(--chart-clicks))',
   leads: 'hsl(var(--warning))',
@@ -181,13 +187,11 @@ function createFormatTooltipDate(formatInTimezone: (date: Date | string | number
 // Memoized main chart component
 const MainChart = memo(({ 
   displayData, 
-  visibleMetrics, 
-  showConversions,
+  activeMetric,
   tickInterval 
 }: { 
   displayData: any[]; 
-  visibleMetrics: Record<MetricKey, boolean>; 
-  showConversions: boolean;
+  activeMetric: MetricKey;
   tickInterval: number;
 }) => {
   const CustomTooltip = ({ active, payload }: any) => {
@@ -220,17 +224,9 @@ const MainChart = memo(({
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={displayData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
         <defs>
-          <linearGradient id="clicksGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.25} />
-            <stop offset="100%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="leadsGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--warning))" stopOpacity={0.2} />
-            <stop offset="100%" stopColor="hsl(var(--warning))" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.2} />
-            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+          <linearGradient id="metricGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={METRIC_COLORS[activeMetric]} stopOpacity={0.25} />
+            <stop offset="100%" stopColor={METRIC_COLORS[activeMetric]} stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid 
@@ -262,7 +258,7 @@ const MainChart = memo(({
           }}
           domain={[0, (dataMax: number) => {
             const minRange = 5;
-            const paddedMax = Math.ceil(dataMax * 1.15); // 15% padding at top
+            const paddedMax = Math.ceil(dataMax * 1.15);
             return Math.max(minRange, paddedMax);
           }]}
           allowDecimals={false}
@@ -270,44 +266,16 @@ const MainChart = memo(({
         />
         <Tooltip content={<CustomTooltip />} />
 
-        {visibleMetrics.clicks && (
-          <Area
-            type="monotone"
-            dataKey="clicks"
-            stroke={METRIC_COLORS.clicks}
-            strokeWidth={2}
-            fill="url(#clicksGradient)"
-            dot={false}
-            activeDot={{ r: 4, fill: METRIC_COLORS.clicks, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-            isAnimationActive={false}
-          />
-        )}
-        
-        {showConversions && visibleMetrics.leads && (
-          <Area
-            type="monotone"
-            dataKey="leads"
-            stroke={METRIC_COLORS.leads}
-            strokeWidth={2}
-            fill="url(#leadsGradient)"
-            dot={false}
-            activeDot={{ r: 4, fill: METRIC_COLORS.leads, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-            isAnimationActive={false}
-          />
-        )}
-        
-        {showConversions && visibleMetrics.sales && (
-          <Area
-            type="monotone"
-            dataKey="sales"
-            stroke={METRIC_COLORS.sales}
-            strokeWidth={2}
-            fill="url(#salesGradient)"
-            dot={false}
-            activeDot={{ r: 4, fill: METRIC_COLORS.sales, stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-            isAnimationActive={false}
-          />
-        )}
+        <Area
+          type="monotone"
+          dataKey={activeMetric}
+          stroke={METRIC_COLORS[activeMetric]}
+          strokeWidth={2}
+          fill="url(#metricGradient)"
+          dot={false}
+          activeDot={{ r: 4, fill: METRIC_COLORS[activeMetric], stroke: 'hsl(var(--background))', strokeWidth: 2 }}
+          isAnimationActive={false}
+        />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -337,11 +305,17 @@ export function AnalyticsChart({
   );
   
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
-  const [visibleMetrics, setVisibleMetrics] = useState<Record<MetricKey, boolean>>({
-    clicks: true,
-    leads: true,
-    sales: true,
-  });
+  const [activeMetric, setActiveMetric] = useState<MetricKey>('clicks');
+
+  // Cycle through available metrics
+  const cycleMetric = useCallback(() => {
+    const available: MetricKey[] = showConversions 
+      ? ['clicks', 'leads', 'sales'] 
+      : ['clicks'];
+    const currentIndex = available.indexOf(activeMetric);
+    const nextIndex = (currentIndex + 1) % available.length;
+    setActiveMetric(available[nextIndex]);
+  }, [activeMetric, showConversions]);
   
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -412,47 +386,7 @@ export function AnalyticsChart({
     return getTickInterval(timeRange, chartData.length);
   }, [timeRange, chartData.length]);
 
-  const toggleMetric = useCallback((metric: MetricKey) => {
-    setVisibleMetrics(prev => ({
-      ...prev,
-      [metric]: !prev[metric],
-    }));
-  }, []);
-
-
-  const CustomLegend = () => {
-    const metrics: { key: MetricKey; label: string; locked?: boolean }[] = [
-      { key: 'clicks', label: 'Clicks' },
-      { key: 'leads', label: 'Leads', locked: !showConversions },
-      { key: 'sales', label: 'Sales', locked: !showConversions },
-    ];
-
-    return (
-      <div className="flex items-center justify-center gap-6 mt-4">
-        {metrics.map(({ key, label, locked }) => (
-          <button
-            key={key}
-            onClick={() => !locked && toggleMetric(key)}
-            disabled={locked}
-            className={`flex items-center gap-2 text-sm transition-opacity ${
-              locked ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'
-            } ${!visibleMetrics[key] && !locked ? 'opacity-40' : ''}`}
-          >
-            <div 
-              className="w-3 h-3 rounded-full transition-all"
-              style={{ 
-                backgroundColor: METRIC_COLORS[key],
-                opacity: visibleMetrics[key] && !locked ? 1 : 0.3,
-              }}
-            />
-            <span className="text-muted-foreground">{label}</span>
-          </button>
-        ))}
-      </div>
-    );
-  };
-
-  // Watermark component - positioned with 20px padding from bottom axis
+  // Watermark component
   const Watermark = () => (
     <div className="absolute bottom-10 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
       <Ghost className="w-4 h-4 text-foreground" />
@@ -464,7 +398,16 @@ export function AnalyticsChart({
     <div className="bg-card rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold text-foreground">Traffic Overview</h3>
+          <button
+            onClick={cycleMetric}
+            className="flex items-center gap-2 text-base font-semibold text-foreground hover:opacity-80 transition-opacity"
+          >
+            <div 
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: METRIC_COLORS[activeMetric] }}
+            />
+            {METRIC_LABELS[activeMetric]}
+          </button>
           {activeLinkId && selectedLinkAlias && (
             <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
               <span className="text-[11px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
@@ -487,15 +430,11 @@ export function AnalyticsChart({
       >
         <MainChart 
           displayData={chartData} 
-          visibleMetrics={visibleMetrics} 
-          showConversions={showConversions}
+          activeMetric={activeMetric}
           tickInterval={tickInterval}
         />
         <Watermark />
       </div>
-
-
-      <CustomLegend />
     </div>
   );
 }
