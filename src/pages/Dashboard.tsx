@@ -386,36 +386,36 @@ const Dashboard = () => {
             <main className="p-4 lg:p-6">
               {/* Page Header */}
               <section className="mb-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-foreground text-sm font-semibold">Overview</h1>
+                <div>
+                  <h1 className="text-foreground text-sm font-semibold">Overview</h1>
+                  <div className="mt-1.5">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-muted/30 border border-border/50">
+                          <CalendarDays className="w-3.5 h-3.5" />
+                          {TIME_RANGE_LABELS[timeRange]}
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-auto p-1.5 bg-card border border-border">
+                        <div className="flex flex-col gap-0.5">
+                          {TIME_RANGE_OPTIONS.map((range) => (
+                            <button
+                              key={range}
+                              onClick={() => setTimeRange(range)}
+                              className={`text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
+                                timeRange === range
+                                  ? 'bg-primary text-primary-foreground font-medium'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                              }`}
+                            >
+                              {TIME_RANGE_LABELS[range]}
+                            </button>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2.5 py-1.5 rounded-md hover:bg-muted/30 border border-border/50">
-                        <CalendarDays className="w-3.5 h-3.5" />
-                        {TIME_RANGE_LABELS[timeRange]}
-                        <ChevronDown className="w-3 h-3" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-auto p-1.5 bg-card border border-border">
-                      <div className="flex flex-col gap-0.5">
-                        {TIME_RANGE_OPTIONS.map((range) => (
-                          <button
-                            key={range}
-                            onClick={() => setTimeRange(range)}
-                            className={`text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
-                              timeRange === range
-                                ? 'bg-primary text-primary-foreground font-medium'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                            }`}
-                          >
-                            {TIME_RANGE_LABELS[range]}
-                          </button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
                 </div>
               </section>
 
