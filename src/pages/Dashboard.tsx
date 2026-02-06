@@ -250,9 +250,9 @@ const Dashboard = () => {
     return filtered;
   }, [transactions, timeRangeCutoff]);
 
-  // Show only the last 7 events
+  // Show only the last 6 events
   const paginatedTransactions = useMemo(() => {
-    return filteredTransactions.slice(0, 7);
+    return filteredTransactions.slice(0, 6);
   }, [filteredTransactions]);
 
   // Calculate stats based on global time range
