@@ -78,7 +78,10 @@ interface TopCountriesCardProps {
 
 export const getCountryInfo = (code: string): { flag: string; name: string } => {
   const upperCode = code?.toUpperCase() || '';
-  return COUNTRIES[upperCode] || { flag: '🌍', name: code || 'Unknown' };
+  if (!upperCode || upperCode === 'XX' || upperCode === 'UNKNOWN') {
+    return { flag: '🌍', name: 'Unknown' };
+  }
+  return COUNTRIES[upperCode] || { flag: '🌍', name: code };
 };
 
 export const TopCountriesCard = ({ countries }: TopCountriesCardProps) => {

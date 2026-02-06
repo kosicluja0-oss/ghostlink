@@ -154,7 +154,7 @@ export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
     const countMap = new Map<string, number>();
     const total = (clicks ?? []).length || 1;
     (clicks ?? []).forEach((c) => {
-      const code = c.country?.toUpperCase() || 'XX';
+      const code = c.country?.toUpperCase() || 'UNKNOWN';
       countMap.set(code, (countMap.get(code) || 0) + 1);
     });
     return Array.from(countMap.entries())
