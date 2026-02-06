@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Share2, ChevronRight, Check } from 'lucide-react';
+import { PlatformIcon } from '@/components/ui/platform-icon';
 import {
   Popover,
   PopoverContent,
@@ -12,7 +13,6 @@ import { toast } from 'sonner';
 interface Platform {
   id: string;
   name: string;
-  icon: string;
   placements: { id: string; name: string; param: string }[];
 }
 
@@ -20,7 +20,6 @@ const PLATFORMS: Platform[] = [
   {
     id: 'instagram',
     name: 'Instagram',
-    icon: '📸',
     placements: [
       { id: 'reels', name: 'Reels', param: 'ig-reels' },
       { id: 'post', name: 'Post', param: 'ig-post' },
@@ -31,7 +30,6 @@ const PLATFORMS: Platform[] = [
   {
     id: 'tiktok',
     name: 'TikTok',
-    icon: '🎵',
     placements: [
       { id: 'video', name: 'Video', param: 'tt-video' },
       { id: 'story', name: 'Story', param: 'tt-story' },
@@ -41,7 +39,6 @@ const PLATFORMS: Platform[] = [
   {
     id: 'youtube',
     name: 'YouTube',
-    icon: '▶️',
     placements: [
       { id: 'video', name: 'Video', param: 'yt-video' },
       { id: 'shorts', name: 'Shorts', param: 'yt-shorts' },
@@ -51,7 +48,6 @@ const PLATFORMS: Platform[] = [
   {
     id: 'pinterest',
     name: 'Pinterest',
-    icon: '📌',
     placements: [
       { id: 'pin', name: 'Pinterest', param: 'pin' },
     ],
@@ -59,7 +55,6 @@ const PLATFORMS: Platform[] = [
   {
     id: 'x',
     name: 'X',
-    icon: '𝕏',
     placements: [
       { id: 'post', name: 'Post', param: 'x-post' },
       { id: 'bio', name: 'Bio', param: 'x-bio' },
@@ -144,7 +139,7 @@ export function SmartCopyMenu({ trackingUrl, className, isVisible = true }: Smar
                 onClick={() => handlePlatformClick(platform.id)}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="text-base w-5 text-center">{platform.icon}</span>
+                  <PlatformIcon platform={platform.id} size={18} />
                   <span className="text-foreground font-medium">{platform.name}</span>
                 </div>
                 {platform.placements.length > 1 && (
