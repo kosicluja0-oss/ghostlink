@@ -33,6 +33,7 @@ const generateMockAnalytics = (): AnalyticsData[] => {
         clicks: baseClicks,
         leads,
         sales,
+        earnings: sales * (20 + Math.random() * 80),
         linkId,
       });
     });
@@ -61,6 +62,7 @@ const generateMockAnalytics = (): AnalyticsData[] => {
         clicks: baseClicks,
         leads,
         sales,
+        earnings: sales * (20 + Math.random() * 80),
         linkId,
       });
     });

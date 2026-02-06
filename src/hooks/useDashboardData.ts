@@ -68,6 +68,7 @@ export function useDashboardData(options?: UseDashboardDataOptions) {
         clicks: d.clicks,
         leads: d.leads,
         sales: d.sales,
+        earnings: Number(d.earnings ?? 0),
         linkId: d.linkId,
       })) as AnalyticsData[];
     },

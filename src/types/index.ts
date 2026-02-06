@@ -45,6 +45,7 @@ export interface AnalyticsData {
   clicks: number;
   leads: number;
   sales: number;
+  earnings: number;
   linkId?: string;
 }
 
