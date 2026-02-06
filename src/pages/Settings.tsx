@@ -27,7 +27,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { TIMEZONES, TIMEZONE_GROUPS } from '@/lib/timezone';
 import { useDataExport } from '@/hooks/useDataExport';
-
 const Settings = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -51,14 +50,19 @@ const Settings = () => {
     refetch: refetchSubscription
   } = useSubscription();
   const openTicketsCount = useOpenTicketsCount();
-  const { isAdmin } = useUserRole();
-  const { exportData, isExporting } = useDataExport();
+  const {
+    isAdmin
+  } = useUserRole();
+  const {
+    exportData,
+    isExporting
+  } = useDataExport();
   const [displayName, setDisplayName] = useState('');
   const [currency, setCurrency] = useState('usd');
   const [timezone, setTimezone] = useState('Europe/Prague');
   const [marketingEmails, setMarketingEmails] = useState(true);
   const [securityAlerts, setSecurityAlerts] = useState(true);
-  
+
   // Admin tier switcher state
   const [selectedTier, setSelectedTier] = useState<TierType>(tier);
   const [isChangingTier, setIsChangingTier] = useState(false);
@@ -84,7 +88,6 @@ const Settings = () => {
 
   // Password strength calculation with detailed requirements
   const passwordStrength = usePasswordStrength(newPassword);
-
   const passwordsMatch = confirmPassword.length > 0 && newPassword === confirmPassword;
   const isPasswordValid = passwordStrength.isStrong && passwordsMatch && currentPassword.length > 0;
 
@@ -92,11 +95,7 @@ const Settings = () => {
   const hasUnsavedChanges = useMemo(() => {
     if (!profile) return false;
     const defaultTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return (
-      displayName !== (profile.display_name || '') ||
-      currency !== (profile.currency || 'usd') ||
-      timezone !== (profile.timezone || defaultTimezone)
-    );
+    return displayName !== (profile.display_name || '') || currency !== (profile.currency || 'usd') || timezone !== (profile.timezone || defaultTimezone);
   }, [displayName, currency, timezone, profile]);
 
   // Handle checkout redirect result
@@ -131,30 +130,28 @@ const Settings = () => {
   // Handler for notification toggle changes
   const handleNotificationChange = (field: 'marketing_emails' | 'security_alerts', value: boolean) => {
     // Optimistic update
-    if (field === 'marketing_emails') setMarketingEmails(value);
-    else setSecurityAlerts(value);
-    
-    updateProfile({ [field]: value });
+    if (field === 'marketing_emails') setMarketingEmails(value);else setSecurityAlerts(value);
+    updateProfile({
+      [field]: value
+    });
   };
-  
+
   // Sync selected tier with current tier
   useEffect(() => {
     setSelectedTier(tier);
   }, [tier]);
-  
+
   // Admin tier change handler
   const handleAdminTierChange = async () => {
     if (!user?.id || selectedTier === tier) return;
-    
     setIsChangingTier(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ tier: selectedTier })
-        .eq('id', user.id);
-      
+      const {
+        error
+      } = await supabase.from('profiles').update({
+        tier: selectedTier
+      }).eq('id', user.id);
       if (error) throw error;
-      
       toast.success(`Tier changed to ${selectedTier.toUpperCase()}`);
       refetchSubscription();
     } catch (error: any) {
@@ -173,7 +170,6 @@ const Settings = () => {
       timezone
     });
   };
-
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -189,26 +185,30 @@ const Settings = () => {
       toast.error('Image must be less than 2MB');
       return;
     }
-
     setAvatarUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/avatar.${fileExt}`;
 
       // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true
+      });
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
 
       // Update profile with avatar URL (add cache buster)
-      await updateProfile({ avatar_url: `${publicUrl}?t=${Date.now()}` });
+      await updateProfile({
+        avatar_url: `${publicUrl}?t=${Date.now()}`
+      });
       toast.success('Avatar updated successfully');
     } catch (error: any) {
       console.error('[AVATAR-UPLOAD] Error:', error);
@@ -224,14 +224,7 @@ const Settings = () => {
 
   // Generate gradient avatar based on initials
   const getInitialGradient = (name: string) => {
-    const colors = [
-      'from-violet-500 to-purple-600',
-      'from-blue-500 to-cyan-500',
-      'from-emerald-500 to-teal-500',
-      'from-orange-500 to-red-500',
-      'from-pink-500 to-rose-500',
-      'from-indigo-500 to-blue-600',
-    ];
+    const colors = ['from-violet-500 to-purple-600', 'from-blue-500 to-cyan-500', 'from-emerald-500 to-teal-500', 'from-orange-500 to-red-500', 'from-pink-500 to-rose-500', 'from-indigo-500 to-blue-600'];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
   };
@@ -270,12 +263,14 @@ const Settings = () => {
       toast.error('Passwords do not match');
       return;
     }
-
     setIsChangingPassword(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const {
+        error
+      } = await supabase.auth.updateUser({
+        password: newPassword
+      });
       if (error) throw error;
-      
       toast.success('Password updated successfully');
       setCurrentPassword('');
       setNewPassword('');
@@ -291,7 +286,6 @@ const Settings = () => {
       setIsChangingPassword(false);
     }
   };
-
   const handleCancelPasswordChange = () => {
     setCurrentPassword('');
     setNewPassword('');
@@ -301,7 +295,6 @@ const Settings = () => {
     setShowNewPassword(false);
     setShowConfirmPassword(false);
   };
-
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'DELETE') {
       toast.error('Please type DELETE to confirm');
@@ -361,14 +354,11 @@ const Settings = () => {
               {/* Header */}
               <section className="mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-                    <SettingsIcon className="w-5 h-5 text-primary" />
-                  </div>
+                  
                   <div>
-                    <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+                    <h1 className="text-foreground font-semibold text-sm">Settings</h1>
                     <p className="text-sm text-muted-foreground">
-                      Manage your account preferences and subscription
-                    </p>
+                  </p>
                   </div>
                 </div>
               </section>
@@ -393,53 +383,26 @@ const Settings = () => {
                         <div className="flex items-center gap-5">
                           <div className="relative group">
                             <Avatar className="h-20 w-20 border-2 border-border shadow-md">
-                              {profile?.avatar_url ? (
-                                <AvatarImage src={profile.avatar_url} alt="Profile" />
-                              ) : (
-                                <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-2xl font-bold`}>
+                              {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="Profile" /> : <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-2xl font-bold`}>
                                   {userInitial}
-                                </AvatarFallback>
-                              )}
+                                </AvatarFallback>}
                             </Avatar>
-                            <button 
-                              className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              onClick={() => avatarInputRef.current?.click()}
-                              disabled={avatarUploading}
-                            >
-                              {avatarUploading ? (
-                                <Loader2 className="w-5 h-5 text-white animate-spin" />
-                              ) : (
-                                <Camera className="w-5 h-5 text-white" />
-                              )}
+                            <button className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}>
+                              {avatarUploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
                             </button>
-                            <input
-                              ref={avatarInputRef}
-                              type="file"
-                              accept="image/*"
-                              onChange={handleAvatarUpload}
-                              className="hidden"
-                            />
+                            <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                           </div>
                           <div className="space-y-1.5 flex-1">
                             <p className="text-lg font-semibold text-foreground">{displayName || 'Set your name'}</p>
                             <p className="text-sm text-muted-foreground">{user?.email}</p>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => avatarInputRef.current?.click()}
-                              disabled={avatarUploading}
-                            >
-                              {avatarUploading ? (
-                                <>
+                            <Button variant="outline" size="sm" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}>
+                              {avatarUploading ? <>
                                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                   Uploading...
-                                </>
-                              ) : (
-                                <>
+                                </> : <>
                                   <Upload className="w-4 h-4 mr-2" />
                                   Change Photo
-                                </>
-                              )}
+                                </>}
                             </Button>
                           </div>
                         </div>
@@ -460,19 +423,12 @@ const Settings = () => {
                         </div>
 
                         {/* Unsaved changes indicator */}
-                        {hasUnsavedChanges && (
-                          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning animate-fade-in">
+                        {hasUnsavedChanges && <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning animate-fade-in">
                             <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             <span className="text-sm font-medium">You have unsaved changes</span>
-                          </div>
-                        )}
+                          </div>}
 
-                        <Button 
-                          onClick={handleSaveProfile} 
-                          className="w-full sm:w-auto" 
-                          disabled={isUpdating || !hasUnsavedChanges}
-                          variant={hasUnsavedChanges ? "default" : "secondary"}
-                        >
+                        <Button onClick={handleSaveProfile} className="w-full sm:w-auto" disabled={isUpdating || !hasUnsavedChanges} variant={hasUnsavedChanges ? "default" : "secondary"}>
                           {isUpdating ? <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Saving...
@@ -518,18 +474,14 @@ const Settings = () => {
                               <SelectValue placeholder="Select timezone" />
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px]">
-                              {Object.entries(TIMEZONE_GROUPS).map(([region, timezones]) => (
-                                <div key={region}>
+                              {Object.entries(TIMEZONE_GROUPS).map(([region, timezones]) => <div key={region}>
                                   <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                     {region}
                                   </div>
-                                  {timezones.map((tz) => (
-                                    <SelectItem key={tz.value} value={tz.value}>
+                                  {timezones.map(tz => <SelectItem key={tz.value} value={tz.value}>
                                       {tz.label}
-                                    </SelectItem>
-                                  ))}
-                                </div>
-                              ))}
+                                    </SelectItem>)}
+                                </div>)}
                             </SelectContent>
                           </Select>
                         </div>
@@ -559,12 +511,7 @@ const Settings = () => {
                               Tips, news, and special offers
                             </p>
                           </div>
-                          <Switch
-                            id="marketing-emails"
-                            checked={marketingEmails}
-                            onCheckedChange={(checked) => handleNotificationChange('marketing_emails', checked)}
-                            disabled={isUpdating}
-                          />
+                          <Switch id="marketing-emails" checked={marketingEmails} onCheckedChange={checked => handleNotificationChange('marketing_emails', checked)} disabled={isUpdating} />
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
@@ -575,12 +522,7 @@ const Settings = () => {
                               Login alerts and password changes
                             </p>
                           </div>
-                          <Switch
-                            id="security-alerts"
-                            checked={securityAlerts}
-                            onCheckedChange={(checked) => handleNotificationChange('security_alerts', checked)}
-                            disabled={isUpdating}
-                          />
+                          <Switch id="security-alerts" checked={securityAlerts} onCheckedChange={checked => handleNotificationChange('security_alerts', checked)} disabled={isUpdating} />
                         </div>
                       </div>
                     </AccordionContent>
@@ -599,33 +541,16 @@ const Settings = () => {
                     </AccordionTrigger>
                     <AccordionContent className="pb-4">
                       <div className="pt-1">
-                        {!showPasswordForm ? (
-                          <Button
-                            variant="outline"
-                            onClick={() => setShowPasswordForm(true)}
-                          >
+                        {!showPasswordForm ? <Button variant="outline" onClick={() => setShowPasswordForm(true)}>
                             Change Password
-                          </Button>
-                        ) : (
-                          <div className="space-y-4">
+                          </Button> : <div className="space-y-4">
                             <div className="grid gap-4">
                               {/* Current Password */}
                               <div className="space-y-2">
                                 <Label htmlFor="currentPassword">Current Password</Label>
                                 <div className="relative">
-                                  <Input
-                                    id="currentPassword"
-                                    type={showCurrentPassword ? 'text' : 'password'}
-                                    value={currentPassword}
-                                    onChange={(e) => setCurrentPassword(e.target.value)}
-                                    placeholder="Enter current password"
-                                    className="bg-input pr-10"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                  >
+                                  <Input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="bg-input pr-10" />
+                                  <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                   </button>
                                 </div>
@@ -635,19 +560,8 @@ const Settings = () => {
                               <div className="space-y-2">
                                 <Label htmlFor="newPassword">New Password</Label>
                                 <div className="relative">
-                                  <Input
-                                    id="newPassword"
-                                    type={showNewPassword ? 'text' : 'password'}
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="Enter new password"
-                                    className="bg-input pr-10"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowNewPassword(!showNewPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                  >
+                                  <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" className="bg-input pr-10" />
+                                  <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                   </button>
                                 </div>
@@ -655,54 +569,28 @@ const Settings = () => {
                                 <div className="space-y-2 pt-1">
                                   {/* Progress bar */}
                                   <div className="flex gap-1">
-                                    {[1, 2, 3].map((level) => {
-                                      const filled = level <= passwordStrength.score;
-                                      return (
-                                        <div
-                                          key={level}
-                                          className={cn(
-                                            "h-1 flex-1 rounded-full transition-all duration-300",
-                                            filled 
-                                              ? passwordStrength.score === 3 
-                                                ? "bg-success" 
-                                                : passwordStrength.score === 2 
-                                                  ? "bg-warning" 
-                                                  : "bg-destructive"
-                                              : "bg-muted"
-                                          )}
-                                        />
-                                      );
-                                    })}
+                                    {[1, 2, 3].map(level => {
+                                  const filled = level <= passwordStrength.score;
+                                  return <div key={level} className={cn("h-1 flex-1 rounded-full transition-all duration-300", filled ? passwordStrength.score === 3 ? "bg-success" : passwordStrength.score === 2 ? "bg-warning" : "bg-destructive" : "bg-muted")} />;
+                                })}
                                   </div>
                                   
                                   {/* Requirements checklist */}
                                   <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-xs">
-                                      {passwordStrength.hasLength ? (
-                                        <Check className="w-3.5 h-3.5 text-success" />
-                                      ) : (
-                                        <X className="w-3.5 h-3.5 text-muted-foreground" />
-                                      )}
+                                      {passwordStrength.hasLength ? <Check className="w-3.5 h-3.5 text-success" /> : <X className="w-3.5 h-3.5 text-muted-foreground" />}
                                       <span className={passwordStrength.hasLength ? 'text-success' : 'text-muted-foreground'}>
                                         At least 8 characters
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs">
-                                      {passwordStrength.hasNumber ? (
-                                        <Check className="w-3.5 h-3.5 text-success" />
-                                      ) : (
-                                        <X className="w-3.5 h-3.5 text-muted-foreground" />
-                                      )}
+                                      {passwordStrength.hasNumber ? <Check className="w-3.5 h-3.5 text-success" /> : <X className="w-3.5 h-3.5 text-muted-foreground" />}
                                       <span className={passwordStrength.hasNumber ? 'text-success' : 'text-muted-foreground'}>
                                         Include a number
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs">
-                                      {passwordStrength.hasSymbol ? (
-                                        <Check className="w-3.5 h-3.5 text-success" />
-                                      ) : (
-                                        <X className="w-3.5 h-3.5 text-muted-foreground" />
-                                      )}
+                                      {passwordStrength.hasSymbol ? <Check className="w-3.5 h-3.5 text-success" /> : <X className="w-3.5 h-3.5 text-muted-foreground" />}
                                       <span className={passwordStrength.hasSymbol ? 'text-success' : 'text-muted-foreground'}>
                                         Include a symbol
                                       </span>
@@ -715,58 +603,31 @@ const Settings = () => {
                               <div className="space-y-2">
                                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                                 <div className="relative">
-                                  <Input
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirm new password"
-                                    className="bg-input pr-10"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                  >
+                                  <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="bg-input pr-10" />
+                                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                   </button>
                                 </div>
-                                {confirmPassword && !passwordsMatch && (
-                                  <p className="text-xs text-destructive">Passwords do not match</p>
-                                )}
-                                {confirmPassword && passwordsMatch && (
-                                  <div className="flex items-center gap-2 text-xs text-success">
+                                {confirmPassword && !passwordsMatch && <p className="text-xs text-destructive">Passwords do not match</p>}
+                                {confirmPassword && passwordsMatch && <div className="flex items-center gap-2 text-xs text-success">
                                     <Check className="w-3.5 h-3.5" />
                                     <span>Passwords match</span>
-                                  </div>
-                                )}
+                                  </div>}
                               </div>
                             </div>
 
                             <div className="flex gap-2">
-                              <Button
-                                onClick={handleChangePassword}
-                                disabled={isChangingPassword || !isPasswordValid}
-                              >
-                                {isChangingPassword ? (
-                                  <>
+                              <Button onClick={handleChangePassword} disabled={isChangingPassword || !isPasswordValid}>
+                                {isChangingPassword ? <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Updating...
-                                  </>
-                                ) : (
-                                  'Update Password'
-                                )}
+                                  </> : 'Update Password'}
                               </Button>
-                              <Button
-                                variant="ghost"
-                                onClick={handleCancelPasswordChange}
-                                disabled={isChangingPassword}
-                              >
+                              <Button variant="ghost" onClick={handleCancelPasswordChange} disabled={isChangingPassword}>
                                 Cancel
                               </Button>
                             </div>
-                          </div>
-                        )}
+                          </div>}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -886,8 +747,7 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* Admin Developer Tools - Only visible to admins */}
-                  {isAdmin && (
-                    <AccordionItem value="admin" className="bg-card border border-dashed border-warning/50 rounded-lg px-5">
+                  {isAdmin && <AccordionItem value="admin" className="bg-card border border-dashed border-warning/50 rounded-lg px-5">
                       <AccordionTrigger className="hover:no-underline py-3">
                         <div className="flex items-center gap-3">
                           <Wrench className="w-5 h-5 text-warning" />
@@ -932,31 +792,16 @@ const Settings = () => {
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
-                              <Button 
-                                onClick={handleAdminTierChange}
-                                disabled={isChangingTier || selectedTier === tier}
-                                variant="outline"
-                              >
-                                {isChangingTier ? (
-                                  <>
+                              <Button onClick={handleAdminTierChange} disabled={isChangingTier || selectedTier === tier} variant="outline">
+                                {isChangingTier ? <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Applying...
-                                  </>
-                                ) : (
-                                  'Apply'
-                                )}
+                                  </> : 'Apply'}
                               </Button>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
                               <span className="text-muted-foreground">Current tier:</span>
-                              <Badge 
-                                variant="secondary" 
-                                className={cn(
-                                  tier === 'free' && "bg-muted text-muted-foreground",
-                                  tier === 'pro' && "bg-primary/10 text-primary",
-                                  tier === 'business' && "bg-warning/10 text-warning"
-                                )}
-                              >
+                              <Badge variant="secondary" className={cn(tier === 'free' && "bg-muted text-muted-foreground", tier === 'pro' && "bg-primary/10 text-primary", tier === 'business' && "bg-warning/10 text-warning")}>
                                 {tier.toUpperCase()}
                               </Badge>
                               {tier !== 'free' && <Check className="w-4 h-4 text-success" />}
@@ -964,29 +809,19 @@ const Settings = () => {
                           </div>
                         </div>
                       </AccordionContent>
-                    </AccordionItem>
-                  )}
+                    </AccordionItem>}
                 </Accordion>
 
                 {/* 6. Footer Actions - GDPR Export & Delete Account */}
                 <div className="pt-3 flex justify-center gap-3">
-                  <Button 
-                    variant="ghost" 
-                    onClick={exportData}
-                    disabled={isExporting}
-                    className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  >
-                    {isExporting ? (
-                      <>
+                  <Button variant="ghost" onClick={exportData} disabled={isExporting} className="text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                    {isExporting ? <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Exporting...
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <Download className="w-4 h-4 mr-2" />
                         Download My Data
-                      </>
-                    )}
+                      </>}
                   </Button>
                   <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                     <AlertDialogTrigger asChild>
