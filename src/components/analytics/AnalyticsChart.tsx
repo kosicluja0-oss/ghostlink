@@ -8,7 +8,7 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
-import { TimeRangeSelector, type TimeRange } from './TimeRangeSelector';
+import type { TimeRange } from './TimeRangeSelector';
 import type { AnalyticsData } from '@/types';
 import { 
   subMinutes, 
@@ -108,7 +108,7 @@ function getTickInterval(range: TimeRange, dataLength: number): number {
 interface AnalyticsChartProps {
   data: AnalyticsData[];
   showConversions?: boolean;
-  onTimeRangeChange?: (range: TimeRange, filteredData: AnalyticsData[]) => void;
+  timeRange: TimeRange;
   activeLinkId?: string | null;
   selectedLinkAlias?: string;
   onClearSelection?: () => void;
@@ -286,7 +286,7 @@ MainChart.displayName = 'MainChart';
 export function AnalyticsChart({ 
   data, 
   showConversions = true, 
-  onTimeRangeChange,
+  timeRange,
   activeLinkId,
   selectedLinkAlias,
   onClearSelection,
@@ -304,7 +304,6 @@ export function AnalyticsChart({
     [formatInTimezone, timezone]
   );
   
-  const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [activeMetric, setActiveMetric] = useState<MetricKey>('clicks');
   const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -337,16 +336,6 @@ export function AnalyticsChart({
   
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
-
-  // Reset range when time range changes
-  const handleTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-    if (onTimeRangeChange) {
-      const startDate = getDateRangeStart(range);
-      const filtered = data.filter(item => new Date(item.date) >= startDate);
-      onTimeRangeChange(range, filtered);
-    }
-  }, [data, onTimeRangeChange]);
 
   // Continuous timeline data with gap-filling
   const chartData = useMemo(() => {
@@ -452,7 +441,6 @@ export function AnalyticsChart({
             </div>
           )}
         </div>
-        <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
 
       {/* Main Chart */}

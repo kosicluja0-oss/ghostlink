@@ -9,14 +9,14 @@ import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { useLinks } from '@/hooks/useLinks';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import type { TierType, AnalyticsData } from '@/types';
+import type { TierType } from '@/types';
 import { TIERS } from '@/types';
 
 const Index = () => {
   const [userTier, setUserTier] = useState<TierType>('pro');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState<AnalyticsData[] | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   
   // Use real data hooks
@@ -42,14 +42,25 @@ const Index = () => {
     setActiveLinkId(null);
   }, []);
 
-  // Calculate stats based on filtered data (time range) - now uses real conversion data
+  // Calculate stats based on time range
   const displayStats = useMemo(() => {
-    const dataToUse = filteredData ?? analyticsData;
+    const now = new Date();
+    let startDate: Date;
+    switch (timeRange) {
+      case '30m': startDate = new Date(now.getTime() - 30 * 60 * 1000); break;
+      case '6h': startDate = new Date(now.getTime() - 6 * 60 * 60 * 1000); break;
+      case '1d': startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); break;
+      case '1w': startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); break;
+      case '1m': startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); break;
+      case '1y': startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); break;
+      case '3y': startDate = new Date(now.getTime() - 3 * 365 * 24 * 60 * 60 * 1000); break;
+      default: startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+    const dataToUse = analyticsData.filter(d => new Date(d.date) >= startDate);
     const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
     const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
     
-    // Calculate earnings from the filtered data or fall back to stats
     const totalEarnings = stats.earningsPerClick * stats.totalClicks;
     
     let conversionRate = 0;
@@ -57,7 +68,6 @@ const Index = () => {
     
     if (totalClicks > 0) {
       conversionRate = ((totalLeads + totalSales) / totalClicks) * 100;
-      // Scale EPC based on filtered clicks proportion
       earningsPerClick = stats.totalClicks > 0 
         ? (totalEarnings * (totalClicks / stats.totalClicks)) / totalClicks 
         : 0;
@@ -70,11 +80,7 @@ const Index = () => {
       conversionRate,
       earningsPerClick,
     };
-  }, [filteredData, analyticsData, stats]);
-
-  const handleTimeRangeChange = (range: TimeRange, data: typeof analyticsData) => {
-    setFilteredData(data);
-  };
+  }, [timeRange, analyticsData, stats]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -149,7 +155,7 @@ const Index = () => {
           <AnalyticsChart 
             data={analyticsData} 
             showConversions={!isFreeTier}
-            onTimeRangeChange={handleTimeRangeChange}
+            timeRange={timeRange}
             activeLinkId={activeLinkId}
             selectedLinkAlias={selectedLink?.alias}
             onClearSelection={handleClearSelection}
