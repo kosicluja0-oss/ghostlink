@@ -16,12 +16,15 @@ import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import type { GhostLink } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
-
 const Links = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { tier: userTier } = useSubscription();
-  
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    tier: userTier
+  } = useSubscription();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -29,11 +32,15 @@ const Links = () => {
   const [activeLinkId, setActiveLinkId] = useState<string | null>(null);
   const [detailLink, setDetailLink] = useState<GhostLink | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  
+
   // Use real data hooks
-  const { links, addLink, updateLink, deleteLink } = useLinks();
+  const {
+    links,
+    addLink,
+    updateLink,
+    deleteLink
+  } = useLinks();
   const openTicketsCount = useOpenTicketsCount();
-  
   const tier = TIERS[userTier];
   const activeLinksCount = links.length;
 
@@ -41,51 +48,35 @@ const Links = () => {
   const handleLinkSelect = useCallback((linkId: string) => {
     setActiveLinkId(prev => prev === linkId ? null : linkId);
   }, []);
-
   const handleOpenDetail = useCallback((link: GhostLink) => {
     setDetailLink(link);
     setDetailOpen(true);
     setActiveLinkId(link.id);
   }, []);
-
   const handleEditLink = useCallback((link: GhostLink) => {
     setEditingLink(link);
     setEditModalOpen(true);
   }, []);
-
-  const handleSaveLink = useCallback(async (
-    id: string, 
-    updates: { targetUrl: string }
-  ) => {
+  const handleSaveLink = useCallback(async (id: string, updates: {
+    targetUrl: string;
+  }) => {
     await updateLink(id, updates);
   }, [updateLink]);
-
-  return (
-    <TooltipProvider>
+  return <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar
-            userEmail={user?.email}
-            userTier={userTier}
-            onOpenSettings={() => setSettingsOpen(true)}
-            onOpenDataIntegration={() => navigate('/integrations')}
-            onSignOut={signOut}
-            openTicketsCount={openTicketsCount}
-          />
+          <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
           
           <SidebarInset className="flex-1">
             <main className="p-4 lg:p-6">
               {/* Header */}
               <section className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-                    <Link2 className="w-5 h-5 text-primary" />
-                  </div>
+                  
                   <div>
-                    <h1 className="text-2xl font-bold text-foreground">Your Links</h1>
+                    <h1 className="text-foreground text-base font-semibold">Your Links</h1>
                     <p className="text-sm text-muted-foreground">
-                      Create and manage your tracking links
-                    </p>
+                  </p>
                   </div>
                 </div>
               </section>
@@ -104,54 +95,21 @@ const Links = () => {
                   </Button>
                 </div>
                 
-                <LinkTable
-                  links={links}
-                  userTier={userTier}
-                  onDeleteLink={deleteLink}
-                  onEditLink={handleEditLink}
-                  activeLinkId={activeLinkId}
-                  onLinkSelect={handleLinkSelect}
-                  onOpenDetail={handleOpenDetail}
-                  onCreateLink={() => setCreateModalOpen(true)}
-                />
+                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} />
               </section>
             </main>
           </SidebarInset>
         </div>
 
         {/* Modals & Drawers */}
-        <SettingsDrawer
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          userTier={userTier}
-          onChangeTier={() => {}}
-        />
+        <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier={userTier} onChangeTier={() => {}} />
 
-        <CreateLinkModal
-          open={createModalOpen}
-          onOpenChange={setCreateModalOpen}
-          onSubmit={addLink}
-          userTier={userTier}
-          currentLinkCount={activeLinksCount}
-          maxLinks={tier.maxLinks}
-        />
+        <CreateLinkModal open={createModalOpen} onOpenChange={setCreateModalOpen} onSubmit={addLink} userTier={userTier} currentLinkCount={activeLinksCount} maxLinks={tier.maxLinks} />
 
-        <EditLinkModal
-          open={editModalOpen}
-          onOpenChange={setEditModalOpen}
-          link={editingLink}
-          userTier={userTier}
-          onSave={handleSaveLink}
-        />
+        <EditLinkModal open={editModalOpen} onOpenChange={setEditModalOpen} link={editingLink} userTier={userTier} onSave={handleSaveLink} />
 
-        <LinkDetailPanel
-          link={detailLink}
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
-        />
+        <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
       </SidebarProvider>
-    </TooltipProvider>
-  );
+    </TooltipProvider>;
 };
-
 export default Links;
