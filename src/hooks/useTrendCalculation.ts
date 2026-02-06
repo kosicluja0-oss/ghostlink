@@ -37,6 +37,7 @@ interface UseTrendsResult {
   clicksTrend: TrendResult | null;
   leadsTrend: TrendResult | null;
   salesTrend: TrendResult | null;
+  earningsTrend: TrendResult | null;
   conversionTrend: TrendResult | null;
   epcTrend: TrendResult | null;
   isLoading: boolean;
@@ -112,6 +113,7 @@ export function useTrends(periodDays = 7): UseTrendsResult {
         clicksTrend: null,
         leadsTrend: null,
         salesTrend: null,
+        earningsTrend: null,
         conversionTrend: null,
         epcTrend: null,
       };
@@ -131,6 +133,7 @@ export function useTrends(periodDays = 7): UseTrendsResult {
       clicksTrend: calculateTrend(current.clicks, previous.clicks),
       leadsTrend: calculateTrend(current.leads, previous.leads),
       salesTrend: calculateTrend(current.sales, previous.sales),
+      earningsTrend: calculateTrend(current.earnings, previous.earnings),
       conversionTrend: calculateTrend(currentConversionRate, previousConversionRate),
       epcTrend: calculateTrend(currentEPC, previousEPC),
     };

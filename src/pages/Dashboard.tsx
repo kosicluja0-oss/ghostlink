@@ -140,7 +140,7 @@ const Dashboard = () => {
   const { profile } = useProfile();
   const { tier: subscriptionTier } = useSubscription();
   const { formatInTimezone } = useTimezone();
-  const { clicksTrend, leadsTrend, salesTrend, conversionTrend, epcTrend } = useTrends(7);
+  const { clicksTrend, leadsTrend, salesTrend, earningsTrend, conversionTrend, epcTrend } = useTrends(7);
   
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
@@ -435,7 +435,7 @@ const Dashboard = () => {
             <main className="p-4 lg:p-6">
               {/* Stats Banner - Compact */}
               <section className="mb-5">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                   <StatCard
                     label="Total Clicks"
                     value={displayStats.totalClicks.toLocaleString()}
@@ -463,7 +463,16 @@ const Dashboard = () => {
                     compact
                   />
                   <StatCard
-                    label="Conversion Rate"
+                    label="Revenue"
+                    value={formatCurrency(displayStats.totalEarnings)}
+                    icon={TrendingUp}
+                    trend={earningsTrend ?? undefined}
+                    isLocked={isFreeTier}
+                    accentColor="success"
+                    compact
+                  />
+                  <StatCard
+                    label="Conv. Rate"
                     value={`${displayStats.conversionRate.toFixed(2)}%`}
                     icon={Percent}
                     trend={conversionTrend ?? undefined}
@@ -474,10 +483,10 @@ const Dashboard = () => {
                   <StatCard
                     label="EPC"
                     value={formatCurrency(displayStats.earningsPerClick)}
-                    icon={TrendingUp}
+                    icon={Sparkles}
                     trend={epcTrend ?? undefined}
                     isLocked={isFreeTier}
-                    accentColor="success"
+                    accentColor="primary"
                     compact
                   />
                 </div>
