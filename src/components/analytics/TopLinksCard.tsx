@@ -3,29 +3,65 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link2 } from 'lucide-react';
 import type { GhostLink } from '@/types';
 import { useMemo } from 'react';
+import type { MetricKey } from './AnalyticsChart';
+
+const METRIC_LABELS: Record<MetricKey, string> = {
+  clicks: 'clicks',
+  leads: 'leads',
+  sales: 'sales',
+  revenue: 'revenue',
+  cr: 'CR',
+  epc: 'EPC',
+};
 
 interface TopLinksCardProps {
   links: GhostLink[];
+  activeMetric?: MetricKey;
 }
 
-export const TopLinksCard = ({ links }: TopLinksCardProps) => {
-  // Rank links by total clicks (primary), then earnings (secondary)
+function getMetricValue(link: GhostLink, metric: MetricKey): number {
+  switch (metric) {
+    case 'clicks': return link.clicks;
+    case 'leads': return link.leads;
+    case 'sales': return link.sales;
+    case 'revenue': return link.earnings;
+    case 'cr': return link.clicks > 0 ? ((link.leads + link.sales) / link.clicks) * 100 : 0;
+    case 'epc': return link.clicks > 0 ? link.earnings / link.clicks : 0;
+    default: return link.clicks;
+  }
+}
+
+function formatValue(value: number, metric: MetricKey): string {
+  switch (metric) {
+    case 'revenue':
+    case 'epc':
+      return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    case 'cr':
+      return `${value.toFixed(1)}%`;
+    default:
+      return value.toLocaleString();
+  }
+}
+
+export const TopLinksCard = ({ links, activeMetric = 'clicks' }: TopLinksCardProps) => {
   const topLinks = useMemo(() => {
-    const sorted = [...links]
-      .filter((l) => l.clicks > 0 || l.earnings > 0)
-      .sort((a, b) => {
-        if (b.clicks !== a.clicks) return b.clicks - a.clicks;
-        return b.earnings - a.earnings;
-      })
+    const withValues = links.map(l => ({
+      ...l,
+      metricValue: getMetricValue(l, activeMetric),
+    }));
+
+    const sorted = [...withValues]
+      .filter(l => l.metricValue > 0)
+      .sort((a, b) => b.metricValue - a.metricValue)
       .slice(0, 5);
 
-    const maxClicks = sorted.length > 0 ? sorted[0].clicks : 1;
+    const maxValue = sorted.length > 0 ? sorted[0].metricValue : 1;
 
-    return sorted.map((link) => ({
+    return sorted.map(link => ({
       ...link,
-      percentage: maxClicks > 0 ? Math.round((link.clicks / maxClicks) * 100) : 0,
+      percentage: maxValue > 0 ? Math.round((link.metricValue / maxValue) * 100) : 0,
     }));
-  }, [links]);
+  }, [links, activeMetric]);
 
   if (topLinks.length === 0) {
     return (
@@ -48,6 +84,9 @@ export const TopLinksCard = ({ links }: TopLinksCardProps) => {
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
           <Link2 className="w-4 h-4 text-primary" />
           Top Links
+          <span className="text-[10px] text-muted-foreground/60 font-normal ml-auto">
+            by {METRIC_LABELS[activeMetric]}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
@@ -62,16 +101,9 @@ export const TopLinksCard = ({ links }: TopLinksCardProps) => {
                   /{link.alias}
                 </span>
               </div>
-              <div className="flex items-center gap-3 shrink-0 ml-2">
-                <span className="text-muted-foreground font-mono">
-                  {link.clicks.toLocaleString()} clicks
-                </span>
-                {link.earnings > 0 && (
-                  <span className="text-success font-mono font-medium">
-                    ${link.earnings.toFixed(2)}
-                  </span>
-                )}
-              </div>
+              <span className="text-muted-foreground font-mono shrink-0 ml-2">
+                {formatValue(link.metricValue, activeMetric)}
+              </span>
             </div>
             <Progress value={link.percentage} className="h-1.5 bg-muted" />
           </div>

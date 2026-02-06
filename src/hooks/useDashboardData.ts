@@ -107,13 +107,13 @@ export function useDashboardData(options?: UseDashboardDataOptions) {
       if (error) {
         console.error('Error fetching distribution:', error);
         return {
-          sources: [] as { source: string; count: number }[],
-          countries: [] as { country: string; count: number }[],
+          sources: [] as { source: string; clicks: number; leads: number; sales: number; earnings: number }[],
+          countries: [] as { country: string; clicks: number; leads: number; sales: number; earnings: number }[],
         };
       }
       return data as {
-        sources: { source: string; count: number }[];
-        countries: { country: string; count: number }[];
+        sources: { source: string; clicks: number; leads: number; sales: number; earnings: number }[];
+        countries: { country: string; clicks: number; leads: number; sales: number; earnings: number }[];
       };
     },
     enabled: !!user?.id,

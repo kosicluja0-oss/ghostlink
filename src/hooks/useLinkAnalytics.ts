@@ -12,14 +12,18 @@ interface DailyClickPoint {
 interface PlacementData {
   platform: string;
   placement: string;
-  count: number;
-  percentage: number;
+  clicks: number;
+  leads: number;
+  sales: number;
+  earnings: number;
 }
 
 interface CountryData {
   code: string;
-  count: number;
-  percentage: number;
+  clicks: number;
+  leads: number;
+  sales: number;
+  earnings: number;
 }
 
 interface FunnelStats {
@@ -123,8 +127,7 @@ export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
   }, [clicks]);
 
   const placements = useMemo((): PlacementData[] => {
-    const countMap = new Map<string, { platform: string; placement: string; count: number }>();
-    const total = (clicks ?? []).length || 1;
+    const countMap = new Map<string, { platform: string; placement: string; clicks: number }>();
     (clicks ?? []).forEach((c) => {
       const parsed = parsePlacement(c.source);
       const key = parsed
@@ -132,27 +135,28 @@ export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
         : 'direct:Direct';
       const existing = countMap.get(key);
       if (existing) {
-        existing.count++;
+        existing.clicks++;
       } else {
         countMap.set(key, {
           platform: parsed?.platform ?? 'direct',
           placement: parsed?.placement ?? 'Direct',
-          count: 1,
+          clicks: 1,
         });
       }
     });
     return Array.from(countMap.values())
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 5)
       .map((p) => ({
         ...p,
-        percentage: Math.round((p.count / total) * 100),
+        leads: 0,
+        sales: 0,
+        earnings: 0,
       }));
   }, [clicks]);
 
   const countries = useMemo((): CountryData[] => {
     const countMap = new Map<string, number>();
-    const total = (clicks ?? []).length || 1;
     (clicks ?? []).forEach((c) => {
       const code = c.country?.toUpperCase() || 'UNKNOWN';
       countMap.set(code, (countMap.get(code) || 0) + 1);
@@ -160,10 +164,12 @@ export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
     return Array.from(countMap.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
-      .map(([code, count]) => ({
+      .map(([code, clickCount]) => ({
         code,
-        count,
-        percentage: Math.round((count / total) * 100),
+        clicks: clickCount,
+        leads: 0,
+        sales: 0,
+        earnings: 0,
       }));
   }, [clicks]);
 
