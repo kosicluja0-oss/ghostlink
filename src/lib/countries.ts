@@ -42,7 +42,6 @@ export const COUNTRIES: Record<string, { name: string }> = {
   TW: { name: 'Taiwan' },
   NZ: { name: 'New Zealand' },
   ZA: { name: 'South Africa' },
-  RU: { name: 'Russia' },
   UA: { name: 'Ukraine' },
   TR: { name: 'Turkey' },
   IL: { name: 'Israel' },
