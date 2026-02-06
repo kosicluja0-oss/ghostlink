@@ -150,8 +150,7 @@ const Dashboard = () => {
 
   // Activity filters
   const [showSampleData, setShowSampleData] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(10);
-  const [activityLimit, setActivityLimit] = useState(200);
+  const activityLimit = 200;
 
   // Use server-side aggregated data (fixes 1000-row limit)
   const {
@@ -251,22 +250,10 @@ const Dashboard = () => {
     return filtered;
   }, [transactions, timeRangeCutoff]);
 
-  // Paginated transactions for display
+  // Show only the last 7 events
   const paginatedTransactions = useMemo(() => {
-    return filteredTransactions.slice(0, visibleCount);
-  }, [filteredTransactions, visibleCount]);
-  const hasMoreTransactions = filteredTransactions.length > visibleCount || activityTotalCount > activityLimit;
-  const handleLoadMore = () => {
-    if (visibleCount < filteredTransactions.length) {
-      setVisibleCount(prev => prev + 10);
-    } else if (activityTotalCount > activityLimit) {
-      setActivityLimit(prev => prev + 200);
-    }
-  };
-
-  useEffect(() => {
-    setVisibleCount(10);
-  }, [timeRange]);
+    return filteredTransactions.slice(0, 7);
+  }, [filteredTransactions]);
 
   // Calculate stats based on global time range
   const displayStats = useMemo(() => {
@@ -482,13 +469,6 @@ const Dashboard = () => {
                             </TableBody>
                           </Table>
                         </div>
-                        {hasMoreTransactions && (
-                          <div className="flex items-center justify-center py-2 border-t border-border bg-muted/20">
-                            <Button variant="ghost" size="sm" onClick={handleLoadMore} className="text-xs text-muted-foreground hover:text-foreground">
-                              Load more
-                            </Button>
-                          </div>
-                        )}
                       </div>
                     )}
                     {showSampleData && !hasRealData && (
