@@ -20,7 +20,7 @@ import { PlacementBadge, parsePlacement } from '@/components/analytics/Placement
 import { WelcomeWizard } from '@/components/wizard/WelcomeWizard';
 import { LiveSignalIndicator } from '@/components/wizard/LiveSignalIndicator';
 import { useLinks } from '@/hooks/useLinks';
-import { useClicksRealtime } from '@/hooks/useClicksRealtime';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/hooks/useAuth';
 import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
 import { useProfile } from '@/hooks/useProfile';
@@ -155,11 +155,15 @@ const Dashboard = () => {
   const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [showSampleData, setShowSampleData] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(10); // Pagination state
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [activityLimit, setActivityLimit] = useState(200);
   
-  // Use real data hooks
+  // Use server-side aggregated data (fixes 1000-row limit)
   const { links, refetch: refetchLinks } = useLinks();
-  const { analyticsData, clicks, conversions } = useClicksRealtime();
+  const {
+    stats, chartData, recentActivity, activityTotalCount,
+    placementDistribution, countryDistribution, hasClicks,
+  } = useDashboardData({ activityLimit });
   const openTicketsCount = useOpenTicketsCount();
   
   // Check if wizard should be shown on mount
@@ -168,9 +172,8 @@ const Dashboard = () => {
     if (!hasSeenWizard) {
       setShowWizard(true);
     } else {
-      // Check if we should show the live signal (wizard completed but no clicks yet)
       const wizardCompletedAt = localStorage.getItem('wizard_completed_at');
-      if (wizardCompletedAt && clicks.length === 0) {
+      if (wizardCompletedAt && !hasClicks) {
         setShowLiveSignal(true);
       }
     }
@@ -178,11 +181,11 @@ const Dashboard = () => {
   
   // Hide live signal once first click arrives
   useEffect(() => {
-    if (clicks.length > 0 && showLiveSignal) {
+    if (hasClicks && showLiveSignal) {
       setShowLiveSignal(false);
       localStorage.removeItem('wizard_completed_at');
     }
-  }, [clicks.length, showLiveSignal]);
+  }, [hasClicks, showLiveSignal]);
   
   const handleWizardComplete = () => {
     setShowWizard(false);
@@ -201,67 +204,30 @@ const Dashboard = () => {
   // Determine if user is on free tier
   const isFreeTier = subscriptionTier === 'free';
 
-  // Build transactions from clicks and conversions
-  const realTransactions: Transaction[] = useMemo(() => {
-    const result: Transaction[] = [];
-    
-    // Map link IDs to aliases
-    const linkMap = new Map(links.map(l => [l.id, l.alias]));
-    
-    // Map click IDs to source and country for conversions
-    const clickSourceMap = new Map(clicks.map(c => [c.id, c.source]));
-    const clickCountryMap = new Map(clicks.map(c => [c.id, c.country]));
-
-    // Add clicks
-    clicks.forEach(click => {
-      const alias = linkMap.get(click.link_id) || 'Unknown';
-      result.push({
-        id: `click-${click.id}`,
-        date: new Date(click.created_at),
-        type: 'click',
-        description: 'Link clicked',
-        amount: null,
-        source: 'Direct Link',
-        sourceIcon: 'direct',
-        linkId: click.link_id,
-        linkAlias: alias,
-        placement: click.source || undefined, // Smart Copy tracking parameter
-        location: click.country || undefined, // Country from IP geolocation
-      });
-    });
-
-    // Add conversions (leads and sales)
-    conversions.forEach(conv => {
-      const alias = conv.link_id ? linkMap.get(conv.link_id) || 'Unknown' : 'Unknown';
-      // Get source and country from conversion (if available) or from click
-      const placementSource = conv.source || clickSourceMap.get(conv.click_id);
-      const country = conv.country || clickCountryMap.get(conv.click_id);
-      result.push({
-        id: `conv-${conv.id}`,
-        date: new Date(conv.created_at),
-        type: conv.type as TransactionType,
-        description: conv.type === 'sale' ? 'Purchase completed' : 'New subscriber',
-        amount: conv.type === 'sale' ? Number(conv.value) : null,
-        source: 'Webhook',
-        sourceIcon: 'direct',
-        linkId: conv.link_id || '',
-        linkAlias: alias,
-        placement: placementSource || undefined, // Smart Copy tracking parameter
-        location: country || undefined, // Country from IP geolocation
-      });
-    });
-
-    // Sort by date descending
-    return result.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [clicks, conversions, links]);
-
-  // Combine real data with sample data if enabled
-  const transactions = useMemo(() => {
-    if (showSampleData && realTransactions.length === 0) {
+  // Map server-side activity events to Transaction format for table display
+  const transactions: Transaction[] = useMemo(() => {
+    if (showSampleData && recentActivity.length === 0) {
       return SAMPLE_TRANSACTIONS;
     }
-    return realTransactions;
-  }, [realTransactions, showSampleData]);
+    return recentActivity.map((event) => ({
+      id: event.id,
+      date: new Date(event.created_at),
+      type: event.event_type as TransactionType,
+      description:
+        event.event_type === 'sale'
+          ? 'Purchase completed'
+          : event.event_type === 'lead'
+          ? 'New subscriber'
+          : 'Link clicked',
+      amount: event.event_type === 'sale' && event.value > 0 ? Number(event.value) : null,
+      source: event.event_type === 'click' ? 'Direct Link' : 'Webhook',
+      sourceIcon: 'direct',
+      linkId: event.link_id,
+      linkAlias: event.link_alias,
+      placement: event.source || undefined,
+      location: event.country || undefined,
+    }));
+  }, [recentActivity, showSampleData]);
 
   // Apply filters
   const filteredTransactions = useMemo(() => {
@@ -314,33 +280,36 @@ const Dashboard = () => {
     return filteredTransactions.slice(0, visibleCount);
   }, [filteredTransactions, visibleCount]);
 
-  const hasMoreTransactions = filteredTransactions.length > visibleCount;
+  const hasMoreTransactions = filteredTransactions.length > visibleCount || 
+    activityTotalCount > activityLimit;
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 10);
+    if (visibleCount < filteredTransactions.length) {
+      setVisibleCount(prev => prev + 10);
+    } else if (activityTotalCount > activityLimit) {
+      setActivityLimit(prev => prev + 200);
+    }
   };
 
-  // Reset visible count when filters change
-  useMemo(() => {
+  // FIX: useEffect instead of useMemo for side-effect (anti-pattern fix)
+  useEffect(() => {
     setVisibleCount(10);
   }, [typeFilter, dateRange, searchQuery]);
 
-  // Calculate stats based on filtered data (time range)
+  // Calculate stats based on chart time range selection
   const displayStats = useMemo(() => {
-    const dataToUse = filteredData ?? analyticsData;
+    const dataToUse = filteredData ?? chartData;
     const totalClicks = dataToUse.reduce((sum, d) => sum + d.clicks, 0);
     const totalLeads = dataToUse.reduce((sum, d) => sum + d.leads, 0);
     const totalSales = dataToUse.reduce((sum, d) => sum + d.sales, 0);
-    
-    // Calculate earnings from links data
-    const totalEarnings = links.reduce((sum, l) => sum + l.earnings, 0);
+    const totalEarnings = stats.totalEarnings;
     
     let conversionRate = 0;
     let earningsPerClick = 0;
     
     if (totalClicks > 0) {
       conversionRate = ((totalLeads + totalSales) / totalClicks) * 100;
-      earningsPerClick = totalEarnings / totalClicks;
+      earningsPerClick = stats.totalClicks > 0 ? totalEarnings / stats.totalClicks : 0;
     }
     
     return {
@@ -351,9 +320,9 @@ const Dashboard = () => {
       conversionRate,
       earningsPerClick,
     };
-  }, [filteredData, analyticsData, links]);
+  }, [filteredData, chartData, stats]);
 
-  const handleTimeRangeChange = (range: TimeRange, data: typeof analyticsData) => {
+  const handleTimeRangeChange = (range: TimeRange, data: typeof chartData) => {
     setFilteredData(data);
   };
 
@@ -364,7 +333,6 @@ const Dashboard = () => {
       minimumFractionDigits: 2,
     }).format(value);
   };
-
 
   const getTypeBadge = (type: TransactionType) => {
     switch (type) {
@@ -412,63 +380,33 @@ const Dashboard = () => {
     .reduce((sum, t) => sum + (t.amount || 0), 0);
   const conversionRate = clicksCount > 0 ? ((salesCount / clicksCount) * 100).toFixed(1) : '0.0';
 
-  const hasRealData = realTransactions.length > 0;
+  const hasRealData = hasClicks;
 
-  // Calculate placement analytics
+  // Placement analytics from server-side distribution
   const placementAnalytics = useMemo(() => {
-    const placementCounts: Record<string, { platform: string; placement: string; count: number }> = {};
-    
-    transactions.forEach(tx => {
-      const placementInfo = parsePlacement(tx.placement);
-      const key = placementInfo 
-        ? `${placementInfo.platform}-${placementInfo.placement}` 
-        : 'direct-Direct';
-      
-      if (!placementCounts[key]) {
-        placementCounts[key] = {
-          platform: placementInfo?.platform || 'direct',
-          placement: placementInfo?.placement || 'Direct',
-          count: 0,
-        };
-      }
-      placementCounts[key].count++;
-    });
-
-    const total = transactions.length;
-    const placements = Object.values(placementCounts)
-      .map(p => ({
-        ...p,
+    const total = placementDistribution.reduce((sum, p) => sum + p.count, 0);
+    return placementDistribution.map((p) => {
+      const parsed = parsePlacement(p.source === 'direct' || !p.source ? undefined : p.source);
+      return {
+        platform: parsed?.platform || 'direct',
+        placement: parsed?.placement || 'Direct',
+        count: p.count,
         percentage: total > 0 ? Math.round((p.count / total) * 100) : 0,
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    return placements;
-  }, [transactions]);
-
-  // Calculate country analytics from transactions
-  const countryAnalytics = useMemo(() => {
-    const countryCounts: Record<string, number> = {};
-    
-    transactions.forEach(tx => {
-      const country = tx.location || 'Unknown';
-      if (!countryCounts[country]) {
-        countryCounts[country] = 0;
-      }
-      countryCounts[country]++;
+      };
     });
+  }, [placementDistribution]);
 
-    const total = transactions.length;
-    const countries = Object.entries(countryCounts)
-      .map(([code, count]) => ({
-        code,
-        count,
-        percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-      }))
-      .filter(c => c.code !== 'Unknown') // Filter out unknown
-      .sort((a, b) => b.count - a.count);
-
-    return countries;
-  }, [transactions]);
+  // Country analytics from server-side distribution
+  const countryAnalytics = useMemo(() => {
+    const total = countryDistribution.reduce((sum, c) => sum + c.count, 0);
+    return countryDistribution
+      .filter((c) => c.country !== 'UNKNOWN')
+      .map((c) => ({
+        code: c.country,
+        count: c.count,
+        percentage: total > 0 ? Math.round((c.count / total) * 100) : 0,
+      }));
+  }, [countryDistribution]);
 
   return (
     <TooltipProvider>
@@ -550,7 +488,7 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                   <div className="lg:col-span-3">
                     <AnalyticsChart 
-                      data={analyticsData} 
+                      data={chartData} 
                       showConversions={!isFreeTier}
                       onTimeRangeChange={handleTimeRangeChange}
                       activeLinkId={null}
@@ -573,7 +511,6 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
-                    {/* Live Signal Indicator - shows when waiting for first click */}
                     {showLiveSignal && <LiveSignalIndicator />}
                   </div>
                 </div>
@@ -637,7 +574,6 @@ const Dashboard = () => {
                       </Button>
                     )}
                   </div>
-
                 </div>
 
                 {/* Summary Strip */}
@@ -701,10 +637,7 @@ const Dashboard = () => {
                             key={tx.id} 
                             className="border-border hover:bg-muted/50 transition-colors h-14"
                           >
-                            {/* Event Column */}
                             <TableCell className="py-4">{getTypeBadge(tx.type)}</TableCell>
-                            
-                            {/* Link Column */}
                             <TableCell className="py-4">
                               <button 
                                 className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors cursor-pointer group"
@@ -716,13 +649,9 @@ const Dashboard = () => {
                                 <span className="font-medium group-hover:underline">ghost.link/{tx.linkAlias}</span>
                               </button>
                             </TableCell>
-                            
-                            {/* Placement Column */}
                             <TableCell className="hidden sm:table-cell py-4">
                               <PlacementBadge source={tx.placement} />
                             </TableCell>
-                            
-                            {/* Customer Column */}
                             <TableCell className="py-4">
                               <div className="flex items-center gap-3">
                                 <Avatar className="w-8 h-8">
@@ -735,8 +664,6 @@ const Dashboard = () => {
                                 </span>
                               </div>
                             </TableCell>
-                            
-                            {/* Country Column */}
                             <TableCell className="hidden md:table-cell py-4">
                               {tx.location && COUNTRIES[tx.location] ? (
                                 <div className="flex items-center gap-2">
@@ -750,8 +677,6 @@ const Dashboard = () => {
                                 </div>
                               )}
                             </TableCell>
-                            
-                            {/* Amount Column */}
                             <TableCell className="text-right py-4 font-mono">
                               {tx.amount !== null ? (
                                 <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span>
@@ -759,8 +684,6 @@ const Dashboard = () => {
                                 <span className="text-muted-foreground">—</span>
                               )}
                             </TableCell>
-                            
-                            {/* Date Column */}
                             <TableCell className="text-right py-4">
                               <span className="text-sm text-muted-foreground font-mono whitespace-nowrap">
                                 {formatInTimezone(tx.date, 'MMM d, HH:mm')}
@@ -780,7 +703,7 @@ const Dashboard = () => {
                           onClick={handleLoadMore}
                           className="text-muted-foreground hover:text-foreground"
                         >
-                          Load more ({filteredTransactions.length - visibleCount} remaining)
+                          Load more ({Math.max(0, filteredTransactions.length - visibleCount)} remaining)
                         </Button>
                       </div>
                     )}
@@ -810,7 +733,7 @@ const Dashboard = () => {
           open={settingsOpen}
           onOpenChange={setSettingsOpen}
           userTier={subscriptionTier}
-          onChangeTier={() => {}} // Tier is managed by subscription
+          onChangeTier={() => {}}
         />
 
         <DataIntegrationModal

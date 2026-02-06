@@ -4,17 +4,15 @@ import type { GhostLink } from '@/types';
 import { toast } from 'sonner';
 import { USE_MOCK_DATA, getMockLinks } from '@/lib/mockData';
 
-interface DbClick {
-  id: string;
-  link_id: string;
-  created_at: string;
-}
-
+/**
+ * Hook to manage links with server-side aggregated stats.
+ * Uses get_link_stats RPC for a single query instead of N+1 queries per link.
+ */
 export function useLinks() {
   const [links, setLinks] = useState<GhostLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch links and their click counts
+  // Fetch links with aggregated stats in a single query
   const fetchLinks = useCallback(async () => {
     if (USE_MOCK_DATA) {
       setLinks(getMockLinks());
@@ -31,74 +29,31 @@ export function useLinks() {
         return;
       }
 
-      const { data: linksData, error: linksError } = await supabase
-        .from('links')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+      // Single RPC call replaces N+1 queries (was: 3 queries per link)
+      const { data, error } = await supabase.rpc('get_link_stats', {
+        p_user_id: session.user.id,
+      });
 
-      if (linksError) {
-        console.error('Error fetching links:', linksError);
+      if (error) {
+        console.error('Error fetching links:', error);
+        setIsLoading(false);
         return;
       }
 
-      if (!linksData) {
-        setLinks([]);
-        return;
-      }
-
-      // Get click counts and conversions for each link
-      const linksWithStats = await Promise.all(
-        linksData.map(async (link) => {
-          const { count: clickCount } = await supabase
-            .from('clicks')
-            .select('*', { count: 'exact', head: true })
-            .eq('link_id', link.id);
-
-          const { data: clickIds } = await supabase
-            .from('clicks')
-            .select('id')
-            .eq('link_id', link.id);
-
-          let leads = 0;
-          let sales = 0;
-          let earnings = 0;
-
-          if (clickIds && clickIds.length > 0) {
-            const ids = clickIds.map(c => c.id);
-            
-            const { data: conversions } = await supabase
-              .from('conversions')
-              .select('type, value')
-              .in('click_id', ids);
-
-            if (conversions) {
-              conversions.forEach((conv) => {
-                if (conv.type === 'lead') {
-                  leads++;
-                } else if (conv.type === 'sale') {
-                  sales++;
-                  earnings += Number(conv.value) || 0;
-                }
-              });
-            }
-          }
-
-          return {
-            id: link.id,
-            alias: link.custom_alias,
-            targetUrl: link.target_url,
-            clicks: clickCount ?? 0,
-            leads,
-            sales,
-            earnings,
-            status: 'active' as const,
-            createdAt: new Date(link.created_at),
-          };
-        })
+      const linksData = (data as any[]) || [];
+      setLinks(
+        linksData.map((l) => ({
+          id: l.link_id,
+          alias: l.alias,
+          targetUrl: l.target_url,
+          clicks: l.clicks,
+          leads: l.leads,
+          sales: l.sales,
+          earnings: Number(l.earnings),
+          status: 'active' as const,
+          createdAt: new Date(l.created_at),
+        }))
       );
-
-      setLinks(linksWithStats);
     } catch (error) {
       console.error('Error in fetchLinks:', error);
     } finally {
@@ -110,7 +65,7 @@ export function useLinks() {
     fetchLinks();
   }, [fetchLinks]);
 
-  // Subscribe to real-time click updates
+  // Subscribe to real-time click updates (just increment counter)
   useEffect(() => {
     const channel = supabase
       .channel('clicks-changes')
@@ -122,9 +77,7 @@ export function useLinks() {
           table: 'clicks',
         },
         (payload) => {
-          const newClick = payload.new as DbClick;
-          console.log('New click received:', newClick);
-          
+          const newClick = payload.new as { link_id: string };
           setLinks((prev) =>
             prev.map((link) =>
               link.id === newClick.link_id
