@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
+import { useState, useMemo, useCallback, memo, useRef } from 'react';
 import {
   XAxis,
   YAxis,
@@ -345,21 +345,10 @@ export function AnalyticsChart({
   
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Fixed range slider state - always has a selection
-  const [rangeStart, setRangeStart] = useState(0);
-  const [rangeEnd, setRangeEnd] = useState(100); // percentage
-  const [dragMode, setDragMode] = useState<'left' | 'right' | 'middle' | null>(null);
-  const [dragStartX, setDragStartX] = useState(0);
-  const [dragStartRange, setDragStartRange] = useState({ start: 0, end: 100 });
-  const [committedRange, setCommittedRange] = useState({ start: 0, end: 100 });
 
   // Reset range when time range changes
   const handleTimeRangeChange = useCallback((range: TimeRange) => {
     setTimeRange(range);
-    setRangeStart(0);
-    setRangeEnd(100);
-    setCommittedRange({ start: 0, end: 100 });
     if (onTimeRangeChange) {
       const startDate = getDateRangeStart(range);
       const filtered = data.filter(item => new Date(item.date) >= startDate);
@@ -418,26 +407,10 @@ export function AnalyticsChart({
     });
   }, [data, timeRange, activeLinkId]);
 
-  // Data to display in main chart - ONLY updates when range is committed (mouse released)
-  const displayData = useMemo(() => {
-    if (committedRange.start === 0 && committedRange.end === 100) {
-      return chartData;
-    }
-    const startIdx = Math.floor((committedRange.start / 100) * chartData.length);
-    const endIdx = Math.floor((committedRange.end / 100) * chartData.length);
-    return chartData.slice(startIdx, Math.max(endIdx, startIdx + 1));
-  }, [chartData, committedRange]);
-
-  // Calculate tick interval based on display data length (adapts to zoom)
+  // Calculate tick interval based on data length
   const tickInterval = useMemo(() => {
-    return getTickInterval(timeRange, displayData.length);
-  }, [timeRange, displayData.length]);
-
-  // Simplified mini-map data for navigator (max 100 points)
-  const navigatorData = useMemo(() => {
-    const step = Math.max(1, Math.floor(chartData.length / 100));
-    return chartData.filter((_, i) => i % step === 0);
-  }, [chartData]);
+    return getTickInterval(timeRange, chartData.length);
+  }, [timeRange, chartData.length]);
 
   const toggleMetric = useCallback((metric: MetricKey) => {
     setVisibleMetrics(prev => ({
@@ -446,62 +419,6 @@ export function AnalyticsChart({
     }));
   }, []);
 
-  // Range slider handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent, mode: 'left' | 'right' | 'middle') => {
-    e.stopPropagation();
-    e.preventDefault();
-    setDragMode(mode);
-    setDragStartX(e.clientX);
-    setDragStartRange({ start: rangeStart, end: rangeEnd });
-  }, [rangeStart, rangeEnd]);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragMode) return;
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const deltaPercent = ((e.clientX - dragStartX) / rect.width) * 100;
-    const minWidth = 5; // Minimum 5% width
-    
-    if (dragMode === 'left') {
-      const newStart = Math.max(0, Math.min(rangeEnd - minWidth, dragStartRange.start + deltaPercent));
-      setRangeStart(newStart);
-    } else if (dragMode === 'right') {
-      const newEnd = Math.min(100, Math.max(rangeStart + minWidth, dragStartRange.end + deltaPercent));
-      setRangeEnd(newEnd);
-    } else if (dragMode === 'middle') {
-      const width = dragStartRange.end - dragStartRange.start;
-      let newStart = dragStartRange.start + deltaPercent;
-      let newEnd = dragStartRange.end + deltaPercent;
-      
-      if (newStart < 0) {
-        newStart = 0;
-        newEnd = width;
-      }
-      if (newEnd > 100) {
-        newEnd = 100;
-        newStart = 100 - width;
-      }
-      
-      setRangeStart(newStart);
-      setRangeEnd(newEnd);
-    }
-  }, [dragMode, dragStartX, dragStartRange, rangeStart, rangeEnd]);
-
-  const handleMouseUp = useCallback(() => {
-    if (dragMode) {
-      // Commit the range on mouse release - this triggers main chart update
-      setCommittedRange({ start: rangeStart, end: rangeEnd });
-    }
-    setDragMode(null);
-  }, [dragMode, rangeStart, rangeEnd]);
-
-  const handleResetZoom = useCallback(() => {
-    setRangeStart(0);
-    setRangeEnd(100);
-    setCommittedRange({ start: 0, end: 100 });
-  }, []);
-
-  const isZoomed = rangeStart !== 0 || rangeEnd !== 100;
 
   const CustomLegend = () => {
     const metrics: { key: MetricKey; label: string; locked?: boolean }[] = [
@@ -559,14 +476,6 @@ export function AnalyticsChart({
               </button>
             </div>
           )}
-          {isZoomed && !activeLinkId && (
-            <button 
-              onClick={handleResetZoom}
-              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-0.5 rounded border border-border/50 hover:border-border"
-            >
-              Reset Zoom
-            </button>
-          )}
         </div>
         <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
       </div>
@@ -577,7 +486,7 @@ export function AnalyticsChart({
         className="h-[240px] w-full relative"
       >
         <MainChart 
-          displayData={displayData} 
+          displayData={chartData} 
           visibleMetrics={visibleMetrics} 
           showConversions={showConversions}
           tickInterval={tickInterval}
@@ -585,95 +494,6 @@ export function AnalyticsChart({
         <Watermark />
       </div>
 
-      {/* Divider */}
-      <div className="h-px bg-border/50 my-3" />
-
-      {/* Fixed Range Slider / Navigator */}
-      <div className="space-y-1">
-        <div 
-          className="relative h-[40px] bg-muted/30 rounded border border-border/50 overflow-hidden select-none"
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
-          {/* Mini area chart */}
-          <div className="absolute inset-0 pointer-events-none">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={navigatorData} margin={{ top: 2, right: 0, left: 0, bottom: 2 }}>
-                <defs>
-                  <linearGradient id="navigatorGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  type="linear"
-                  dataKey="clicks"
-                  stroke="hsl(var(--chart-clicks))"
-                  strokeWidth={1}
-                  strokeOpacity={0.5}
-                  fill="url(#navigatorGradient)"
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Dimmed areas outside selection */}
-          <div 
-            className="absolute top-0 bottom-0 left-0 bg-background/60 pointer-events-none"
-            style={{ width: `${rangeStart}%` }}
-          />
-          <div 
-            className="absolute top-0 bottom-0 right-0 bg-background/60 pointer-events-none"
-            style={{ width: `${100 - rangeEnd}%` }}
-          />
-
-          {/* Selection window - always visible, never disappears */}
-          <div 
-            className="absolute top-0 bottom-0 border-l-2 border-r-2 border-primary/60"
-            style={{ 
-              left: `${rangeStart}%`, 
-              width: `${rangeEnd - rangeStart}%` 
-            }}
-          >
-            {/* Middle drag area */}
-            <div 
-              className="absolute inset-0 cursor-grab active:cursor-grabbing"
-              onMouseDown={(e) => handleMouseDown(e, 'middle')}
-            />
-            
-            {/* Left handle */}
-            <div 
-              className="absolute left-0 top-0 bottom-0 w-3 -translate-x-1/2 cursor-ew-resize flex items-center justify-center z-10"
-              onMouseDown={(e) => handleMouseDown(e, 'left')}
-            >
-              <div className="w-1.5 h-5 bg-primary rounded-full shadow-sm" />
-            </div>
-            
-            {/* Right handle */}
-            <div 
-              className="absolute right-0 top-0 bottom-0 w-3 translate-x-1/2 cursor-ew-resize flex items-center justify-center z-10"
-              onMouseDown={(e) => handleMouseDown(e, 'right')}
-            >
-              <div className="w-1.5 h-5 bg-primary rounded-full shadow-sm" />
-            </div>
-          </div>
-        </div>
-
-        {/* Static timeline labels */}
-        <div className="flex justify-between px-1">
-          {navigatorData
-            .filter((_, i) => i % Math.max(1, Math.floor(navigatorData.length / 6)) === 0 || i === navigatorData.length - 1)
-            .slice(0, 7)
-            .map((item, i) => (
-              <span key={i} className="text-[10px] text-muted-foreground">
-                {item.dateFormatted}
-              </span>
-            ))
-          }
-        </div>
-      </div>
 
       <CustomLegend />
     </div>
