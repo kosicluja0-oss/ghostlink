@@ -39,7 +39,9 @@ export default function Support() {
     isAdmin
   } = useUserRole();
   const openTicketsCount = useOpenTicketsCount();
-  const { getUnreadCountForTicket } = useUnreadMessages();
+  const {
+    getUnreadCountForTicket
+  } = useUnreadMessages();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dataIntegrationOpen, setDataIntegrationOpen] = useState(false);
   const [createTicketOpen, setCreateTicketOpen] = useState(false);
@@ -69,13 +71,12 @@ export default function Support() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <HelpCircle className="w-6 h-6 text-primary" />
+                <h1 className="flex items-center gap-2 text-sm font-semibold">
+                  
                   Support
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  ​Do you have questions or problems? We are here for you.
-                </p>
+              </p>
               </div>
               <Button onClick={() => setCreateTicketOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
