@@ -74,7 +74,7 @@ const Links = () => {
                 <div className="flex items-center gap-3 mb-2">
                   
                   <div>
-                    <h1 className="text-foreground font-semibold text-sm">Your Links</h1>
+                    <h1 className="text-foreground font-semibold text-sm">Links</h1>
                     <p className="text-sm text-muted-foreground">
                   </p>
                   </div>
