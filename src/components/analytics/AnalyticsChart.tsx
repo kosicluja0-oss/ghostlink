@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo, useRef } from 'react';
+import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
 import {
   XAxis,
   YAxis,
@@ -26,7 +26,7 @@ import {
   startOfWeek,
   startOfMonth,
 } from 'date-fns';
-import { Ghost } from 'lucide-react';
+import { Ghost, ChevronLeft } from 'lucide-react';
 import { useTimezone } from '@/hooks/useTimezone';
 
 // Generate all time points in a range for continuous timeline
@@ -306,16 +306,34 @@ export function AnalyticsChart({
   
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [activeMetric, setActiveMetric] = useState<MetricKey>('clicks');
+  const [metricDropdownOpen, setMetricDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Cycle through available metrics
-  const cycleMetric = useCallback(() => {
-    const available: MetricKey[] = showConversions 
-      ? ['clicks', 'leads', 'sales'] 
-      : ['clicks'];
-    const currentIndex = available.indexOf(activeMetric);
-    const nextIndex = (currentIndex + 1) % available.length;
-    setActiveMetric(available[nextIndex]);
-  }, [activeMetric, showConversions]);
+  // Available metrics
+  const availableMetrics: MetricKey[] = showConversions 
+    ? ['clicks', 'leads', 'sales'] 
+    : ['clicks'];
+
+  // Other metrics (not currently active)
+  const otherMetrics = availableMetrics.filter(m => m !== activeMetric);
+
+  // Select a metric from dropdown
+  const selectMetric = useCallback((metric: MetricKey) => {
+    setActiveMetric(metric);
+    setMetricDropdownOpen(false);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!metricDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setMetricDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [metricDropdownOpen]);
   
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -398,16 +416,30 @@ export function AnalyticsChart({
     <div className="bg-card rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <button
-            onClick={cycleMetric}
-            className="flex items-center gap-2 text-base font-semibold text-foreground hover:opacity-80 transition-opacity"
-          >
-            <div 
-              className="w-2.5 h-2.5 rounded-full"
-              style={{ backgroundColor: METRIC_COLORS[activeMetric] }}
-            />
-            {METRIC_LABELS[activeMetric]}
-          </button>
+          <div ref={dropdownRef} className="relative">
+            <button
+              onClick={() => setMetricDropdownOpen(prev => !prev)}
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+            >
+              {METRIC_LABELS[activeMetric]}
+              <ChevronLeft 
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${metricDropdownOpen ? '-rotate-90' : ''}`} 
+              />
+            </button>
+            {metricDropdownOpen && otherMetrics.length > 0 && (
+              <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-md shadow-lg z-20 min-w-[100px] overflow-hidden animate-fade-in">
+                {otherMetrics.map(metric => (
+                  <button
+                    key={metric}
+                    onClick={() => selectMetric(metric)}
+                    className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                  >
+                    {METRIC_LABELS[metric]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {activeLinkId && selectedLinkAlias && (
             <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
               <span className="text-[11px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
