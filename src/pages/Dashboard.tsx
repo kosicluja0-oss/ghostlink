@@ -456,7 +456,7 @@ const Dashboard = () => {
                   <StatCard
                     label="Total Sales"
                     value={displayStats.totalSales.toLocaleString()}
-                    icon={DollarSign}
+                    icon={TrendingUp}
                     trend={salesTrend ?? undefined}
                     isLocked={isFreeTier}
                     accentColor="success"
@@ -465,7 +465,7 @@ const Dashboard = () => {
                   <StatCard
                     label="Revenue"
                     value={formatCurrency(displayStats.totalEarnings)}
-                    icon={TrendingUp}
+                    icon={DollarSign}
                     trend={earningsTrend ?? undefined}
                     isLocked={isFreeTier}
                     accentColor="success"
