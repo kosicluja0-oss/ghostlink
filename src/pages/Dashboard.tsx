@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MousePointer, Users, DollarSign, TrendingUp, Percent, Filter, Search, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
+import { MousePointer, Users, DollarSign, TrendingUp, Percent, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -27,8 +27,6 @@ import { useTrends } from '@/hooks/useTrendCalculation';
 import { COUNTRIES } from '@/lib/countries';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 type TransactionType = 'click' | 'lead' | 'sale';
 
@@ -151,9 +149,7 @@ const Dashboard = () => {
   const [showLiveSignal, setShowLiveSignal] = useState(false);
 
   // Activity filters
-  const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
   const [showSampleData, setShowSampleData] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(10);
   const [activityLimit, setActivityLimit] = useState(200);
 
@@ -247,25 +243,13 @@ const Dashboard = () => {
     }
   }, [timeRange]);
 
-  // Apply filters
+  // Apply time range filter
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
-
-    // Type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(t => t.type === typeFilter);
-    }
-
     // Global time range filter
     filtered = filtered.filter(t => t.date >= timeRangeCutoff);
-
-    // Search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(t => t.description.toLowerCase().includes(query) || t.id.toLowerCase().includes(query) || t.linkAlias.toLowerCase().includes(query) || t.source.toLowerCase().includes(query));
-    }
     return filtered;
-  }, [transactions, typeFilter, timeRangeCutoff, searchQuery]);
+  }, [transactions, timeRangeCutoff]);
 
   // Paginated transactions for display
   const paginatedTransactions = useMemo(() => {
@@ -280,10 +264,9 @@ const Dashboard = () => {
     }
   };
 
-  // FIX: useEffect instead of useMemo for side-effect (anti-pattern fix)
   useEffect(() => {
     setVisibleCount(10);
-  }, [typeFilter, timeRange, searchQuery]);
+  }, [timeRange]);
 
   // Calculate stats based on global time range
   const displayStats = useMemo(() => {
@@ -449,40 +432,6 @@ const Dashboard = () => {
                   </div>
                 </div>
 
-                {/* Enhanced Toolbar */}
-                <div className="flex items-center gap-3 flex-wrap justify-between mb-4">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-muted-foreground">Filters:</span>
-                    </div>
-                    
-                    <Select value={typeFilter} onValueChange={v => setTypeFilter(v as typeof typeFilter)}>
-                      <SelectTrigger className="w-[130px] h-9">
-                        <SelectValue placeholder="Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value="sale">Sales</SelectItem>
-                        <SelectItem value="lead">Leads</SelectItem>
-                        <SelectItem value="click">Clicks</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {/* Search Bar */}
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input placeholder="Search email, ID..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 w-[180px] bg-background" />
-                    </div>
-
-                    {(typeFilter !== 'all' || searchQuery) && <Button variant="ghost" size="sm" onClick={() => {
-                    setTypeFilter('all');
-                    setSearchQuery('');
-                  }} className="text-muted-foreground hover:text-foreground">
-                        Reset
-                      </Button>}
-                  </div>
-                </div>
 
 
                 {/* Data Table or Empty State */}
