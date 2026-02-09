@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MousePointer, Users, DollarSign, TrendingUp, Percent, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown } from 'lucide-react';
+import { MousePointer, Users, DollarSign, TrendingUp, Percent, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown, ChevronUp } from 'lucide-react';
 import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
@@ -84,7 +84,7 @@ const Dashboard = () => {
   const [timeRangeOpen, setTimeRangeOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>('1m');
   const [activeMetric, setActiveMetric] = useState<MetricKey>('clicks');
-  const handleMetricChange = useCallback((metric: MetricKey) => setActiveMetric(metric), []);
+  const [showAllEvents, setShowAllEvents] = useState(false);
   // Welcome wizard state
   const [showWizard, setShowWizard] = useState(false);
   const [showLiveSignal, setShowLiveSignal] = useState(false);
@@ -189,8 +189,11 @@ const Dashboard = () => {
 
   // Show only the last 6 events
   const paginatedTransactions = useMemo(() => {
-    return filteredTransactions.slice(0, 6);
-  }, [filteredTransactions]);
+    return showAllEvents ? filteredTransactions : filteredTransactions.slice(0, 6);
+  }, [filteredTransactions, showAllEvents]);
+
+  const hasMoreEvents = filteredTransactions.length > 6;
+  const handleMetricChange = useCallback((metric: MetricKey) => setActiveMetric(metric), []);
 
   // Calculate stats based on global time range
   const displayStats = useMemo(() => {
@@ -406,6 +409,22 @@ const Dashboard = () => {
                             </TableBody>
                           </Table>
                         </div>
+                        {hasMoreEvents && (
+                          <div className="border-t border-border px-3 py-1.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowAllEvents(!showAllEvents)}
+                              className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7"
+                            >
+                              {showAllEvents ? (
+                                <>Show less <ChevronUp className="w-3 h-3" /></>
+                              ) : (
+                                <>Show all ({filteredTransactions.length}) <ChevronDown className="w-3 h-3" /></>
+                              )}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
