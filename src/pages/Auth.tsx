@@ -60,12 +60,20 @@ export default function Auth() {
     setHasPendingLink(!!pendingLink);
   }, []);
 
+  // Track if we're in the middle of a signup to prevent auth listener redirect
+  const [isSigningUp, setIsSigningUp] = useState(false);
+
   // Check if already logged in, but handle PASSWORD_RECOVERY specially
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // If user clicked password reset link, redirect to reset page
       if (event === 'PASSWORD_RECOVERY') {
         navigate('/auth/reset-password');
+        return;
+      }
+      // Don't redirect during active signup — handleSubmit will navigate
+      if (isSigningUp) {
+        setIsInitializing(false);
         return;
       }
       if (session) {
@@ -83,7 +91,7 @@ export default function Auth() {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isSigningUp]);
 
   // Show loading while checking auth state
   if (isInitializing) {
@@ -170,7 +178,8 @@ export default function Auth() {
         toast.success('Welcome back!');
         navigate('/dashboard');
       } else {
-        const redirectUrl = `${window.location.origin}/dashboard`;
+        setIsSigningUp(true);
+        const redirectUrl = `${window.location.origin}/onboarding/plans`;
         
         const { error } = await supabase.auth.signUp({
           email,
@@ -184,6 +193,7 @@ export default function Auth() {
         });
 
         if (error) {
+          setIsSigningUp(false);
           if (error.message.includes('already registered')) {
             toast.error('This email is already registered. Please login instead.');
           } else {
