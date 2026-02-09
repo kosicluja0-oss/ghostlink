@@ -363,15 +363,6 @@ const Dashboard = () => {
                       <div className="border border-border rounded-xl overflow-hidden bg-card h-full flex flex-col">
                         <div className="flex-1 overflow-auto">
                           <Table>
-                            <TableHeader>
-                              <TableRow className="hover:bg-transparent border-border bg-muted/30">
-                                <TableHead className="text-muted-foreground font-medium text-xs px-3">Event</TableHead>
-                                <TableHead className="text-muted-foreground font-medium text-xs px-3">Link</TableHead>
-                                <TableHead className="text-muted-foreground font-medium text-xs px-3">Customer</TableHead>
-                                <TableHead className="text-muted-foreground font-medium text-xs px-3 text-right">Amount</TableHead>
-                                <TableHead className="text-muted-foreground font-medium text-xs px-3 text-right">Date</TableHead>
-                              </TableRow>
-                            </TableHeader>
                             <TableBody>
                               {paginatedTransactions.map(tx => (
                                 <TableRow key={tx.id} className="border-border hover:bg-muted/50 transition-colors">
