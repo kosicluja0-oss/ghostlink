@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { LucideIcon, Lock } from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
 
 interface StatCardProps {
   label: string;
@@ -12,6 +13,7 @@ interface StatCardProps {
   isLocked?: boolean;
   accentColor?: 'primary' | 'success' | 'warning' | 'chart-conversions';
   compact?: boolean;
+  tooltip?: string;
 }
 
 export function StatCard({ 
@@ -21,8 +23,22 @@ export function StatCard({
   trend, 
   isLocked = false,
   accentColor = 'primary',
-  compact = false
+  compact = false,
+  tooltip
 }: StatCardProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = useCallback(() => {
+    if (!tooltip) return;
+    timerRef.current = setTimeout(() => setShowTooltip(true), 2000);
+  }, [tooltip]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setShowTooltip(false);
+  }, []);
+
   const colorClasses = {
     primary: 'text-primary',
     success: 'text-success',
@@ -31,10 +47,14 @@ export function StatCard({
   };
 
   return (
-    <div className={cn(
-      "relative bg-card rounded-lg border border-border transition-ghost hover:border-primary/30",
-      compact ? "p-3" : "p-5"
-    )}>
+    <div
+      className={cn(
+        "relative bg-card rounded-lg border border-border transition-ghost hover:border-primary/30",
+        compact ? "p-3" : "p-5"
+      )}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className={cn("flex items-start justify-between", compact ? "mb-1.5" : "mb-3")}>
         <span className={cn("font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>{label}</span>
         <Icon className={cn(colorClasses[accentColor], compact ? "h-4 w-4" : "h-5 w-5")} />
@@ -66,6 +86,15 @@ export function StatCard({
           <div className="flex items-center gap-2 text-muted-foreground">
             <Lock className="h-4 w-4" />
             <span className="text-xs font-medium">PRO</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delayed hover tooltip */}
+      {tooltip && showTooltip && (
+        <div className="absolute z-50 left-0 right-0 top-full mt-2 animate-fade-in">
+          <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg">
+            <p className="text-xs text-popover-foreground leading-relaxed">{tooltip}</p>
           </div>
         </div>
       )}

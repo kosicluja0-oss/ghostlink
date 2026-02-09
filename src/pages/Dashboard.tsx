@@ -329,12 +329,12 @@ const Dashboard = () => {
               {/* Stats Banner - Compact */}
               <section className="mb-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  <StatCard label="Total Clicks" value={displayStats.totalClicks.toLocaleString()} icon={MousePointer} trend={clicksTrend ?? undefined} accentColor="primary" compact />
-                  <StatCard label="Total Leads" value={displayStats.totalLeads.toLocaleString()} icon={Users} trend={leadsTrend ?? undefined} isLocked={isFreeTier} accentColor="warning" compact />
-                  <StatCard label="Total Sales" value={displayStats.totalSales.toLocaleString()} icon={TrendingUp} trend={salesTrend ?? undefined} isLocked={isFreeTier} accentColor="success" compact />
-                  <StatCard label="Revenue" value={formatCurrency(displayStats.totalEarnings)} icon={DollarSign} trend={earningsTrend ?? undefined} isLocked={isFreeTier} accentColor="success" compact />
-                  <StatCard label="Conv. Rate" value={`${displayStats.conversionRate.toFixed(2)}%`} icon={Percent} trend={conversionTrend ?? undefined} isLocked={isFreeTier} accentColor="chart-conversions" compact />
-                  <StatCard label="EPC" value={formatCurrency(displayStats.earningsPerClick)} icon={Sparkles} trend={epcTrend ?? undefined} isLocked={isFreeTier} accentColor="primary" compact />
+                  <StatCard label="Total Clicks" value={displayStats.totalClicks.toLocaleString()} icon={MousePointer} trend={clicksTrend ?? undefined} accentColor="primary" compact tooltip="Total number of times someone clicked on your tracking link. Every visit counts — even repeat visitors." />
+                  <StatCard label="Total Leads" value={displayStats.totalLeads.toLocaleString()} icon={Users} trend={leadsTrend ?? undefined} isLocked={isFreeTier} accentColor="warning" compact tooltip="People who took a desired action after clicking — like signing up, submitting a form, or opting in. A lead means someone showed real interest." />
+                  <StatCard label="Total Sales" value={displayStats.totalSales.toLocaleString()} icon={TrendingUp} trend={salesTrend ?? undefined} isLocked={isFreeTier} accentColor="success" compact tooltip="Confirmed purchases made through your links. Each sale means someone bought the product or service you're promoting." />
+                  <StatCard label="Revenue" value={formatCurrency(displayStats.totalEarnings)} icon={DollarSign} trend={earningsTrend ?? undefined} isLocked={isFreeTier} accentColor="success" compact tooltip="Total money earned from all your sales. This is the sum of commissions or product prices generated through your links." />
+                  <StatCard label="Conv. Rate" value={`${displayStats.conversionRate.toFixed(2)}%`} icon={Percent} trend={conversionTrend ?? undefined} isLocked={isFreeTier} accentColor="chart-conversions" compact tooltip="The percentage of clicks that turned into leads or sales. A higher rate means your traffic is more targeted and your offer resonates well." />
+                  <StatCard label="EPC" value={formatCurrency(displayStats.earningsPerClick)} icon={Sparkles} trend={epcTrend ?? undefined} isLocked={isFreeTier} accentColor="primary" compact tooltip="Earnings Per Click — how much money you earn on average for each click. It helps you compare which links or traffic sources are most profitable." />
                 </div>
               </section>
 
