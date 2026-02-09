@@ -14,6 +14,8 @@ interface StatCardProps {
   accentColor?: 'primary' | 'success' | 'warning' | 'chart-conversions';
   compact?: boolean;
   tooltip?: string;
+  isActive?: boolean;
+  onClick?: () => void;
 }
 
 export function StatCard({ 
@@ -24,7 +26,9 @@ export function StatCard({
   isLocked = false,
   accentColor = 'primary',
   compact = false,
-  tooltip
+  tooltip,
+  isActive = false,
+  onClick
 }: StatCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,9 +53,12 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative bg-card rounded-lg border border-border transition-ghost hover:border-primary/30",
+        "relative bg-card rounded-lg border transition-ghost",
+        isActive ? "border-primary/60 ring-1 ring-primary/20" : "border-border hover:border-primary/30",
+        onClick && "cursor-pointer",
         compact ? "p-3" : "p-5"
       )}
+      onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
