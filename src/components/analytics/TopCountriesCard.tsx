@@ -1,10 +1,11 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe } from 'lucide-react';
+import { Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import { CircleFlag } from '@/components/ui/circle-flag';
 import { COUNTRIES } from '@/lib/countries';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { MetricKey } from './AnalyticsChart';
+import { Button } from '@/components/ui/button';
 
 export interface CountryData {
   code: string;
@@ -61,8 +62,9 @@ function formatValue(value: number, metric: MetricKey): string {
 }
 
 export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCountriesCardProps) => {
-  const topCountries = useMemo(() => {
-    // Re-sort by the active metric and compute percentages
+  const [showAll, setShowAll] = useState(false);
+
+  const allSorted = useMemo(() => {
     const withValues = countries.map(c => ({
       ...c,
       metricValue: getMetricValue(c, activeMetric),
@@ -70,8 +72,7 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
 
     const sorted = [...withValues]
       .filter(c => c.metricValue > 0)
-      .sort((a, b) => b.metricValue - a.metricValue)
-      .slice(0, 5);
+      .sort((a, b) => b.metricValue - a.metricValue);
 
     const maxValue = sorted.length > 0 ? sorted[0].metricValue : 1;
 
@@ -80,6 +81,9 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
       percentage: maxValue > 0 ? Math.round((c.metricValue / maxValue) * 100) : 0,
     }));
   }, [countries, activeMetric]);
+
+  const topCountries = showAll ? allSorted : allSorted.slice(0, 5);
+  const hasMore = allSorted.length > 5;
 
   if (topCountries.length === 0) {
     return (
@@ -122,6 +126,20 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
             </div>
           );
         })}
+        {hasMore && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1"
+          >
+            {showAll ? (
+              <>Show less <ChevronUp className="w-3 h-3" /></>
+            ) : (
+              <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
+            )}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,9 +1,10 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import { PlatformIcon } from '@/components/ui/platform-icon';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { MetricKey } from './AnalyticsChart';
+import { Button } from '@/components/ui/button';
 
 export interface PlacementData {
   platform: string;
@@ -53,7 +54,9 @@ function formatValue(value: number, metric: MetricKey): string {
 }
 
 export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPlacementsCardProps) => {
-  const topPlacements = useMemo(() => {
+  const [showAll, setShowAll] = useState(false);
+
+  const allSorted = useMemo(() => {
     const withValues = placements.map(p => ({
       ...p,
       metricValue: getMetricValue(p, activeMetric),
@@ -61,8 +64,7 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPl
 
     const sorted = [...withValues]
       .filter(p => p.metricValue > 0)
-      .sort((a, b) => b.metricValue - a.metricValue)
-      .slice(0, 3);
+      .sort((a, b) => b.metricValue - a.metricValue);
 
     const maxValue = sorted.length > 0 ? sorted[0].metricValue : 1;
 
@@ -71,6 +73,9 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPl
       percentage: maxValue > 0 ? Math.round((p.metricValue / maxValue) * 100) : 0,
     }));
   }, [placements, activeMetric]);
+
+  const topPlacements = showAll ? allSorted : allSorted.slice(0, 3);
+  const hasMore = allSorted.length > 3;
 
   if (topPlacements.length === 0) {
     return (
@@ -112,6 +117,20 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPl
             <Progress value={placement.percentage} className="h-1.5 bg-muted" />
           </div>
         ))}
+        {hasMore && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1"
+          >
+            {showAll ? (
+              <>Show less <ChevronUp className="w-3 h-3" /></>
+            ) : (
+              <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
+            )}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
