@@ -35,7 +35,7 @@ export function StatCard({
 
   const handleMouseEnter = useCallback(() => {
     if (!tooltip) return;
-    timerRef.current = setTimeout(() => setShowTooltip(true), 2000);
+    timerRef.current = setTimeout(() => setShowTooltip(true), 1000);
   }, [tooltip]);
 
   const handleMouseLeave = useCallback(() => {
