@@ -32,7 +32,7 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'global' });
       toast.success('Signed out successfully');
       navigate('/');
     } catch (error) {
