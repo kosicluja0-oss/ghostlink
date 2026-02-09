@@ -18,6 +18,8 @@ const METRIC_LABELS: Record<MetricKey, string> = {
 interface TopLinksCardProps {
   links: GhostLink[];
   activeMetric?: MetricKey;
+  selectedLinkId?: string | null;
+  onLinkSelect?: (linkId: string | null) => void;
 }
 
 function getMetricValue(link: GhostLink, metric: MetricKey): number {
@@ -44,8 +46,13 @@ function formatValue(value: number, metric: MetricKey): string {
   }
 }
 
-export const TopLinksCard = ({ links, activeMetric = 'clicks' }: TopLinksCardProps) => {
+export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, onLinkSelect }: TopLinksCardProps) => {
   const [showAll, setShowAll] = useState(false);
+
+  const handleLinkClick = (linkId: string) => {
+    if (!onLinkSelect) return;
+    onLinkSelect(selectedLinkId === linkId ? null : linkId);
+  };
 
   const allSorted = useMemo(() => {
     const withValues = links.map(l => ({
@@ -92,24 +99,37 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks' }: TopLinksCardPro
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        {topLinks.map((link) => (
-          <div key={link.id} className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-5 h-5 rounded bg-muted flex items-center justify-center shrink-0">
-                  <Link2 className="w-3 h-3 text-muted-foreground" />
+        {topLinks.map((link) => {
+          const isSelected = selectedLinkId === link.id;
+          return (
+            <div
+              key={link.id}
+              className={`space-y-1.5 rounded-lg px-2 py-1.5 -mx-2 transition-colors cursor-pointer ${
+                isSelected
+                  ? 'bg-primary/10 ring-1 ring-primary/30'
+                  : 'hover:bg-muted/50'
+              }`}
+              onClick={() => handleLinkClick(link.id)}
+            >
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
+                    isSelected ? 'bg-primary/20' : 'bg-muted'
+                  }`}>
+                    <Link2 className={`w-3 h-3 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                  </div>
+                  <span className={`font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                    /{link.alias}
+                  </span>
                 </div>
-                <span className="text-foreground font-medium truncate">
-                  /{link.alias}
+                <span className="text-muted-foreground font-mono shrink-0 ml-2">
+                  {formatValue(link.metricValue, activeMetric)}
                 </span>
               </div>
-              <span className="text-muted-foreground font-mono shrink-0 ml-2">
-                {formatValue(link.metricValue, activeMetric)}
-              </span>
+              <Progress value={link.percentage} className="h-1.5 bg-muted" />
             </div>
-            <Progress value={link.percentage} className="h-1.5 bg-muted" />
-          </div>
-        ))}
+          );
+        })}
         {hasMore && (
           <Button
             variant="ghost"
