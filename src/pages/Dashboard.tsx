@@ -56,68 +56,6 @@ interface Transaction {
   placement?: string;
 }
 
-// Sample mock data for demo purposes (shown only when user has no real data)
-const SAMPLE_TRANSACTIONS: Transaction[] = [{
-  id: 'sample-1',
-  date: new Date(Date.now() - 1000 * 60 * 30),
-  type: 'sale',
-  description: 'Yuki Tanada',
-  amount: 49.00,
-  source: 'Gumroad',
-  sourceIcon: 'gumroad',
-  linkId: '1',
-  linkAlias: 'ebook',
-  location: 'JP',
-  placement: 'ig-story'
-}, {
-  id: 'sample-2',
-  date: new Date(Date.now() - 1000 * 60 * 60 * 2),
-  type: 'lead',
-  description: 'newsletter@email.com',
-  amount: null,
-  source: 'Direct Link',
-  sourceIcon: 'direct',
-  linkId: '2',
-  linkAlias: 'signup',
-  location: 'DE',
-  placement: 'tt-bio'
-}, {
-  id: 'sample-3',
-  date: new Date(Date.now() - 1000 * 60 * 60 * 3),
-  type: 'sale',
-  description: 'Marcus Chen',
-  amount: 199.00,
-  source: 'Stripe',
-  sourceIcon: 'stripe',
-  linkId: '3',
-  linkAlias: 'course',
-  location: 'US',
-  placement: 'yt-shorts'
-}, {
-  id: 'sample-4',
-  date: new Date(Date.now() - 1000 * 60 * 60 * 5),
-  type: 'click',
-  description: 'visitor@gmail.com',
-  amount: null,
-  source: 'Direct Link',
-  sourceIcon: 'direct',
-  linkId: '1',
-  linkAlias: 'promo',
-  location: 'FR',
-  placement: 'ig-story'
-}, {
-  id: 'sample-5',
-  date: new Date(Date.now() - 1000 * 60 * 60 * 8),
-  type: 'sale',
-  description: 'Sarah Johnson',
-  amount: 79.00,
-  source: 'Lemon Squeezy',
-  sourceIcon: 'lemon',
-  linkId: '2',
-  linkAlias: 'bundle',
-  location: 'CA',
-  placement: 'ig-story'
-}];
 const Dashboard = () => {
   const navigate = useNavigate();
   const {
@@ -152,7 +90,6 @@ const Dashboard = () => {
   const [showLiveSignal, setShowLiveSignal] = useState(false);
 
   // Activity filters
-  const [showSampleData, setShowSampleData] = useState(false);
   const activityLimit = 200;
 
   // Use server-side aggregated data (fixes 1000-row limit)
@@ -212,9 +149,6 @@ const Dashboard = () => {
 
   // Map server-side activity events to Transaction format for table display
   const transactions: Transaction[] = useMemo(() => {
-    if (showSampleData && recentActivity.length === 0) {
-      return SAMPLE_TRANSACTIONS;
-    }
     return recentActivity.map(event => ({
       id: event.id,
       date: new Date(event.created_at),
@@ -228,7 +162,7 @@ const Dashboard = () => {
       placement: event.source || undefined,
       location: event.country || undefined
     }));
-  }, [recentActivity, showSampleData]);
+  }, [recentActivity]);
 
   // Helper to get cutoff date from global timeRange
   const timeRangeCutoff = useMemo(() => {
@@ -412,19 +346,15 @@ const Dashboard = () => {
                   </div>
                   <div className="lg:col-span-2">
                     {showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
-                    {filteredTransactions.length === 0 && !showSampleData ? (
+                    {filteredTransactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border rounded-xl bg-card/50 h-full">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                           <MousePointerClick className="w-6 h-6 text-primary" />
                         </div>
                         <h3 className="text-sm font-semibold text-foreground mb-1">No activity yet</h3>
-                        <p className="text-xs text-muted-foreground text-center max-w-xs mb-4">
+                        <p className="text-xs text-muted-foreground text-center max-w-xs">
                           Once you start getting clicks and conversions, they'll appear here.
                         </p>
-                        <Button variant="outline" size="sm" onClick={() => setShowSampleData(true)} className="gap-2">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Show Sample Data
-                        </Button>
                       </div>
                     ) : (
                       <div className="border border-border rounded-xl overflow-hidden bg-card h-full flex flex-col">
@@ -476,13 +406,6 @@ const Dashboard = () => {
                             </TableBody>
                           </Table>
                         </div>
-                      </div>
-                    )}
-                    {showSampleData && !hasRealData && (
-                      <div className="mt-3 flex items-center justify-center">
-                        <Button variant="ghost" size="sm" onClick={() => setShowSampleData(false)} className="text-xs text-muted-foreground">
-                          Hide Sample Data
-                        </Button>
                       </div>
                     )}
                   </div>
