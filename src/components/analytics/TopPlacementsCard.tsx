@@ -92,10 +92,7 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPl
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
           <BarChart3 className="w-4 h-4 text-primary" />
-          Top Placements
-          <span className="text-[10px] text-muted-foreground/60 font-normal ml-auto">
-            by {METRIC_LABELS[activeMetric]}
-          </span>
+          Top Placements by {METRIC_LABELS[activeMetric]}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
