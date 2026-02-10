@@ -120,6 +120,9 @@ export default function OnboardingPlans() {
   }, []);
 
   const handleSelectPlan = async (planId: string) => {
+    // Ensure wizard shows on first dashboard visit after plan selection
+    localStorage.removeItem('has_seen_welcome_wizard');
+    
     if (planId === 'free') {
       toast.success('Welcome to Ghost Link!');
       navigate('/dashboard');
