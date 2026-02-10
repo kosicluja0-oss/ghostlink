@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Ghost, Check, Loader2, Sparkles, Link2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Ghost, Check, Loader2, Sparkles, Link2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Extract display-friendly domain from URL
@@ -110,14 +111,48 @@ function AnimatedPrice({ value }: { value: number }) {
 
 export default function OnboardingPlans() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
+  const [checkoutPending, setCheckoutPending] = useState(false);
 
   useEffect(() => {
     const storedLink = localStorage.getItem('pending_initial_link');
     setPendingLink(storedLink);
   }, []);
+
+  // If user returns to this page after canceling checkout
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'canceled') {
+      toast.info('Checkout was canceled. You can try again or pick a different plan.');
+    }
+  }, [searchParams]);
+
+  // Listen for subscription changes while checkout is pending
+  // When the Stripe tab completes, the webhook updates the profile.
+  // We poll the profile to detect when tier changes from 'free'.
+  useEffect(() => {
+    if (!checkoutPending) return;
+    
+    const interval = setInterval(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profile?.tier && profile.tier !== 'free') {
+        clearInterval(interval);
+        navigate('/dashboard');
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [checkoutPending, navigate]);
 
   const handleSelectPlan = async (planId: string) => {
     // Ensure wizard shows on first dashboard visit after plan selection
@@ -140,14 +175,39 @@ export default function OnboardingPlans() {
       const url = await createCheckoutSession(stripePlanId, billingCycle);
       if (url) {
         window.open(url, '_blank');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
+        // Don't navigate blindly — show a waiting state and poll for subscription activation
+        setCheckoutPending(true);
       }
     } finally {
       setLoadingPlan(null);
     }
   };
+
+  // Checkout pending screen — user opened Stripe in another tab
+  if (checkoutPending) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mx-auto mb-6">
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Completing your payment…</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Finish checkout in the new tab. This page will redirect automatically once your subscription is active.
+          </p>
+          <div className="flex flex-col gap-3 items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCheckoutPending(false)}
+            >
+              ← Pick a different plan
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
