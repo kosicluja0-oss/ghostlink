@@ -5,6 +5,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// --- In-memory rate limiter (per-isolate) ---
+const RATE_LIMIT = 30; // max requests per window
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const ipHits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = ipHits.get(ip) || [];
+  const valid = hits.filter((t) => now - t < RATE_WINDOW_MS);
+  if (valid.length >= RATE_LIMIT) {
+    ipHits.set(ip, valid);
+    return true;
+  }
+  valid.push(now);
+  ipHits.set(ip, valid);
+  return false;
+}
+
+// Periodic cleanup to avoid memory leaks (every 5 min)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, hits] of ipHits) {
+    const valid = hits.filter((t) => now - t < RATE_WINDOW_MS);
+    if (valid.length === 0) ipHits.delete(ip);
+    else ipHits.set(ip, valid);
+  }
+}, 300_000);
+
 // Try to extract a monetary value from any JSON payload
 function extractValue(payload: Record<string, unknown>): number {
   const valueKeys = ['value', 'price', 'amount', 'total', 'revenue', 'subtotal', 'sale_price', 'unit_amount'];
@@ -58,6 +86,20 @@ Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('cf-connecting-ip')
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+
+  if (isRateLimited(clientIP)) {
+    console.warn(`Rate limited: ${clientIP}`);
+    return new Response(
+      JSON.stringify({ status: 'error', message: 'Too many requests. Try again later.' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } }
+    );
   }
 
   try {

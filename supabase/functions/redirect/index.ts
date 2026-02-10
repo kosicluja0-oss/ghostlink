@@ -5,6 +5,35 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// --- In-memory rate limiter (per-isolate) ---
+const RATE_LIMIT = 60; // max requests per window
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const ipHits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = ipHits.get(ip) || [];
+  // Remove expired entries
+  const valid = hits.filter((t) => now - t < RATE_WINDOW_MS);
+  if (valid.length >= RATE_LIMIT) {
+    ipHits.set(ip, valid);
+    return true;
+  }
+  valid.push(now);
+  ipHits.set(ip, valid);
+  return false;
+}
+
+// Periodic cleanup to avoid memory leaks (every 5 min)
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, hits] of ipHits) {
+    const valid = hits.filter((t) => now - t < RATE_WINDOW_MS);
+    if (valid.length === 0) ipHits.delete(ip);
+    else ipHits.set(ip, valid);
+  }
+}, 300_000);
+
 // Get country from IP using free geolocation service
 const getCountryFromIP = async (ip: string): Promise<string | null> => {
   try {
@@ -25,6 +54,20 @@ Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('cf-connecting-ip')
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+
+  if (isRateLimited(clientIP)) {
+    console.warn(`Rate limited: ${clientIP}`);
+    return new Response('Too Many Requests', {
+      status: 429,
+      headers: { ...corsHeaders, 'Retry-After': '60' },
+    });
   }
 
   try {
@@ -73,16 +116,10 @@ Deno.serve(async (req) => {
     // Get source tracking parameter (from Smart Copy feature)
     const source = url.searchParams.get('s') || url.searchParams.get('source') || null;
     
-    // Get visitor IP for geolocation
-    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
-      || req.headers.get('cf-connecting-ip') 
-      || req.headers.get('x-real-ip')
-      || null;
-    
     console.log(`Found link: ${link.id}, target: ${link.target_url}, source: ${source}, IP: ${clientIP}`);
 
     // Fetch country from IP
-    const country = clientIP ? await getCountryFromIP(clientIP) : null;
+    const country = clientIP !== 'unknown' ? await getCountryFromIP(clientIP) : null;
     console.log(`Country detected: ${country}`);
     
     // Log the click
