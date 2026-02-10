@@ -448,8 +448,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <TestimonialsSection />
+      {/* Testimonials Section — hidden until real testimonials are collected */}
+      {/* <TestimonialsSection /> */}
 
       {/* FAQ Section */}
       <section className="py-20 px-4 bg-card/30">
