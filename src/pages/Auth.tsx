@@ -205,7 +205,7 @@ export default function Auth() {
         // Reset wizard flag so new accounts always see the welcome wizard
         localStorage.removeItem('has_seen_welcome_wizard');
         
-        navigate('/verify-email');
+        navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
