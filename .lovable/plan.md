@@ -1,37 +1,76 @@
 
 
-# SEO Meta Tagy — Ghost Link
+# Vlastni domena pro tracking linky
 
-## Co chybí
+## Co to obnasi
 
-Většina OG tagů už existuje, ale chybí klíčové: `og:image`, `og:url`, `twitter:title`, `twitter:description`, `twitter:image` a `theme-color`. Bez `og:image` se při sdílení na sociálních sítích nezobrazí náhledový obrázek.
+Aby tracking linky vypadaly jako `ghost.link/abc123` misto dlouhe adresy, potrebujes tri veci:
 
-## Plán
+1. **Koupit kratkou domenu** (napr. `ghost.link`, `ghst.link`, `ghl.ink` apod.)
+2. **Nastavit proxy** — sluzbu, ktera prijme pozadavek na kratke domene a preposleje ho na tvoji redirect Edge funkci
+3. **Upravit kod** — aby aplikace generovala kratke URL misto dlouhych
 
-### 1. Vytvořit OG image (1200x630px)
+---
 
-Vytvořím statický SVG soubor `public/og-image.svg` s tmavým designem Ghost Link (ghost ikona, název, tagline) a přidám ho jako `og:image`. Alternativně lze použít PNG — ale SVG je jednodušší na údržbu.
+## Krok 1: Koupě domeny
 
-**Poznámka:** Některé platformy (WhatsApp, LinkedIn) nepodporují SVG jako OG image. Doporučuji později nahrát PNG verzi. Prozatím nastavím cestu, kterou snadno vyměníš.
+Domenu si koupis u registratora (napr. Namecheap, Cloudflare Registrar, GoDaddy). Idealne neco kratkeho a zapamatovatelneho. Priklady:
 
-### 2. Doplnit chybějící meta tagy do `index.html`
+- `ghost.link` (pokud je dostupna)
+- `ghst.lnk`
+- `ghl.ink`
+- `ghostl.ink`
 
-Přidám tyto tagy:
+Cena: typicky 5-20 USD/rok.
 
-- `og:url` — `https://ghostlink.app`
-- `og:image` — `https://ghostlink.app/og-image.png`
-- `og:image:width` / `og:image:height` — 1200x630
-- `twitter:title` — shodný s og:title
-- `twitter:description` — shodný s og:description
-- `twitter:image` — shodný s og:image
-- `theme-color` — `#141414` (tmavé pozadí aplikace)
+---
 
-### 3. Soubory k úpravě
+## Krok 2: Nastaveni proxy (Cloudflare Workers)
 
-- `index.html` — doplnění meta tagů
-- `public/og-image.png` — placeholder OG obrázek (budeš ho moci nahradit vlastním)
+Toto je externi nastaveni **mimo Lovable**. Doporucuji Cloudflare Workers (free tier staci):
 
-## Poznámka k OG image
+1. Registruj domenu nebo ji presun na Cloudflare
+2. Vytvor Worker, ktery prijme pozadavek a preposleje ho na tvoji Edge funkci:
 
-Prozatím nastavím URL na `https://ghostlink.app/og-image.png`. Až budeš mít vlastní doménu a finální obrázek, stačí soubor vyměnit. Vytvořím jednoduchý tmavý placeholder obrázek s Ghost Link brandem.
+```text
+ghost.link/abc123
+    |
+    v
+Cloudflare Worker
+    |
+    v
+https://mlgrbwkddyrazysxrlvo.supabase.co/functions/v1/redirect/abc123
+```
+
+Worker kod je cca 10 radek — jednoduchy fetch proxy, ktery zachova vsechny parametry (vcetne `?s=ig-reels` pro Smart Copy).
+
+Cloudflare Workers free tier: **100 000 pozadavku denne** — vice nez dostatecne pro zacatek.
+
+---
+
+## Krok 3: Uprava kodu v Lovable
+
+Po nastaveni proxy upravim jediny soubor:
+
+**`src/lib/trackingUrl.ts`** — zmena base URL:
+- Misto: `https://[id].supabase.co/functions/v1/redirect`
+- Na: `https://ghost.link` (tvoje nova domena)
+
+Funkce `getDisplayUrl` uz dnes zobrazuje kratkou verzi — po zmene bude skutecna URL odpovidat tomu, co uzivatel vidi.
+
+Zadne dalsi soubory se nemeni. Smart Copy, LinkCard, LinkTable — vsechno pouziva `getTrackingUrl()` z tohoto souboru.
+
+---
+
+## Shrnuti postupu
+
+1. Vyber a kup kratkou domenu
+2. Nastavit Cloudflare Workers proxy (muzu ti dat presny kod pro Worker)
+3. Ja upravim `trackingUrl.ts` aby generovals kratke URL
+
+## Dulezite
+
+- Databaze, Edge funkce, analytics — **nic se nemeni**
+- Stare linky budou fungovat dal (Supabase URL nikam nezmizi)
+- Proxy prida minimalni latenci (pod 10ms)
 
