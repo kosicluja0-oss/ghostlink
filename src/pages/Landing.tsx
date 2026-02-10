@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp, BarChart, Loader2 } from 'lucide-react';
+import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp, BarChart, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -484,6 +484,16 @@ export default function Landing() {
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText('https://ghostlink.app');
+                  toast.success('Link copied to clipboard!');
+                }}
+                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                Share
+              </button>
             </div>
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} Ghost Link. All rights reserved.
