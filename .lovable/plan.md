@@ -1,38 +1,37 @@
 
 
-# Branded Email Templates — Ghost Link
+# SEO Meta Tagy — Ghost Link
 
-## Summary
+## Co chybí
 
-Configure custom HTML email templates for verification and password reset emails, styled to match Ghost Link's dark UI aesthetic. Footer will display **ghostlink.app** as the domain.
+Většina OG tagů už existuje, ale chybí klíčové: `og:image`, `og:url`, `twitter:title`, `twitter:description`, `twitter:image` a `theme-color`. Bez `og:image` se při sdílení na sociálních sítích nezobrazí náhledový obrázek.
 
-## Design
+## Plán
 
-Both templates share the same layout:
+### 1. Vytvořit OG image (1200x630px)
 
-- Dark background (#141414), card (#1F1F1F), purple CTA button (#7C6BF0)
-- Inline ghost icon SVG (no external images)
-- System font stack for email client compatibility
-- Footer: "Ghost Link · ghostlink.app"
+Vytvořím statický SVG soubor `public/og-image.svg` s tmavým designem Ghost Link (ghost ikona, název, tagline) a přidám ho jako `og:image`. Alternativně lze použít PNG — ale SVG je jednodušší na údržbu.
 
-## Emails
+**Poznámka:** Některé platformy (WhatsApp, LinkedIn) nepodporují SVG jako OG image. Doporučuji později nahrát PNG verzi. Prozatím nastavím cestu, kterou snadno vyměníš.
 
-### 1. Email Verification
-- Heading: "Verify your email"
-- Body: "Thanks for signing up for Ghost Link. Click the button below to verify your email address."
-- CTA: "Verify Email Address"
-- Note: "This link will expire in 24 hours."
+### 2. Doplnit chybějící meta tagy do `index.html`
 
-### 2. Password Reset
-- Heading: "Reset your password"
-- Body: "We received a request to reset your password. Click the button below to set a new one."
-- CTA: "Reset Password"
-- Note: "This link will expire in 1 hour. If you didn't request this, you can safely ignore this email."
+Přidám tyto tagy:
 
-## Technical Details
+- `og:url` — `https://ghostlink.app`
+- `og:image` — `https://ghostlink.app/og-image.png`
+- `og:image:width` / `og:image:height` — 1200x630
+- `twitter:title` — shodný s og:title
+- `twitter:description` — shodný s og:description
+- `twitter:image` — shodný s og:image
+- `theme-color` — `#141414` (tmavé pozadí aplikace)
 
-- Uses the **configure-auth** tool to set custom HTML templates
-- Template variable `{{ .ConfirmationURL }}` for action links
-- No code files modified — purely auth infrastructure configuration
-- Footer text: `Ghost Link · ghostlink.app`
+### 3. Soubory k úpravě
+
+- `index.html` — doplnění meta tagů
+- `public/og-image.png` — placeholder OG obrázek (budeš ho moci nahradit vlastním)
+
+## Poznámka k OG image
+
+Prozatím nastavím URL na `https://ghostlink.app/og-image.png`. Až budeš mít vlastní doménu a finální obrázek, stačí soubor vyměnit. Vytvořím jednoduchý tmavý placeholder obrázek s Ghost Link brandem.
 
