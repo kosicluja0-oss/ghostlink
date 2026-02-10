@@ -92,8 +92,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/settings?checkout=success`,
-      cancel_url: `${origin}/settings?checkout=canceled`,
+      success_url: `${origin}/dashboard?checkout=success`,
+      cancel_url: `${origin}/onboarding/plans?checkout=canceled`,
       metadata: {
         supabase_user_id: user.id,
         billing_cycle: billingCycle || "monthly"
