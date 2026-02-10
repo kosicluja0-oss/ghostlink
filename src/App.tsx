@@ -8,6 +8,7 @@ import { CookieConsent } from "@/components/CookieConsent";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import OnboardingPlans from "./pages/OnboardingPlans";
 import Dashboard from "./pages/Dashboard";
 import Integrations from "./pages/Integrations";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/onboarding/plans" element={<ProtectedRoute><OnboardingPlans /></ProtectedRoute>} />
