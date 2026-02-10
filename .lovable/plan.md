@@ -1,50 +1,38 @@
 
 
-## Dashboard Page Header
+# Branded Email Templates — Ghost Link
 
-Pridani hlavicky na stranku Dashboard, aby byla konzistentni s ostatnimi moduly (Links, Integrations, Settings, Support). Kazda z techto stranek ma vzor: ikona v kruhu + nadpis + popis.
+## Summary
 
-### Co se zmeni
+Configure custom HTML email templates for verification and password reset emails, styled to match Ghost Link's dark UI aesthetic. Footer will display **ghostlink.app** as the domain.
 
-Dashboard aktualne zacina rovnou KPI kartami bez jakehokoliv nadpisu. Pridame hlavickovou sekci pred stats grid, ktera bude obsahovat:
+## Design
 
-- Ikona v kruhu (LayoutDashboard z lucide-react)
-- Nadpis "Dashboard"
-- Kratky popis, napr. "Your performance overview at a glance"
+Both templates share the same layout:
 
-### Vizualni vzor (z ostatnich stranek)
+- Dark background (#141414), card (#1F1F1F), purple CTA button (#7C6BF0)
+- Inline ghost icon SVG (no external images)
+- System font stack for email client compatibility
+- Footer: "Ghost Link · ghostlink.app"
 
-```text
-+-------------------------------------------+
-| [icon]  Dashboard                         |
-|         Your performance overview ...     |
-+-------------------------------------------+
-| KPI karty (Total Clicks, Leads, ...)      |
-| ...                                       |
-```
+## Emails
 
-### Technicke detaily
+### 1. Email Verification
+- Heading: "Verify your email"
+- Body: "Thanks for signing up for Ghost Link. Click the button below to verify your email address."
+- CTA: "Verify Email Address"
+- Note: "This link will expire in 24 hours."
 
-Jedina zmena v souboru `src/pages/Dashboard.tsx`:
+### 2. Password Reset
+- Heading: "Reset your password"
+- Body: "We received a request to reset your password. Click the button below to set a new one."
+- CTA: "Reset Password"
+- Note: "This link will expire in 1 hour. If you didn't request this, you can safely ignore this email."
 
-1. Pridat import `LayoutDashboard` z `lucide-react`
-2. Vlozit novou `<section>` pred stavajici "Stats Banner" (pred radek ~437), pouzitim stejneho patternu jako ostatni stranky:
+## Technical Details
 
-```tsx
-<section className="mb-5">
-  <div className="flex items-center gap-3">
-    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
-      <LayoutDashboard className="w-5 h-5 text-primary" />
-    </div>
-    <div>
-      <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-      <p className="text-sm text-muted-foreground">
-        Your performance overview at a glance
-      </p>
-    </div>
-  </div>
-</section>
-```
-
-Zadne dalsi soubory ani zavislosti neni treba menit.
+- Uses the **configure-auth** tool to set custom HTML templates
+- Template variable `{{ .ConfirmationURL }}` for action links
+- No code files modified — purely auth infrastructure configuration
+- Footer text: `Ghost Link · ghostlink.app`
 
