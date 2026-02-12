@@ -121,7 +121,7 @@ export function ComparisonSection() {
 
         {/* Comparison Cards */}
         <motion.div
-          className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
+          className="flex flex-col md:grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -157,6 +157,13 @@ export function ComparisonSection() {
             </Card>
           </motion.div>
 
+          {/* Mobile "vs" indicator - between cards */}
+          <div className="md:hidden flex justify-center -my-3 relative z-10">
+            <div className="bg-background px-4 py-1 rounded-full border border-border text-sm text-muted-foreground font-medium">
+              vs
+            </div>
+          </div>
+
           {/* Industry Average Card */}
           <motion.div variants={itemVariants} whileHover={{ y: -4, boxShadow: '0 8px 30px hsl(0 0% 100% / 0.05)' }} transition={{ duration: 0.3 }}>
             <Card className="border-border bg-card/50 h-full">
@@ -184,13 +191,6 @@ export function ComparisonSection() {
             </Card>
           </motion.div>
         </motion.div>
-
-        {/* Mobile "vs" indicator - only visible on mobile when cards stack */}
-        <div className="md:hidden flex justify-center -my-3 relative z-10">
-          <div className="bg-background px-4 py-1 rounded-full border border-border text-sm text-muted-foreground font-medium">
-            vs
-          </div>
-        </div>
 
         {/* CTA */}
         <motion.div

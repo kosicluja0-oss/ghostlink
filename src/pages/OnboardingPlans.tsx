@@ -262,7 +262,7 @@ export default function OnboardingPlans() {
                 key={planId}
                 className={`relative bg-card border rounded-xl p-6 flex flex-col ${
                   plan.highlighted
-                    ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10'
+                    ? 'border-primary shadow-lg shadow-primary/20 md:scale-105 z-10'
                     : 'border-border'
                 }`}
               >

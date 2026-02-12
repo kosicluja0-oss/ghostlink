@@ -403,7 +403,7 @@ const Dashboard = () => {
                                       <span className="font-medium group-hover:underline truncate max-w-[80px]">/{tx.linkAlias}</span>
                                     </button>
                                   </TableCell>
-                                  <TableCell className="py-2.5 px-3">
+                                  <TableCell className="py-2.5 px-3 hidden md:table-cell">
                                     <div className="flex items-center gap-2">
                                       <Avatar className="w-6 h-6">
                                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-medium">
@@ -415,7 +415,7 @@ const Dashboard = () => {
                                       </span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="text-right py-2.5 px-3 font-mono text-xs">
+                                  <TableCell className="text-right py-2.5 px-3 font-mono text-xs hidden sm:table-cell">
                                     {tx.amount !== null ? <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
                                   </TableCell>
                                   <TableCell className="text-right py-2.5 px-3">

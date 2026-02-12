@@ -211,11 +211,11 @@ function LinkRow({
             <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.clicks.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Clicks</p>
           </div>
-          <div className={cn("text-right w-14", isFreeTier && "opacity-40")}>
+          <div className={cn("text-right w-14 hidden sm:block", isFreeTier && "opacity-40")}>
             <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.leads.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Leads</p>
           </div>
-          <div className={cn("text-right w-14", isFreeTier && "opacity-40")}>
+          <div className={cn("text-right w-14 hidden sm:block", isFreeTier && "opacity-40")}>
             <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.sales.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Sales</p>
           </div>
@@ -406,8 +406,8 @@ export function LinkTable({
         <div className="w-16 shrink-0 hidden lg:block text-center">Trend</div>
         <div className="flex items-center gap-4 shrink-0">
           <SortableHeader label="Clicks" field="clicks" currentSort={sort} onSort={handleSort} />
-          <SortableHeader label="Leads" field="leads" currentSort={sort} onSort={handleSort} />
-          <SortableHeader label="Sales" field="sales" currentSort={sort} onSort={handleSort} />
+          <span className="hidden sm:block"><SortableHeader label="Leads" field="leads" currentSort={sort} onSort={handleSort} /></span>
+          <span className="hidden sm:block"><SortableHeader label="Sales" field="sales" currentSort={sort} onSort={handleSort} /></span>
         </div>
         <div className="w-20 shrink-0"></div>
       </div>
