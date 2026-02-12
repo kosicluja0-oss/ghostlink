@@ -27,34 +27,31 @@ export function useSubscription() {
         };
       }
 
-      const { data: profile, error } = await supabase
+      // Fetch tier from profiles
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('tier, subscription_status, billing_cycle, stripe_customer_id, subscription_id')
+        .select('tier')
         .eq('id', user.id)
         .single();
 
-      if (error) {
-        console.error('Error fetching subscription:', error);
-        return {
-          tier: 'free',
-          subscriptionStatus: null,
-          billingCycle: null,
-          stripeCustomerId: null,
-          subscriptionId: null,
-        };
-      }
+      // Fetch billing data from separate table
+      const { data: billing } = await supabase
+        .from('billing_data')
+        .select('subscription_status, billing_cycle, stripe_customer_id, subscription_id')
+        .eq('user_id', user.id)
+        .single();
 
       return {
         tier: (profile?.tier as TierType) || 'free',
-        subscriptionStatus: profile?.subscription_status || null,
-        billingCycle: profile?.billing_cycle || null,
-        stripeCustomerId: profile?.stripe_customer_id || null,
-        subscriptionId: profile?.subscription_id || null,
+        subscriptionStatus: billing?.subscription_status || null,
+        billingCycle: billing?.billing_cycle || null,
+        stripeCustomerId: billing?.stripe_customer_id || null,
+        subscriptionId: billing?.subscription_id || null,
       };
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60, // 1 minute
-    refetchInterval: 1000 * 60, // Refetch every minute
+    staleTime: 1000 * 60,
+    refetchInterval: 1000 * 60,
   });
 
   const isSubscribed = data?.subscriptionStatus === 'active';

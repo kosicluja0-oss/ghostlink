@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -41,16 +41,15 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Get customer ID from profile
-    const { data: profile } = await supabaseClient
-      .from("profiles")
+    // Get customer ID from billing_data
+    const { data: billing } = await supabaseClient
+      .from("billing_data")
       .select("stripe_customer_id")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single();
 
-    let customerId = profile?.stripe_customer_id;
+    let customerId = billing?.stripe_customer_id;
 
-    // If not in profile, try to find in Stripe
     if (!customerId) {
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -60,16 +59,28 @@ serve(async (req) => {
       customerId = customers.data[0].id;
       
       // Store for future use
-      await supabaseClient
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
+      const { data: existingBilling } = await supabaseClient
+        .from("billing_data")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (existingBilling) {
+        await supabaseClient
+          .from("billing_data")
+          .update({ stripe_customer_id: customerId })
+          .eq("user_id", user.id);
+      } else {
+        await supabaseClient
+          .from("billing_data")
+          .insert({ user_id: user.id, stripe_customer_id: customerId });
+      }
     }
 
     logStep("Found Stripe customer", { customerId });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = req.headers.get("origin") || "https://ghostlink.lovable.app";
     
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
