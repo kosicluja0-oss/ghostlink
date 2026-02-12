@@ -386,7 +386,7 @@ export default function Landing() {
             {Object.entries(pricingPlans).map(([planId, plan]) => {
             const isFree = planId === 'free';
             const displayPrice = getDisplayPrice(plan, billingCycle);
-            return <div key={planId} className={`relative bg-card border rounded-xl p-6 flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)] transition-all duration-300 ${plan.highlighted ? 'border-primary shadow-lg shadow-primary/20 scale-105 z-10' : 'border-border'}`}>
+            return <div key={planId} className={`relative bg-card border rounded-xl p-6 flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)] transition-all duration-300 ${plan.highlighted ? 'border-primary shadow-lg shadow-primary/20 md:scale-105 z-10' : 'border-border'}`}>
                   {plan.badge && <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
                         {plan.badge}

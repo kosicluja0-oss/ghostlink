@@ -101,7 +101,7 @@ export function HeroLinkInput() {
     <div className="w-full max-w-2xl mx-auto">
       <div 
         className={cn(
-          "relative flex items-center gap-2 p-1.5 rounded-2xl border transition-all duration-300",
+          "relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 rounded-2xl border transition-all duration-300",
           "bg-[#0a0a0a]",
           "hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)]",
           isFocused || hasValue
@@ -130,7 +130,7 @@ export function HeroLinkInput() {
           onClick={handleClick}
           disabled={isProcessing}
           className={cn(
-            "flex items-center gap-2 px-5 h-11 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap",
+            "flex items-center justify-center gap-2 px-5 h-11 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap",
             isProcessing
               ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] cursor-wait"
               : hasValue
