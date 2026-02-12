@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_data: {
+        Row: {
+          billing_cycle: string | null
+          created_at: string
+          id: string
+          stripe_customer_id: string | null
+          subscription_id: string | null
+          subscription_status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_cycle?: string | null
+          created_at?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_cycle?: string | null
+          created_at?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clicks: {
         Row: {
           country: string | null
@@ -161,48 +194,36 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          billing_cycle: string | null
           created_at: string
           currency: string | null
           display_name: string | null
           id: string
           marketing_emails: boolean | null
           security_alerts: boolean | null
-          stripe_customer_id: string | null
-          subscription_id: string | null
-          subscription_status: string | null
           tier: string | null
           timezone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
-          billing_cycle?: string | null
           created_at?: string
           currency?: string | null
           display_name?: string | null
           id: string
           marketing_emails?: boolean | null
           security_alerts?: boolean | null
-          stripe_customer_id?: string | null
-          subscription_id?: string | null
-          subscription_status?: string | null
           tier?: string | null
           timezone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
-          billing_cycle?: string | null
           created_at?: string
           currency?: string | null
           display_name?: string | null
           id?: string
           marketing_emails?: boolean | null
           security_alerts?: boolean | null
-          stripe_customer_id?: string | null
-          subscription_id?: string | null
-          subscription_status?: string | null
           tier?: string | null
           timezone?: string | null
           updated_at?: string

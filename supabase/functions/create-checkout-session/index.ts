@@ -41,24 +41,22 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Parse request body
     const { priceId, billingCycle } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
     logStep("Request body parsed", { priceId, billingCycle });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Check if user already has a Stripe customer ID in profiles
-    const { data: profile } = await supabaseClient
-      .from("profiles")
+    // Check if user already has a Stripe customer ID in billing_data
+    const { data: billing } = await supabaseClient
+      .from("billing_data")
       .select("stripe_customer_id")
-      .eq("id", user.id)
+      .eq("user_id", user.id)
       .single();
 
-    let customerId = profile?.stripe_customer_id;
-    logStep("Profile fetched", { existingCustomerId: customerId });
+    let customerId = billing?.stripe_customer_id;
+    logStep("Billing data fetched", { existingCustomerId: customerId });
 
-    // If no customer ID in profile, check Stripe or create new customer
     if (!customerId) {
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       if (customers.data.length > 0) {
@@ -73,24 +71,30 @@ serve(async (req) => {
         logStep("Created new Stripe customer", { customerId });
       }
 
-      // Store customer ID in profile
-      await supabaseClient
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
-      logStep("Stored customer ID in profile");
+      // Upsert billing_data with customer ID
+      const { data: existingBilling } = await supabaseClient
+        .from("billing_data")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (existingBilling) {
+        await supabaseClient
+          .from("billing_data")
+          .update({ stripe_customer_id: customerId })
+          .eq("user_id", user.id);
+      } else {
+        await supabaseClient
+          .from("billing_data")
+          .insert({ user_id: user.id, stripe_customer_id: customerId });
+      }
+      logStep("Stored customer ID in billing_data");
     }
 
-    // Create checkout session
     const origin = req.headers.get("origin") || "https://ghostlink.lovable.app";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/onboarding/plans?checkout=canceled`,

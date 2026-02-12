@@ -14,13 +14,62 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 // Price ID to tier mapping
 const PRICE_TO_TIER: Record<string, { tier: string; cycle: string }> = {
-  // Pro plan
   "price_1SqvwMR7WITbhBZj8cbrc0Zz": { tier: "pro", cycle: "monthly" },
   "price_1SqvxyR7WITbhBZjcM73F1lN": { tier: "pro", cycle: "yearly" },
-  // Business plan
   "price_1Sqw2AR7WITbhBZjvQDRReY6": { tier: "business", cycle: "monthly" },
   "price_1Sqw2aR7WITbhBZjzBBcN8H3": { tier: "business", cycle: "yearly" },
 };
+
+// Helper to upsert billing_data
+async function upsertBillingData(
+  supabaseClient: ReturnType<typeof createClient>,
+  userId: string,
+  data: Record<string, unknown>
+) {
+  // Try update first
+  const { data: existing } = await supabaseClient
+    .from("billing_data")
+    .select("id")
+    .eq("user_id", userId)
+    .single();
+
+  if (existing) {
+    await supabaseClient
+      .from("billing_data")
+      .update(data)
+      .eq("user_id", userId);
+  } else {
+    await supabaseClient
+      .from("billing_data")
+      .insert({ user_id: userId, ...data });
+  }
+}
+
+// Helper to find user ID by stripe customer ID
+async function findUserByCustomer(
+  supabaseClient: ReturnType<typeof createClient>,
+  customerId: string
+): Promise<string | null> {
+  const { data } = await supabaseClient
+    .from("billing_data")
+    .select("user_id")
+    .eq("stripe_customer_id", customerId)
+    .limit(1);
+  return data?.[0]?.user_id || null;
+}
+
+// Helper to find user ID by subscription ID
+async function findUserBySubscription(
+  supabaseClient: ReturnType<typeof createClient>,
+  subscriptionId: string
+): Promise<string | null> {
+  const { data } = await supabaseClient
+    .from("billing_data")
+    .select("user_id")
+    .eq("subscription_id", subscriptionId)
+    .limit(1);
+  return data?.[0]?.user_id || null;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -42,7 +91,6 @@ serve(async (req) => {
 
     let event: Stripe.Event;
 
-    // Verify webhook signature if secret is configured
     if (webhookSecret && signature) {
       try {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
@@ -56,7 +104,6 @@ serve(async (req) => {
         });
       }
     } else {
-      // In development, parse without verification
       event = JSON.parse(body) as Stripe.Event;
       logStep("Webhook parsed without signature verification (dev mode)");
     }
@@ -79,45 +126,36 @@ serve(async (req) => {
         });
 
         if (session.mode === "subscription" && session.subscription) {
-          // Fetch the subscription to get price details
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
           const priceId = subscription.items.data[0]?.price.id;
           const tierInfo = PRICE_TO_TIER[priceId] || { tier: "pro", cycle: "monthly" };
 
-          // Find user by Stripe customer ID
-          const { data: profiles, error: findError } = await supabaseClient
-            .from("profiles")
-            .select("id")
-            .eq("stripe_customer_id", session.customer)
-            .limit(1);
+          // Find user by customer ID in billing_data
+          let userId = await findUserByCustomer(supabaseClient, session.customer as string);
 
-          if (findError || !profiles?.length) {
-            // Try to find by metadata
-            const userId = session.metadata?.supabase_user_id;
-            if (userId) {
-              await supabaseClient
-                .from("profiles")
-                .update({
-                  stripe_customer_id: session.customer as string,
-                  subscription_id: session.subscription as string,
-                  subscription_status: "active",
-                  tier: tierInfo.tier,
-                  billing_cycle: tierInfo.cycle,
-                })
-                .eq("id", userId);
-              logStep("Updated profile by user ID", { userId, tier: tierInfo.tier });
-            }
-          } else {
+          if (!userId) {
+            // Try metadata
+            userId = session.metadata?.supabase_user_id || null;
+          }
+
+          if (userId) {
+            // Update billing_data
+            await upsertBillingData(supabaseClient, userId, {
+              stripe_customer_id: session.customer as string,
+              subscription_id: session.subscription as string,
+              subscription_status: "active",
+              billing_cycle: tierInfo.cycle,
+            });
+
+            // Update tier in profiles
             await supabaseClient
               .from("profiles")
-              .update({
-                subscription_id: session.subscription as string,
-                subscription_status: "active",
-                tier: tierInfo.tier,
-                billing_cycle: tierInfo.cycle,
-              })
-              .eq("stripe_customer_id", session.customer);
-            logStep("Updated profile by customer ID", { tier: tierInfo.tier });
+              .update({ tier: tierInfo.tier })
+              .eq("id", userId);
+
+            logStep("Updated billing_data and profile", { userId, tier: tierInfo.tier });
+          } else {
+            logStep("Could not find user for checkout session");
           }
         }
         break;
@@ -133,16 +171,25 @@ serve(async (req) => {
         const priceId = subscription.items.data[0]?.price.id;
         const tierInfo = PRICE_TO_TIER[priceId] || { tier: "pro", cycle: "monthly" };
 
-        await supabaseClient
-          .from("profiles")
-          .update({
-            subscription_status: subscription.status,
-            tier: subscription.status === "active" ? tierInfo.tier : "free",
-            billing_cycle: subscription.status === "active" ? tierInfo.cycle : null,
-          })
-          .eq("subscription_id", subscription.id);
+        const userId = await findUserBySubscription(supabaseClient, subscription.id);
+        if (userId) {
+          await supabaseClient
+            .from("billing_data")
+            .update({
+              subscription_status: subscription.status,
+              billing_cycle: subscription.status === "active" ? tierInfo.cycle : null,
+            })
+            .eq("user_id", userId);
 
-        logStep("Profile updated for subscription change");
+          await supabaseClient
+            .from("profiles")
+            .update({
+              tier: subscription.status === "active" ? tierInfo.tier : "free",
+            })
+            .eq("id", userId);
+
+          logStep("Profile and billing updated for subscription change");
+        }
         break;
       }
 
@@ -150,17 +197,24 @@ serve(async (req) => {
         const subscription = event.data.object as Stripe.Subscription;
         logStep("Subscription deleted", { subscriptionId: subscription.id });
 
-        await supabaseClient
-          .from("profiles")
-          .update({
-            subscription_id: null,
-            subscription_status: "canceled",
-            tier: "free",
-            billing_cycle: null,
-          })
-          .eq("subscription_id", subscription.id);
+        const userId = await findUserBySubscription(supabaseClient, subscription.id);
+        if (userId) {
+          await supabaseClient
+            .from("billing_data")
+            .update({
+              subscription_id: null,
+              subscription_status: "canceled",
+              billing_cycle: null,
+            })
+            .eq("user_id", userId);
 
-        logStep("Profile downgraded to free tier");
+          await supabaseClient
+            .from("profiles")
+            .update({ tier: "free" })
+            .eq("id", userId);
+
+          logStep("Profile downgraded to free tier");
+        }
         break;
       }
 
@@ -169,12 +223,15 @@ serve(async (req) => {
         logStep("Payment failed", { invoiceId: invoice.id, subscriptionId: invoice.subscription });
 
         if (invoice.subscription) {
-          await supabaseClient
-            .from("profiles")
-            .update({ subscription_status: "past_due" })
-            .eq("subscription_id", invoice.subscription);
+          const userId = await findUserBySubscription(supabaseClient, invoice.subscription as string);
+          if (userId) {
+            await supabaseClient
+              .from("billing_data")
+              .update({ subscription_status: "past_due" })
+              .eq("user_id", userId);
 
-          logStep("Profile marked as past_due");
+            logStep("Billing marked as past_due");
+          }
         }
         break;
       }
