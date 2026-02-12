@@ -388,8 +388,8 @@ const Dashboard = () => {
                         </p>
                       </div>
                     ) : (
-                      <div className="border border-border rounded-xl overflow-hidden bg-card h-full flex flex-col">
-                        <div className="flex-1 overflow-auto" style={{ maxHeight: showAllEvents ? '264px' : undefined }}>
+                      <div className="border border-border rounded-xl overflow-hidden bg-card h-full flex flex-col" style={{ maxHeight: hasMoreEvents ? undefined : undefined }}>
+                        <div className="flex-1 min-h-0 overflow-auto">
                           <Table>
                             <TableBody>
                               {paginatedTransactions.map(tx => (
