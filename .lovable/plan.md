@@ -1,76 +1,48 @@
 
 
-# Vlastni domena pro tracking linky
+# Mobile Responsive Fixes
 
-## Co to obnasi
+This plan addresses all mobile layout issues across the app to ensure clean, professional appearance on phones without changing the desktop experience.
 
-Aby tracking linky vypadaly jako `ghost.link/abc123` misto dlouhe adresy, potrebujes tri veci:
+## Issues Found
 
-1. **Koupit kratkou domenu** (napr. `ghost.link`, `ghst.link`, `ghl.ink` apod.)
-2. **Nastavit proxy** — sluzbu, ktera prijme pozadavek na kratke domene a preposleje ho na tvoji redirect Edge funkci
-3. **Upravit kod** — aby aplikace generovala kratke URL misto dlouhych
+1. **Hero Link Input** - "Analyze & Track" button text is clipped on the right edge on small screens
+2. **Landing Pricing Cards** - `scale-105` on Business card causes horizontal overflow on mobile; cards stack vertically but the middle card still has desktop scaling
+3. **Onboarding Plans** - Same `scale-105` issue on mobile
+4. **Comparison Section** - "vs" indicator is placed after both cards instead of between them on mobile
+5. **Dashboard Stats Grid** - 6 stat cards in `grid-cols-2` can feel cramped; the activity table columns overflow on narrow screens
+6. **Dashboard Activity Table** - 5 columns with avatar, description, amount, date don't fit well at 390px
+7. **LinkTable** - Metrics columns (Clicks/Leads/Sales numbers + actions) overflow horizontally on mobile
 
----
+## Changes
 
-## Krok 1: Koupě domeny
+### 1. `src/components/landing/HeroLinkInput.tsx`
+- Change the input+button container from single-row flex to **stack vertically on mobile** (`flex-col sm:flex-row`)
+- Make button full-width on mobile, inline on desktop
+- Adjust padding on the outer container for mobile
 
-Domenu si koupis u registratora (napr. Namecheap, Cloudflare Registrar, GoDaddy). Idealne neco kratkeho a zapamatovatelneho. Priklady:
+### 2. `src/pages/Landing.tsx` (Pricing section)
+- Remove `scale-105` on mobile for the highlighted Business card: change to `md:scale-105` so scaling only applies on desktop
+- Ensure pricing cards stack cleanly on mobile with consistent spacing
 
-- `ghost.link` (pokud je dostupna)
-- `ghst.lnk`
-- `ghl.ink`
-- `ghostl.ink`
+### 3. `src/pages/OnboardingPlans.tsx`
+- Same `scale-105` fix as Landing pricing: use `md:scale-105` 
+- Ensure cards stack properly on mobile
 
-Cena: typicky 5-20 USD/rok.
+### 4. `src/components/landing/ComparisonSection.tsx`
+- Move the "vs" indicator to render **between** the two cards using flex ordering, or restructure the grid to place it correctly on mobile
 
----
+### 5. `src/pages/Dashboard.tsx`
+- Hide less critical columns (avatar/description, amount) on mobile in the activity table
+- Ensure stat cards at `grid-cols-2` have proper spacing
 
-## Krok 2: Nastaveni proxy (Cloudflare Workers)
+### 6. `src/components/links/LinkTable.tsx`
+- Hide Leads/Sales metric columns on mobile (show only Clicks)
+- Ensure link row fits within 390px width without horizontal scroll
 
-Toto je externi nastaveni **mimo Lovable**. Doporucuji Cloudflare Workers (free tier staci):
+## Technical Details
 
-1. Registruj domenu nebo ji presun na Cloudflare
-2. Vytvor Worker, ktery prijme pozadavek a preposleje ho na tvoji Edge funkci:
-
-```text
-ghost.link/abc123
-    |
-    v
-Cloudflare Worker
-    |
-    v
-https://mlgrbwkddyrazysxrlvo.supabase.co/functions/v1/redirect/abc123
-```
-
-Worker kod je cca 10 radek — jednoduchy fetch proxy, ktery zachova vsechny parametry (vcetne `?s=ig-reels` pro Smart Copy).
-
-Cloudflare Workers free tier: **100 000 pozadavku denne** — vice nez dostatecne pro zacatek.
-
----
-
-## Krok 3: Uprava kodu v Lovable
-
-Po nastaveni proxy upravim jediny soubor:
-
-**`src/lib/trackingUrl.ts`** — zmena base URL:
-- Misto: `https://[id].supabase.co/functions/v1/redirect`
-- Na: `https://ghost.link` (tvoje nova domena)
-
-Funkce `getDisplayUrl` uz dnes zobrazuje kratkou verzi — po zmene bude skutecna URL odpovidat tomu, co uzivatel vidi.
-
-Zadne dalsi soubory se nemeni. Smart Copy, LinkCard, LinkTable — vsechno pouziva `getTrackingUrl()` z tohoto souboru.
-
----
-
-## Shrnuti postupu
-
-1. Vyber a kup kratkou domenu
-2. Nastavit Cloudflare Workers proxy (muzu ti dat presny kod pro Worker)
-3. Ja upravim `trackingUrl.ts` aby generovals kratke URL
-
-## Dulezite
-
-- Databaze, Edge funkce, analytics — **nic se nemeni**
-- Stare linky budou fungovat dal (Supabase URL nikam nezmizi)
-- Proxy prida minimalni latenci (pod 10ms)
+- All changes use Tailwind responsive prefixes (`sm:`, `md:`, `lg:`) to conditionally apply styles
+- No changes affect desktop layout - only adding mobile-specific overrides
+- No new dependencies needed
 
