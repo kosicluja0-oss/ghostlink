@@ -77,14 +77,37 @@ export default function Auth() {
         return;
       }
       if (session) {
-        navigate('/dashboard');
+        // Check if user has completed plan selection
+        supabase
+          .from('profiles')
+          .select('tier')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (!data?.tier || data.tier === 'free') {
+              navigate('/onboarding/plans');
+            } else {
+              navigate('/dashboard');
+            }
+          });
       }
       setIsInitializing(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/dashboard');
+        supabase
+          .from('profiles')
+          .select('tier')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (!data?.tier || data.tier === 'free') {
+              navigate('/onboarding/plans');
+            } else {
+              navigate('/dashboard');
+            }
+          });
       } else {
         setIsInitializing(false);
       }
