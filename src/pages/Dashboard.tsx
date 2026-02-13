@@ -375,7 +375,7 @@ const Dashboard = () => {
                   <div className="lg:col-span-3">
                     <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={selectedLinkId} selectedLinkAlias={selectedLinkAlias} onClearSelection={() => setSelectedLinkId(null)} links={links} activeMetric={activeMetric} onMetricChange={handleMetricChange} />
                   </div>
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-2 flex flex-col">
                     {showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
                     {filteredTransactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border rounded-xl bg-card/50 h-full">
@@ -388,7 +388,7 @@ const Dashboard = () => {
                         </p>
                       </div>
                     ) : (
-                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '100%', maxHeight: '100%' }}>
+                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col flex-1 min-h-0">
                         <div className="flex-1 min-h-0 overflow-y-auto">
                           <Table>
                             <TableBody>
