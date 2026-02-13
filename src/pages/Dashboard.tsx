@@ -371,7 +371,7 @@ const Dashboard = () => {
 
               {/* Chart + Activity Table Row */}
               <section className="mb-5">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:items-stretch">
                   <div className="lg:col-span-3">
                     <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={selectedLinkId} selectedLinkAlias={selectedLinkAlias} onClearSelection={() => setSelectedLinkId(null)} links={links} activeMetric={activeMetric} onMetricChange={handleMetricChange} />
                   </div>
@@ -388,8 +388,8 @@ const Dashboard = () => {
                         </p>
                       </div>
                     ) : (
-                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col h-full">
-                        <div className="flex-1 min-h-0 overflow-auto">
+                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '100%', maxHeight: '100%' }}>
+                        <div className="flex-1 min-h-0 overflow-y-auto">
                           <Table>
                             <TableBody>
                               {paginatedTransactions.map(tx => (
