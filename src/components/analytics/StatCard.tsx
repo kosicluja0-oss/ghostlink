@@ -12,6 +12,7 @@ interface StatCardProps {
   };
   isLocked?: boolean;
   accentColor?: 'primary' | 'success' | 'warning' | 'chart-conversions';
+  customColor?: string;
   compact?: boolean;
   tooltip?: string;
   isActive?: boolean;
@@ -25,6 +26,7 @@ export function StatCard({
   trend, 
   isLocked = false,
   accentColor = 'primary',
+  customColor,
   compact = false,
   tooltip,
   isActive = false,
@@ -64,14 +66,14 @@ export function StatCard({
     >
       <div className={cn("flex items-start justify-between", compact ? "mb-1.5" : "mb-3")}>
         <span className={cn("font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>{label}</span>
-        <Icon className={cn(colorClasses[accentColor], compact ? "h-4 w-4" : "h-5 w-5")} />
+        <Icon className={cn(compact ? "h-4 w-4" : "h-5 w-5", !customColor && colorClasses[accentColor])} style={customColor ? { color: customColor } : undefined} />
       </div>
       
       <div className={cn('relative', isLocked && 'tier-locked')}>
         <p className={cn(
-          colorClasses[accentColor],
+          !customColor && colorClasses[accentColor],
           compact ? "text-xl font-bold tabular-nums" : "stat-number"
-        )}>
+        )} style={customColor ? { color: customColor } : undefined}>
           {value}
         </p>
         
