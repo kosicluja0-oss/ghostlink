@@ -281,21 +281,21 @@ const Integrations = () => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev => ({
+    setExpandedCategories((prev) => ({
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
   };
 
   // Prepare links for dropdown
-  const linkOptions = useMemo(() => links.filter(l => l.status === 'active').map(l => ({
+  const linkOptions = useMemo(() => links.filter((l) => l.status === 'active').map((l) => ({
     id: l.id,
     alias: l.alias
   })), [links]);
 
   // Map static integrations with real status from database
   const integrationsWithStatus = useMemo(() => {
-    return INTEGRATIONS.map(integration => ({
+    return INTEGRATIONS.map((integration) => ({
       ...integration,
       status: getIntegrationStatus(integration.id)
     }));
@@ -304,15 +304,15 @@ const Integrations = () => {
   // Group integrations by category
   const groupedIntegrations = useMemo(() => {
     const grouped: Record<string, Integration[]> = {};
-    CATEGORIES.forEach(cat => {
-      grouped[cat.id] = integrationsWithStatus.filter(i => i.category === cat.id);
+    CATEGORIES.forEach((cat) => {
+      grouped[cat.id] = integrationsWithStatus.filter((i) => i.category === cat.id);
     });
     return grouped;
   }, [integrationsWithStatus]);
 
   // Uniform connect handler — same for all integrations including Stripe
   const handleConnect = useCallback((integrationId: string) => {
-    const integration = integrationsWithStatus.find(i => i.id === integrationId);
+    const integration = integrationsWithStatus.find((i) => i.id === integrationId);
     if (integration && !integration.comingSoon) {
       setSelectedIntegration(integration);
       setConnectModalOpen(true);
@@ -330,8 +330,8 @@ const Integrations = () => {
       toast.error('Failed to connect integration');
     }
   }, [connect]);
-  const connectedCount = integrationsWithStatus.filter(i => i.status === 'connected').length;
-  const pendingCount = integrationsWithStatus.filter(i => i.status === 'pending').length;
+  const connectedCount = integrationsWithStatus.filter((i) => i.status === 'connected').length;
+  const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
   return <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
@@ -365,11 +365,11 @@ const Integrations = () => {
               <ConnectedEcosystemBar integrations={integrationsWithStatus} />
 
               {/* Integration Categories */}
-              {CATEGORIES.map(category => {
+              {CATEGORIES.map((category) => {
               const categoryIntegrations = groupedIntegrations[category.id];
               if (!categoryIntegrations || categoryIntegrations.length === 0) return null;
               const Icon = category.icon;
-              const hasComingSoon = categoryIntegrations.some(i => i.comingSoon);
+              const hasComingSoon = categoryIntegrations.some((i) => i.comingSoon);
               const isExpanded = expandedCategories[category.id];
               const hasMoreThanThree = categoryIntegrations.length > 3;
               const visibleIntegrations = hasMoreThanThree && !isExpanded ? categoryIntegrations.slice(0, 3) : categoryIntegrations;
@@ -382,10 +382,10 @@ const Integrations = () => {
                           NEW
                         </span>}
                     </div>
-                    <p className="text-xs text-muted-foreground mb-4">{category.description}</p>
+                    
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {visibleIntegrations.map(integration => <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />)}
+                      {visibleIntegrations.map((integration) => <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />)}
                     </div>
 
                     {/* Expand/Collapse Toggle */}
