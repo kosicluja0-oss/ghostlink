@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown, ChevronUp, X } from 'lucide-react';
 import type { MetricKey } from '@/components/analytics/AnalyticsChart';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // kept for potential future use
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -394,32 +394,23 @@ const Dashboard = () => {
                             <TableBody>
                               {paginatedTransactions.map(tx => (
                                 <TableRow key={tx.id} className="border-border hover:bg-muted/50 transition-colors">
-                                  <TableCell className="py-2.5 px-3">{getTypeBadge(tx.type)}</TableCell>
-                                  <TableCell className="py-2.5 px-3">
-                                    <button className="flex items-center gap-1.5 text-xs text-foreground hover:text-primary transition-colors cursor-pointer group" onClick={() => navigate('/links')}>
-                                      <div className="w-5 h-5 rounded bg-muted flex items-center justify-center">
-                                        <Link2 className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                                      </div>
-                                      <span className="font-medium group-hover:underline truncate max-w-[80px]">/{tx.linkAlias}</span>
+                                  <TableCell className="py-2 px-2">{getTypeBadge(tx.type)}</TableCell>
+                                  <TableCell className="py-2 px-2">
+                                    <button className="flex items-center gap-1 text-xs text-foreground hover:text-primary transition-colors cursor-pointer group" onClick={() => navigate('/links')}>
+                                      <Link2 className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                                      <span className="font-medium group-hover:underline truncate max-w-[60px]">/{tx.linkAlias}</span>
                                     </button>
                                   </TableCell>
-                                  <TableCell className="py-2.5 px-3 hidden md:table-cell">
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="w-6 h-6">
-                                        <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-medium">
-                                          {getCustomerInitials(tx.description)}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <span className="text-xs text-foreground truncate max-w-[100px]">
-                                        {tx.description}
-                                      </span>
-                                    </div>
+                                  <TableCell className="py-2 px-2 hidden xl:table-cell">
+                                    <span className="text-xs text-foreground truncate max-w-[80px] block">
+                                      {tx.description}
+                                    </span>
                                   </TableCell>
-                                  <TableCell className="text-right py-2.5 px-3 font-mono text-xs hidden sm:table-cell">
+                                  <TableCell className="text-right py-2 px-2 font-mono text-xs hidden sm:table-cell">
                                     {tx.amount !== null ? <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
                                   </TableCell>
-                                  <TableCell className="text-right py-2.5 px-3">
-                                    <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+                                  <TableCell className="text-right py-2 px-1.5">
+                                    <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap">
                                       {formatInTimezone(tx.date, 'MMM d, HH:mm')}
                                     </span>
                                   </TableCell>
