@@ -535,7 +535,7 @@ const Settings = () => {
                         <Lock className="w-5 h-5 text-primary" />
                         <div className="text-left">
                           <p className="font-medium text-foreground">Security</p>
-                          <p className="text-sm text-muted-foreground font-normal">Password and account security</p>
+                          
                         </div>
                       </div>
                     </AccordionTrigger>
