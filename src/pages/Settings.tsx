@@ -639,7 +639,7 @@ const Settings = () => {
                         <CreditCard className="w-5 h-5 text-primary" />
                         <div className="text-left">
                           <p className="font-medium text-foreground">Billing & Subscription</p>
-                          <p className="text-sm text-muted-foreground font-normal">Manage your plan and payment methods</p>
+                          
                         </div>
                       </div>
                     </AccordionTrigger>
