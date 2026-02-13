@@ -37,8 +37,8 @@ const METRIC_COLORS: Record<MetricKey, string> = {
   leads: 'hsl(var(--warning))',
   sales: 'hsl(var(--success))',
   revenue: 'hsl(var(--success))',
-  cr: 'hsl(var(--primary))',
-  epc: 'hsl(var(--primary))'
+  cr: 'hsl(var(--chart-conversions))',
+  epc: 'hsl(var(--chart-conversions))'
 };
 
 const TIME_RANGE_LABELS: Record<TimeRange, string> = {
