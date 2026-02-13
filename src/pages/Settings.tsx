@@ -411,7 +411,7 @@ const Settings = () => {
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div className="space-y-2">
                             <Label htmlFor="displayName">Display Name</Label>
-                            <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name" className="bg-input" />
+                            <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" className="bg-input" />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
@@ -447,7 +447,7 @@ const Settings = () => {
                         <Globe className="w-5 h-5 text-primary" />
                         <div className="text-left">
                           <p className="font-medium text-foreground">Preferences</p>
-                          <p className="text-sm text-muted-foreground font-normal">Customize your experience</p>
+                          
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -478,7 +478,7 @@ const Settings = () => {
                                   <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                     {region}
                                   </div>
-                                  {timezones.map(tz => <SelectItem key={tz.value} value={tz.value}>
+                                  {timezones.map((tz) => <SelectItem key={tz.value} value={tz.value}>
                                       {tz.label}
                                     </SelectItem>)}
                                 </div>)}
@@ -511,7 +511,7 @@ const Settings = () => {
                               Tips, news, and special offers
                             </p>
                           </div>
-                          <Switch id="marketing-emails" checked={marketingEmails} onCheckedChange={checked => handleNotificationChange('marketing_emails', checked)} disabled={isUpdating} />
+                          <Switch id="marketing-emails" checked={marketingEmails} onCheckedChange={(checked) => handleNotificationChange('marketing_emails', checked)} disabled={isUpdating} />
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="space-y-0.5">
@@ -522,7 +522,7 @@ const Settings = () => {
                               Login alerts and password changes
                             </p>
                           </div>
-                          <Switch id="security-alerts" checked={securityAlerts} onCheckedChange={checked => handleNotificationChange('security_alerts', checked)} disabled={isUpdating} />
+                          <Switch id="security-alerts" checked={securityAlerts} onCheckedChange={(checked) => handleNotificationChange('security_alerts', checked)} disabled={isUpdating} />
                         </div>
                       </div>
                     </AccordionContent>
@@ -549,7 +549,7 @@ const Settings = () => {
                               <div className="space-y-2">
                                 <Label htmlFor="currentPassword">Current Password</Label>
                                 <div className="relative">
-                                  <Input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="bg-input pr-10" />
+                                  <Input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password" className="bg-input pr-10" />
                                   <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                   </button>
@@ -560,7 +560,7 @@ const Settings = () => {
                               <div className="space-y-2">
                                 <Label htmlFor="newPassword">New Password</Label>
                                 <div className="relative">
-                                  <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" className="bg-input pr-10" />
+                                  <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" className="bg-input pr-10" />
                                   <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                   </button>
@@ -569,7 +569,7 @@ const Settings = () => {
                                 <div className="space-y-2 pt-1">
                                   {/* Progress bar */}
                                   <div className="flex gap-1">
-                                    {[1, 2, 3].map(level => {
+                                    {[1, 2, 3].map((level) => {
                                   const filled = level <= passwordStrength.score;
                                   return <div key={level} className={cn("h-1 flex-1 rounded-full transition-all duration-300", filled ? passwordStrength.score === 3 ? "bg-success" : passwordStrength.score === 2 ? "bg-warning" : "bg-destructive" : "bg-muted")} />;
                                 })}
@@ -603,7 +603,7 @@ const Settings = () => {
                               <div className="space-y-2">
                                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                                 <div className="relative">
-                                  <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="bg-input pr-10" />
+                                  <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" className="bg-input pr-10" />
                                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                   </button>
@@ -848,7 +848,7 @@ const Settings = () => {
                               <Label htmlFor="delete-confirm" className="text-foreground">
                                 Type <strong>DELETE</strong> to confirm:
                               </Label>
-                              <Input id="delete-confirm" value={deleteConfirmation} onChange={e => setDeleteConfirmation(e.target.value)} placeholder="DELETE" className="mt-2" />
+                              <Input id="delete-confirm" value={deleteConfirmation} onChange={(e) => setDeleteConfirmation(e.target.value)} placeholder="DELETE" className="mt-2" />
                             </div>
                           </div>
                         </AlertDialogDescription>
