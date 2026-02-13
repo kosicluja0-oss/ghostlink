@@ -420,7 +420,7 @@ const Dashboard = () => {
                           </Table>
                         </div>
                         {hasMoreEvents && (
-                          <div className="border-t border-white/10 px-3 py-1.5 backdrop-blur-xl bg-card/40">
+                          <div className="border-t border-white/10 px-3 py-1.5 backdrop-blur-xl bg-background/30">
                             <Button
                               variant="ghost"
                               size="sm"
