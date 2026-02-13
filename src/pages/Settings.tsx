@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle, Download } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle, Download, Sun, Moon } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -869,6 +869,24 @@ const Settings = () => {
                 </div>
               </div>
             </main>
+
+            {/* Light/Dark mode toggle - fixed bottom right */}
+            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-card/80 backdrop-blur-xl border border-border rounded-full px-4 py-2.5 shadow-lg">
+              <Sun className="w-4 h-4 text-muted-foreground" />
+              <Switch
+                checked={document.documentElement.classList.contains('dark')}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                  }
+                }}
+              />
+              <Moon className="w-4 h-4 text-muted-foreground" />
+            </div>
           </SidebarInset>
         </div>
       </SidebarProvider>
