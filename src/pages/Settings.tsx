@@ -758,7 +758,7 @@ const Settings = () => {
                                 Admin
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground font-normal">Test different subscription tiers</p>
+                            
                           </div>
                         </div>
                       </AccordionTrigger>
