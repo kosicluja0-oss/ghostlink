@@ -496,7 +496,7 @@ const Settings = () => {
                         <Bell className="w-5 h-5 text-primary" />
                         <div className="text-left">
                           <p className="font-medium text-foreground">Notifications</p>
-                          <p className="text-sm text-muted-foreground font-normal">Email notification preferences</p>
+                          
                         </div>
                       </div>
                     </AccordionTrigger>
