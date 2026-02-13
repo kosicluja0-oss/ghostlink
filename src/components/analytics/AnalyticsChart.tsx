@@ -134,7 +134,7 @@ const METRIC_COLORS: Record<MetricKey, string> = {
   sales: 'hsl(var(--success))',
   revenue: 'hsl(var(--success))',
   cr: 'hsl(var(--chart-conversions))',
-  epc: 'hsl(var(--chart-conversions))'
+  epc: 'hsl(var(--foreground))'
 };
 
 // Metrics that require special Y-axis formatting
