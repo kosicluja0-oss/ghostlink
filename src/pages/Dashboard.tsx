@@ -388,7 +388,7 @@ const Dashboard = () => {
                         </p>
                       </div>
                     ) : (
-                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '100%', maxHeight: '320px' }}>
+                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col h-full">
                         <div className="flex-1 min-h-0 overflow-auto">
                           <Table>
                             <TableBody>
@@ -420,7 +420,7 @@ const Dashboard = () => {
                           </Table>
                         </div>
                         {hasMoreEvents && (
-                          <div className="border-t border-border/50 px-3 py-1.5 backdrop-blur-md bg-card/60">
+                          <div className="border-t border-white/10 px-3 py-1.5 backdrop-blur-xl bg-card/40">
                             <Button
                               variant="ghost"
                               size="sm"
