@@ -388,7 +388,7 @@ const Dashboard = () => {
                         </p>
                       </div>
                     ) : (
-                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '308px' }}>
+                      <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '311px' }}>
                         <div className="flex-1 min-h-0 overflow-y-auto">
                           <Table>
                             <TableBody>
