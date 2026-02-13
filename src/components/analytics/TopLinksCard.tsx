@@ -18,6 +18,7 @@ const METRIC_LABELS: Record<MetricKey, string> = {
 interface TopLinksCardProps {
   links: GhostLink[];
   activeMetric?: MetricKey;
+  metricColor?: string;
   selectedLinkId?: string | null;
   onLinkSelect?: (linkId: string | null) => void;
 }
@@ -46,7 +47,7 @@ function formatValue(value: number, metric: MetricKey): string {
   }
 }
 
-export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, onLinkSelect }: TopLinksCardProps) => {
+export const TopLinksCard = ({ links, activeMetric = 'clicks', metricColor, selectedLinkId, onLinkSelect }: TopLinksCardProps) => {
   const [showAll, setShowAll] = useState(false);
 
   const handleLinkClick = (linkId: string) => {
@@ -126,7 +127,7 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, o
                   {formatValue(link.metricValue, activeMetric)}
                 </span>
               </div>
-              <Progress value={link.percentage} className="h-1.5 bg-muted" />
+              <Progress value={link.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
             </div>);
 
         })}

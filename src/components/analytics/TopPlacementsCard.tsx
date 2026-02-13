@@ -27,6 +27,7 @@ const METRIC_LABELS: Record<MetricKey, string> = {
 interface TopPlacementsCardProps {
   placements: PlacementData[];
   activeMetric?: MetricKey;
+  metricColor?: string;
 }
 
 function getMetricValue(p: PlacementData, metric: MetricKey): number {
@@ -53,7 +54,7 @@ function formatValue(value: number, metric: MetricKey): string {
   }
 }
 
-export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPlacementsCardProps) => {
+export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricColor }: TopPlacementsCardProps) => {
   const [showAll, setShowAll] = useState(false);
 
   const allSorted = useMemo(() => {
@@ -114,7 +115,7 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks' }: TopPl
                 {formatValue(placement.metricValue, activeMetric)}
               </span>
             </div>
-            <Progress value={placement.percentage} className="h-1.5 bg-muted" />
+            <Progress value={placement.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
           </div>
         )}
         {hasMore &&

@@ -27,6 +27,7 @@ const METRIC_LABELS: Record<MetricKey, string> = {
 interface TopCountriesCardProps {
   countries: CountryData[];
   activeMetric?: MetricKey;
+  metricColor?: string;
 }
 
 export const getCountryInfo = (code: string): {name: string;} => {
@@ -61,7 +62,7 @@ function formatValue(value: number, metric: MetricKey): string {
   }
 }
 
-export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCountriesCardProps) => {
+export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricColor }: TopCountriesCardProps) => {
   const [showAll, setShowAll] = useState(false);
 
   const allSorted = useMemo(() => {
@@ -122,7 +123,7 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
                   {formatValue(country.metricValue, activeMetric)}
                 </span>
               </div>
-              <Progress value={country.percentage} className="h-1.5 bg-muted" />
+              <Progress value={country.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
             </div>);
 
         })}
