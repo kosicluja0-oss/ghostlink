@@ -1,6 +1,6 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { CircleFlag } from '@/components/ui/circle-flag';
 import { COUNTRIES } from '@/lib/countries';
 import { useMemo, useState } from 'react';
@@ -21,7 +21,7 @@ const METRIC_LABELS: Record<MetricKey, string> = {
   sales: 'sales',
   revenue: 'revenue',
   cr: 'CR',
-  epc: 'EPC',
+  epc: 'EPC'
 };
 
 interface TopCountriesCardProps {
@@ -29,7 +29,7 @@ interface TopCountriesCardProps {
   activeMetric?: MetricKey;
 }
 
-export const getCountryInfo = (code: string): { name: string } => {
+export const getCountryInfo = (code: string): {name: string;} => {
   const upperCode = code?.toUpperCase() || '';
   if (!upperCode || upperCode === 'XX' || upperCode === 'UNKNOWN') {
     return { name: 'Unknown' };
@@ -39,13 +39,13 @@ export const getCountryInfo = (code: string): { name: string } => {
 
 function getMetricValue(country: CountryData, metric: MetricKey): number {
   switch (metric) {
-    case 'clicks': return country.clicks;
-    case 'leads': return country.leads;
-    case 'sales': return country.sales;
-    case 'revenue': return country.earnings;
-    case 'cr': return country.clicks > 0 ? ((country.leads + country.sales) / country.clicks) * 100 : 0;
-    case 'epc': return country.clicks > 0 ? country.earnings / country.clicks : 0;
-    default: return country.clicks;
+    case 'clicks':return country.clicks;
+    case 'leads':return country.leads;
+    case 'sales':return country.sales;
+    case 'revenue':return country.earnings;
+    case 'cr':return country.clicks > 0 ? (country.leads + country.sales) / country.clicks * 100 : 0;
+    case 'epc':return country.clicks > 0 ? country.earnings / country.clicks : 0;
+    default:return country.clicks;
   }
 }
 
@@ -65,20 +65,20 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
   const [showAll, setShowAll] = useState(false);
 
   const allSorted = useMemo(() => {
-    const withValues = countries.map(c => ({
+    const withValues = countries.map((c) => ({
       ...c,
-      metricValue: getMetricValue(c, activeMetric),
+      metricValue: getMetricValue(c, activeMetric)
     }));
 
-    const sorted = [...withValues]
-      .filter(c => c.metricValue > 0)
-      .sort((a, b) => b.metricValue - a.metricValue);
+    const sorted = [...withValues].
+    filter((c) => c.metricValue > 0).
+    sort((a, b) => b.metricValue - a.metricValue);
 
     const maxValue = sorted.length > 0 ? sorted[0].metricValue : 1;
 
-    return sorted.map(c => ({
+    return sorted.map((c) => ({
       ...c,
-      percentage: maxValue > 0 ? Math.round((c.metricValue / maxValue) * 100) : 0,
+      percentage: maxValue > 0 ? Math.round(c.metricValue / maxValue * 100) : 0
     }));
   }, [countries, activeMetric]);
 
@@ -96,20 +96,20 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
         <CardContent className="pt-0">
           <p className="text-xs text-muted-foreground">No country data yet</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
-          <Globe className="w-4 h-4 text-primary" />
+          
           Top Countries by {METRIC_LABELS[activeMetric]}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        {topCountries.map(country => {
+        {topCountries.map((country) => {
           const { name } = getCountryInfo(country.code);
           return (
             <div key={country.code} className="space-y-1.5">
@@ -123,24 +123,24 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks' }: TopCoun
                 </span>
               </div>
               <Progress value={country.percentage} className="h-1.5 bg-muted" />
-            </div>
-          );
+            </div>);
+
         })}
-        {hasMore && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAll(!showAll)}
-            className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1"
-          >
-            {showAll ? (
-              <>Show less <ChevronUp className="w-3 h-3" /></>
-            ) : (
-              <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
-            )}
+        {hasMore &&
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAll(!showAll)}
+          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1">
+
+            {showAll ?
+          <>Show less <ChevronUp className="w-3 h-3" /></> :
+
+          <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
+          }
           </Button>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
