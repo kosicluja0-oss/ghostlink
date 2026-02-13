@@ -32,6 +32,15 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 type TransactionType = 'click' | 'lead' | 'sale';
 
+const METRIC_COLORS: Record<MetricKey, string> = {
+  clicks: 'hsl(var(--chart-clicks))',
+  leads: 'hsl(var(--warning))',
+  sales: 'hsl(var(--success))',
+  revenue: 'hsl(var(--success))',
+  cr: 'hsl(var(--primary))',
+  epc: 'hsl(var(--primary))'
+};
+
 const TIME_RANGE_LABELS: Record<TimeRange, string> = {
   '30m': '30 min',
   '6h': '6 hours',
@@ -444,9 +453,9 @@ const Dashboard = () => {
               {/* Countries + Placements + Links Row */}
               <section className="mb-5">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <TopCountriesCard countries={countryAnalytics} activeMetric={activeMetric} />
-                  <TopPlacementsCard placements={placementAnalytics} activeMetric={activeMetric} />
-                  <TopLinksCard links={links} activeMetric={activeMetric} selectedLinkId={selectedLinkId} onLinkSelect={setSelectedLinkId} />
+                  <TopCountriesCard countries={countryAnalytics} activeMetric={activeMetric} metricColor={METRIC_COLORS[activeMetric]} />
+                  <TopPlacementsCard placements={placementAnalytics} activeMetric={activeMetric} metricColor={METRIC_COLORS[activeMetric]} />
+                  <TopLinksCard links={links} activeMetric={activeMetric} metricColor={METRIC_COLORS[activeMetric]} selectedLinkId={selectedLinkId} onLinkSelect={setSelectedLinkId} />
                 </div>
               </section>
             </main>
