@@ -12,7 +12,7 @@ const METRIC_LABELS: Record<MetricKey, string> = {
   sales: 'sales',
   revenue: 'revenue',
   cr: 'CR',
-  epc: 'EPC',
+  epc: 'EPC'
 };
 
 interface TopLinksCardProps {
@@ -24,13 +24,13 @@ interface TopLinksCardProps {
 
 function getMetricValue(link: GhostLink, metric: MetricKey): number {
   switch (metric) {
-    case 'clicks': return link.clicks;
-    case 'leads': return link.leads;
-    case 'sales': return link.sales;
-    case 'revenue': return link.earnings;
-    case 'cr': return link.clicks > 0 ? ((link.leads + link.sales) / link.clicks) * 100 : 0;
-    case 'epc': return link.clicks > 0 ? link.earnings / link.clicks : 0;
-    default: return link.clicks;
+    case 'clicks':return link.clicks;
+    case 'leads':return link.leads;
+    case 'sales':return link.sales;
+    case 'revenue':return link.earnings;
+    case 'cr':return link.clicks > 0 ? (link.leads + link.sales) / link.clicks * 100 : 0;
+    case 'epc':return link.clicks > 0 ? link.earnings / link.clicks : 0;
+    default:return link.clicks;
   }
 }
 
@@ -55,20 +55,20 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, o
   };
 
   const allSorted = useMemo(() => {
-    const withValues = links.map(l => ({
+    const withValues = links.map((l) => ({
       ...l,
-      metricValue: getMetricValue(l, activeMetric),
+      metricValue: getMetricValue(l, activeMetric)
     }));
 
-    const sorted = [...withValues]
-      .filter(l => l.metricValue > 0)
-      .sort((a, b) => b.metricValue - a.metricValue);
+    const sorted = [...withValues].
+    filter((l) => l.metricValue > 0).
+    sort((a, b) => b.metricValue - a.metricValue);
 
     const maxValue = sorted.length > 0 ? sorted[0].metricValue : 1;
 
-    return sorted.map(link => ({
+    return sorted.map((link) => ({
       ...link,
-      percentage: maxValue > 0 ? Math.round((link.metricValue / maxValue) * 100) : 0,
+      percentage: maxValue > 0 ? Math.round(link.metricValue / maxValue * 100) : 0
     }));
   }, [links, activeMetric]);
 
@@ -86,15 +86,15 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, o
         <CardContent className="pt-0">
           <p className="text-xs text-muted-foreground">No link data yet</p>
         </CardContent>
-      </Card>
-    );
+      </Card>);
+
   }
 
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
-          <Link2 className="w-4 h-4 text-primary" />
+          
           Top Links by {METRIC_LABELS[activeMetric]}
         </CardTitle>
       </CardHeader>
@@ -105,17 +105,17 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, o
             <div
               key={link.id}
               className={`space-y-1.5 rounded-lg px-2 py-1.5 -mx-2 transition-colors cursor-pointer ${
-                isSelected
-                  ? 'bg-primary/10 ring-1 ring-primary/30'
-                  : 'hover:bg-muted/50'
-              }`}
-              onClick={() => handleLinkClick(link.id)}
-            >
+              isSelected ?
+              'bg-primary/10 ring-1 ring-primary/30' :
+              'hover:bg-muted/50'}`
+              }
+              onClick={() => handleLinkClick(link.id)}>
+
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
-                    isSelected ? 'bg-primary/20' : 'bg-muted'
-                  }`}>
+                  isSelected ? 'bg-primary/20' : 'bg-muted'}`
+                  }>
                     <Link2 className={`w-3 h-3 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                   </div>
                   <span className={`font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
@@ -127,24 +127,24 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', selectedLinkId, o
                 </span>
               </div>
               <Progress value={link.percentage} className="h-1.5 bg-muted" />
-            </div>
-          );
+            </div>);
+
         })}
-        {hasMore && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAll(!showAll)}
-            className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1"
-          >
-            {showAll ? (
-              <>Show less <ChevronUp className="w-3 h-3" /></>
-            ) : (
-              <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
-            )}
+        {hasMore &&
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAll(!showAll)}
+          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1">
+
+            {showAll ?
+          <>Show less <ChevronUp className="w-3 h-3" /></> :
+
+          <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
+          }
           </Button>
-        )}
+        }
       </CardContent>
-    </Card>
-  );
+    </Card>);
+
 };
