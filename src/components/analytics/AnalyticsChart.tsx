@@ -6,16 +6,16 @@ import {
   Tooltip,
   ResponsiveContainer,
   Area,
-  AreaChart,
-} from 'recharts';
+  AreaChart } from
+'recharts';
 import type { TimeRange } from './TimeRangeSelector';
 import type { AnalyticsData } from '@/types';
-import { 
-  subMinutes, 
-  subHours, 
-  subDays, 
-  subWeeks, 
-  subMonths, 
+import {
+  subMinutes,
+  subHours,
+  subDays,
+  subWeeks,
+  subMonths,
   subYears,
   eachMinuteOfInterval,
   eachDayOfInterval,
@@ -24,8 +24,8 @@ import {
   startOfMinute,
   startOfDay,
   startOfWeek,
-  startOfMonth,
-} from 'date-fns';
+  startOfMonth } from
+'date-fns';
 import { Ghost, ChevronLeft } from 'lucide-react';
 import { useTimezone } from '@/hooks/useTimezone';
 
@@ -33,7 +33,7 @@ import { useTimezone } from '@/hooks/useTimezone';
 function generateTimePoints(range: TimeRange): Date[] {
   const now = new Date();
   const start = getDateRangeStart(range);
-  
+
   switch (range) {
     case '30m':
       return eachMinuteOfInterval({ start, end: now });
@@ -125,7 +125,7 @@ const METRIC_LABELS: Record<MetricKey, string> = {
   sales: 'Sales',
   revenue: 'Revenue',
   cr: 'Conv. Rate',
-  epc: 'EPC',
+  epc: 'EPC'
 };
 
 const METRIC_COLORS: Record<MetricKey, string> = {
@@ -134,7 +134,7 @@ const METRIC_COLORS: Record<MetricKey, string> = {
   sales: 'hsl(var(--success))',
   revenue: 'hsl(var(--success))',
   cr: 'hsl(var(--primary))',
-  epc: 'hsl(var(--primary))',
+  epc: 'hsl(var(--primary))'
 };
 
 // Metrics that require special Y-axis formatting
@@ -146,20 +146,20 @@ const METRIC_FORMAT: Record<MetricKey, MetricFormat> = {
   sales: 'number',
   revenue: 'currency',
   cr: 'percentage',
-  epc: 'currency',
+  epc: 'currency'
 };
 
 function getDateRangeStart(range: TimeRange): Date {
   const now = new Date();
   switch (range) {
-    case '30m': return subMinutes(now, 30);
-    case '6h': return subHours(now, 6);
-    case '1d': return subDays(now, 1);
-    case '1w': return subWeeks(now, 1);
-    case '1m': return subMonths(now, 1);
-    case '1y': return subYears(now, 1);
-    case '3y': return subYears(now, 3);
-    default: return subMonths(now, 1);
+    case '30m':return subMinutes(now, 30);
+    case '6h':return subHours(now, 6);
+    case '1d':return subDays(now, 1);
+    case '1w':return subWeeks(now, 1);
+    case '1m':return subMonths(now, 1);
+    case '1y':return subYears(now, 1);
+    case '3y':return subYears(now, 3);
+    default:return subMonths(now, 1);
   }
 }
 
@@ -209,17 +209,17 @@ function formatMetricValue(value: number, metric: MetricKey): string {
   const fmt = METRIC_FORMAT[metric];
   switch (fmt) {
     case 'currency':
-      return value >= 1000
-        ? `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k`
-        : `$${value.toFixed(2)}`;
+      return value >= 1000 ?
+      `$${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k` :
+      `$${value.toFixed(2)}`;
     case 'percentage':
       return `${value.toFixed(1)}%`;
-    default: {
-      const intValue = Math.round(value);
-      return intValue >= 1000
-        ? `${(intValue / 1000).toFixed(intValue >= 10000 ? 0 : 1)}k`
-        : intValue.toString();
-    }
+    default:{
+        const intValue = Math.round(value);
+        return intValue >= 1000 ?
+        `${(intValue / 1000).toFixed(intValue >= 10000 ? 0 : 1)}k` :
+        intValue.toString();
+      }
   }
 }
 
@@ -237,15 +237,15 @@ function formatTooltipValue(value: number, metric: MetricKey): string {
 }
 
 // Memoized main chart component
-const MainChart = memo(({ 
-  displayData, 
+const MainChart = memo(({
+  displayData,
   activeMetric,
-  tickInterval 
-}: { 
-  displayData: any[]; 
-  activeMetric: MetricKey;
-  tickInterval: number;
-}) => {
+  tickInterval
+
+
+
+
+}: {displayData: any[];activeMetric: MetricKey;tickInterval: number;}) => {
   const metricFormat = METRIC_FORMAT[activeMetric];
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -256,22 +256,22 @@ const MainChart = memo(({
           <p className="text-xs font-medium text-foreground mb-2 border-b border-border/50 pb-2">
             {dataPoint?.tooltipDate}
           </p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center justify-between gap-4 text-sm py-0.5">
+          {payload.map((entry: any, index: number) =>
+          <div key={index} className="flex items-center justify-between gap-4 text-sm py-0.5">
               <div className="flex items-center gap-2">
-                <div 
-                  className="w-2 h-2 rounded-full" 
-                  style={{ backgroundColor: entry.color }}
-                />
+                <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: entry.color }} />
+
                 <span className="text-muted-foreground">{METRIC_LABELS[entry.dataKey as MetricKey] ?? entry.dataKey}</span>
               </div>
               <span className="font-semibold text-foreground tabular-nums">
                 {formatTooltipValue(entry.value, entry.dataKey as MetricKey)}
               </span>
             </div>
-          ))}
-        </div>
-      );
+          )}
+        </div>);
+
     }
     return null;
   };
@@ -285,14 +285,14 @@ const MainChart = memo(({
             <stop offset="100%" stopColor={METRIC_COLORS[activeMetric]} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid 
-          strokeDasharray="3 3" 
-          stroke="hsl(var(--border))" 
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="hsl(var(--border))"
           strokeOpacity={0.25}
-          vertical={false}
-        />
-        <XAxis 
-          dataKey="dateFormatted" 
+          vertical={false} />
+
+        <XAxis
+          dataKey="dateFormatted"
           stroke="hsl(var(--muted-foreground))"
           fontSize={11}
           tickLine={false}
@@ -300,9 +300,9 @@ const MainChart = memo(({
           dy={10}
           interval={tickInterval}
           padding={{ left: 10, right: 10 }}
-          textAnchor="middle"
-        />
-        <YAxis 
+          textAnchor="middle" />
+
+        <YAxis
           stroke="hsl(var(--muted-foreground))"
           fontSize={11}
           tickLine={false}
@@ -318,8 +318,8 @@ const MainChart = memo(({
             return Math.max(minRange, paddedMax);
           }]}
           allowDecimals={metricFormat !== 'number'}
-          tickCount={5}
-        />
+          tickCount={5} />
+
         <Tooltip content={<CustomTooltip />} />
 
         <Area
@@ -330,28 +330,28 @@ const MainChart = memo(({
           fill="url(#metricGradient)"
           dot={false}
           activeDot={{ r: 4, fill: METRIC_COLORS[activeMetric], stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-          isAnimationActive={false}
-        />
+          isAnimationActive={false} />
+
       </AreaChart>
-    </ResponsiveContainer>
-  );
+    </ResponsiveContainer>);
+
 });
 
 MainChart.displayName = 'MainChart';
 
-export function AnalyticsChart({ 
-  data, 
-  showConversions = true, 
+export function AnalyticsChart({
+  data,
+  showConversions = true,
   timeRange,
   activeLinkId,
   selectedLinkAlias,
   onClearSelection,
   links = [],
   activeMetric: controlledMetric,
-  onMetricChange,
+  onMetricChange
 }: AnalyticsChartProps) {
   const { formatInTimezone, timezone } = useTimezone();
-  
+
   // Create timezone-aware formatting functions
   const formatDateForRange = useMemo(
     () => createFormatDateForRange(formatInTimezone),
@@ -361,7 +361,7 @@ export function AnalyticsChart({
     () => createFormatTooltipDate(formatInTimezone),
     [formatInTimezone, timezone]
   );
-  
+
   // Support both controlled and uncontrolled metric state
   const [internalMetric, setInternalMetric] = useState<MetricKey>('clicks');
   const activeMetric = controlledMetric ?? internalMetric;
@@ -373,12 +373,12 @@ export function AnalyticsChart({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Available metrics
-  const availableMetrics: MetricKey[] = showConversions 
-    ? ['clicks', 'leads', 'sales', 'revenue', 'cr', 'epc'] 
-    : ['clicks'];
+  const availableMetrics: MetricKey[] = showConversions ?
+  ['clicks', 'leads', 'sales', 'revenue', 'cr', 'epc'] :
+  ['clicks'];
 
   // Other metrics (not currently active)
-  const otherMetrics = availableMetrics.filter(m => m !== activeMetric);
+  const otherMetrics = availableMetrics.filter((m) => m !== activeMetric);
 
   // Select a metric from dropdown
   const selectMetric = useCallback((metric: MetricKey) => {
@@ -397,26 +397,26 @@ export function AnalyticsChart({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [metricDropdownOpen]);
-  
+
   // Chart container ref for measuring dimensions
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   // Continuous timeline data with gap-filling
   const chartData = useMemo(() => {
     const startDate = getDateRangeStart(timeRange);
-    
+
     // Filter data by date range first
-    let filtered = data.filter(item => new Date(item.date) >= startDate);
-    
+    let filtered = data.filter((item) => new Date(item.date) >= startDate);
+
     // Filter by active link if one is selected
     if (activeLinkId) {
-      filtered = filtered.filter(item => item.linkId === activeLinkId);
+      filtered = filtered.filter((item) => item.linkId === activeLinkId);
     }
-    
+
     // Build a map of actual data keyed by time bucket
-    const dataMap = new Map<string, { clicks: number; leads: number; sales: number; earnings: number }>();
-    
-    filtered.forEach(item => {
+    const dataMap = new Map<string, {clicks: number;leads: number;sales: number;earnings: number;}>();
+
+    filtered.forEach((item) => {
       const key = getTimeKey(new Date(item.date), timeRange);
       if (dataMap.has(key)) {
         const existing = dataMap.get(key)!;
@@ -429,25 +429,25 @@ export function AnalyticsChart({
           clicks: item.clicks,
           leads: item.leads,
           sales: item.sales,
-          earnings: item.earnings,
+          earnings: item.earnings
         });
       }
     });
-    
+
     // Generate all time points for continuous timeline
     const timePoints = generateTimePoints(timeRange);
-    
+
     // Merge time points with actual data (fill gaps with zeros)
     // Include computed metrics: revenue, cr (conversion rate), epc (earnings per click)
-    return timePoints.map(date => {
+    return timePoints.map((date) => {
       const key = getTimeKey(date, timeRange);
       const d = dataMap.get(key);
-      
+
       const clicks = d?.clicks ?? 0;
       const leads = d?.leads ?? 0;
       const sales = d?.sales ?? 0;
       const earnings = d?.earnings ?? 0;
-      
+
       return {
         date: date.toISOString(),
         timestamp: date.getTime(),
@@ -455,10 +455,10 @@ export function AnalyticsChart({
         leads,
         sales,
         revenue: earnings,
-        cr: clicks > 0 ? ((leads + sales) / clicks) * 100 : 0,
+        cr: clicks > 0 ? (leads + sales) / clicks * 100 : 0,
         epc: clicks > 0 ? earnings / clicks : 0,
         dateFormatted: formatDateForRange(date, timeRange),
-        tooltipDate: formatTooltipDate(date, timeRange),
+        tooltipDate: formatTooltipDate(date, timeRange)
       };
     });
   }, [data, timeRange, activeLinkId]);
@@ -469,12 +469,12 @@ export function AnalyticsChart({
   }, [timeRange, chartData.length]);
 
   // Watermark component
-  const Watermark = () => (
-    <div className="absolute bottom-10 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
+  const Watermark = () =>
+  <div className="absolute bottom-10 right-4 flex items-center gap-1.5 opacity-25 pointer-events-none select-none">
       <Ghost className="w-4 h-4 text-foreground" />
       <span className="text-xs font-medium text-foreground tracking-wide">Ghost Link</span>
-    </div>
-  );
+    </div>;
+
 
   return (
     <div className="bg-card rounded-lg border border-border p-4">
@@ -482,54 +482,54 @@ export function AnalyticsChart({
         <div className="flex items-center gap-2">
           <div ref={dropdownRef} className="relative">
             <button
-              onClick={() => setMetricDropdownOpen(prev => !prev)}
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/30"
-            >
+              onClick={() => setMetricDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-1.5 font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/30 text-xs">
+
               {METRIC_LABELS[activeMetric]}
-              <ChevronLeft 
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${metricDropdownOpen ? '-rotate-90' : ''}`} 
-              />
+              <ChevronLeft
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${metricDropdownOpen ? '-rotate-90' : ''}`} />
+
             </button>
-            {metricDropdownOpen && otherMetrics.length > 0 && (
-              <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-md shadow-lg z-20 min-w-[100px] overflow-hidden animate-fade-in">
-                {otherMetrics.map(metric => (
-                  <button
-                    key={metric}
-                    onClick={() => selectMetric(metric)}
-                    className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                  >
+            {metricDropdownOpen && otherMetrics.length > 0 &&
+            <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-md shadow-lg z-20 min-w-[100px] overflow-hidden animate-fade-in">
+                {otherMetrics.map((metric) =>
+              <button
+                key={metric}
+                onClick={() => selectMetric(metric)}
+                className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+
                     {METRIC_LABELS[metric]}
                   </button>
-                ))}
+              )}
               </div>
-            )}
+            }
           </div>
-          {activeLinkId && selectedLinkAlias && (
-            <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+          {activeLinkId && selectedLinkAlias &&
+          <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
               <span className="text-[11px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
               <button
-                onClick={onClearSelection}
-                className="text-[11px] text-primary/70 hover:text-primary transition-colors font-medium"
-              >
+              onClick={onClearSelection}
+              className="text-[11px] text-primary/70 hover:text-primary transition-colors font-medium">
+
                 ✕
               </button>
             </div>
-          )}
+          }
         </div>
       </div>
 
       {/* Main Chart */}
-      <div 
-        ref={chartContainerRef} 
-        className="h-[240px] w-full relative"
-      >
-        <MainChart 
-          displayData={chartData} 
+      <div
+        ref={chartContainerRef}
+        className="h-[240px] w-full relative">
+
+        <MainChart
+          displayData={chartData}
           activeMetric={activeMetric}
-          tickInterval={tickInterval}
-        />
+          tickInterval={tickInterval} />
+
         <Watermark />
       </div>
-    </div>
-  );
+    </div>);
+
 }
