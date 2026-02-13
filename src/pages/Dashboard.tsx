@@ -194,10 +194,10 @@ const Dashboard = () => {
 
   // Show only the last 6 events
   const paginatedTransactions = useMemo(() => {
-    return showAllEvents ? filteredTransactions : filteredTransactions.slice(0, 6);
+    return showAllEvents ? filteredTransactions : filteredTransactions.slice(0, 8);
   }, [filteredTransactions, showAllEvents]);
 
-  const hasMoreEvents = filteredTransactions.length > 6;
+  const hasMoreEvents = filteredTransactions.length > 8;
   const handleMetricChange = useCallback((metric: MetricKey) => setActiveMetric(metric), []);
 
   // Calculate stats based on global time range + optional link filter
@@ -420,7 +420,7 @@ const Dashboard = () => {
                           </Table>
                         </div>
                         {hasMoreEvents && (
-                          <div className="border-t border-border px-3 py-1.5">
+                          <div className="border-t border-border/50 px-3 py-1.5 backdrop-blur-md bg-card/60">
                             <Button
                               variant="ghost"
                               size="sm"
