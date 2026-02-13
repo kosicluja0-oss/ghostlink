@@ -10,8 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-  useSidebar,
-} from '@/components/ui/sidebar';
+  useSidebar } from
+'@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -32,7 +32,7 @@ export function AppSidebar({
   onOpenSettings,
   onOpenDataIntegration,
   onSignOut,
-  openTicketsCount,
+  openTicketsCount
 }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,48 +42,48 @@ export function AppSidebar({
   const userInitial = userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
 
   const navItems = [
-    {
-      title: 'Dashboard',
-      icon: LayoutDashboard,
-      onClick: () => navigate('/dashboard'),
-      path: '/dashboard',
-      badge: undefined as number | undefined,
-    },
-    {
-      title: 'Links',
-      icon: Link2,
-      onClick: () => navigate('/links'),
-      path: '/links',
-      badge: undefined as number | undefined,
-    },
-    {
-      title: 'Integrations',
-      icon: Puzzle,
-      onClick: () => navigate('/integrations'),
-      path: '/integrations',
-      badge: undefined as number | undefined,
-    },
-    {
-      title: 'Support',
-      icon: HelpCircle,
-      onClick: () => navigate('/support'),
-      path: '/support',
-      badge: openTicketsCount && openTicketsCount > 0 ? openTicketsCount : undefined,
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      onClick: () => navigate('/settings'),
-      path: '/settings',
-      badge: undefined as number | undefined,
-    },
-  ];
+  {
+    title: 'Dashboard',
+    icon: LayoutDashboard,
+    onClick: () => navigate('/dashboard'),
+    path: '/dashboard',
+    badge: undefined as number | undefined
+  },
+  {
+    title: 'Links',
+    icon: Link2,
+    onClick: () => navigate('/links'),
+    path: '/links',
+    badge: undefined as number | undefined
+  },
+  {
+    title: 'Integrations',
+    icon: Puzzle,
+    onClick: () => navigate('/integrations'),
+    path: '/integrations',
+    badge: undefined as number | undefined
+  },
+  {
+    title: 'Support',
+    icon: HelpCircle,
+    onClick: () => navigate('/support'),
+    path: '/support',
+    badge: openTicketsCount && openTicketsCount > 0 ? openTicketsCount : undefined
+  },
+  {
+    title: 'Settings',
+    icon: Settings,
+    onClick: () => navigate('/settings'),
+    path: '/settings',
+    badge: undefined as number | undefined
+  }];
+
 
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-border bg-card/95 backdrop-blur-sm"
-    >
+      className="border-r border-border bg-card/95 backdrop-blur-sm">
+
       {/* Header with Logo & Toggle */}
       <SidebarHeader className="p-3">
         <div className={cn(
@@ -92,33 +92,33 @@ export function AppSidebar({
         )}>
           <div className="flex items-center gap-2">
             <Ghost className="h-6 w-6 text-white flex-shrink-0" />
-            {!isCollapsed && (
-              <span className="text-base font-bold text-foreground tracking-tight">
+            {!isCollapsed &&
+            <span className="text-base font-bold text-foreground tracking-tight">
                 Ghost Link
               </span>
-            )}
+            }
           </div>
-          {!isCollapsed && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={toggleSidebar}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-        {isCollapsed && (
+          {!isCollapsed &&
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 mt-2 mx-auto"
-            onClick={toggleSidebar}
-          >
+            className="h-7 w-7"
+            onClick={toggleSidebar}>
+
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          }
+        </div>
+        {isCollapsed &&
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 mt-2 mx-auto"
+          onClick={toggleSidebar}>
+
             <ChevronRight className="h-4 w-4" />
           </Button>
-        )}
+        }
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -138,19 +138,19 @@ export function AppSidebar({
                       className={cn(
                         "transition-ghost relative",
                         isActive && "bg-primary/10 text-primary font-medium"
-                      )}
-                    >
-                      {isActive && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r" />
-                      )}
+                      )}>
+
+                      {isActive
+
+                      }
                       <div className="relative">
                         <item.icon className={cn(
                           "h-4 w-4 flex-shrink-0",
                           isActive && "text-primary"
                         )} />
-                        {isCollapsed && item.badge && (
-                          <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-destructive rounded-full" />
-                        )}
+                        {isCollapsed && item.badge &&
+                        <span className="absolute -top-1.5 -right-1.5 w-2 h-2 bg-destructive rounded-full" />
+                        }
                       </div>
                       <span className={cn(
                         "transition-opacity duration-0 flex-1",
@@ -158,21 +158,21 @@ export function AppSidebar({
                       )}>
                         {item.title}
                       </span>
-                      {!isCollapsed && item.badge && (
-                        <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 font-medium">
+                      {!isCollapsed && item.badge &&
+                      <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 font-medium">
                           {item.badge > 99 ? '99+' : item.badge}
                         </span>
-                      )}
+                      }
                     </SidebarMenuButton>
                   </TooltipTrigger>
-                  {isCollapsed && (
-                    <TooltipContent side="right">
+                  {isCollapsed &&
+                  <TooltipContent side="right">
                       {item.title}
                     </TooltipContent>
-                  )}
+                  }
                 </Tooltip>
-              </SidebarMenuItem>
-            );
+              </SidebarMenuItem>);
+
           })}
         </SidebarMenu>
       </SidebarContent>
@@ -192,14 +192,14 @@ export function AppSidebar({
                 </AvatarFallback>
               </Avatar>
             </TooltipTrigger>
-            {isCollapsed && (
-              <TooltipContent side="right">
+            {isCollapsed &&
+            <TooltipContent side="right">
                 {userEmail}
               </TooltipContent>
-            )}
+            }
           </Tooltip>
-          {!isCollapsed && (
-            <>
+          {!isCollapsed &&
+          <>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-medium text-foreground truncate max-w-[100px]">
                   {userEmail}
@@ -211,11 +211,11 @@ export function AppSidebar({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={onSignOut}
-                  >
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={onSignOut}>
+
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -224,9 +224,9 @@ export function AppSidebar({
                 </TooltipContent>
               </Tooltip>
             </>
-          )}
+          }
         </div>
       </SidebarFooter>
-    </Sidebar>
-  );
+    </Sidebar>);
+
 }
