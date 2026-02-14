@@ -310,15 +310,14 @@ const Dashboard = () => {
       }));
   }, [countryDistribution]);
   return <TooltipProvider>
-      <SidebarProvider open={false}>
+      <>
         {/* Welcome Wizard Overlay */}
         {showWizard && <WelcomeWizard userName={userName} tier={subscriptionTier} onComplete={handleWizardComplete} onLinkCreated={refetchLinks} />}
         
-        <div className="min-h-screen flex w-full bg-background">
+        <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <SidebarInset className="w-[calc(100vw-16rem)]">
-            <main className="p-4 lg:p-6">
+          <main className="pl-16 p-4 lg:p-6">
               {/* Page Header */}
               <section className="mb-5">
                 <div>
@@ -461,14 +460,13 @@ const Dashboard = () => {
                 </div>
               </section>
             </main>
-          </SidebarInset>
         </div>
 
         {/* Modals & Drawers */}
         <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier={subscriptionTier} onChangeTier={() => {}} />
 
         <DataIntegrationModal open={dataIntegrationOpen} onOpenChange={setDataIntegrationOpen} />
-      </SidebarProvider>
+      </>
     </TooltipProvider>;
 };
 export default Dashboard;

@@ -65,12 +65,11 @@ const Links = () => {
     await updateLink(id, updates);
   }, [updateLink]);
   return <TooltipProvider>
-      <SidebarProvider open={false}>
-        <div className="min-h-screen flex w-full bg-background">
+      <>
+        <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <SidebarInset className="w-[calc(100vw-16rem)]">
-            <main className="p-4 lg:p-6">
+          <main className="pl-16 p-4 lg:p-6">
               {/* Header */}
               <section className="mb-6">
                 <div className="flex items-center gap-3 mb-2">
@@ -100,7 +99,6 @@ const Links = () => {
                 <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} />
               </section>
             </main>
-          </SidebarInset>
         </div>
 
         {/* Modals & Drawers */}
@@ -111,7 +109,7 @@ const Links = () => {
         <EditLinkModal open={editModalOpen} onOpenChange={setEditModalOpen} link={editingLink} userTier={userTier} onSave={handleSaveLink} />
 
         <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
-      </SidebarProvider>
+      </>
     </TooltipProvider>;
 };
 export default Links;

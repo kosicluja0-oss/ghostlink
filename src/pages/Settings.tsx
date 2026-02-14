@@ -347,12 +347,11 @@ const Settings = () => {
       </Badge>;
   };
   return <TooltipProvider>
-      <SidebarProvider open={false}>
-        <div className="min-h-screen flex w-full bg-background">
+      <>
+        <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <SidebarInset className="w-[calc(100vw-16rem)]">
-            <main className="p-4 lg:p-6 max-w-7xl mx-auto">
+          <main className="pl-16 p-4 lg:p-6 max-w-7xl mx-auto">
               {/* Header */}
               <section className="mb-5">
                 <div className="flex items-center gap-3">
@@ -879,9 +878,8 @@ const Settings = () => {
                 </div>
               </div>
             </main>
-          </SidebarInset>
         </div>
-      </SidebarProvider>
+      </>
     </TooltipProvider>;
 };
 export default Settings;

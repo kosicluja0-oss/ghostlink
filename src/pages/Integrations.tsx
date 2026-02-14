@@ -335,12 +335,11 @@ const Integrations = () => {
   const connectedCount = integrationsWithStatus.filter((i) => i.status === 'connected').length;
   const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
   return <TooltipProvider>
-      <SidebarProvider open={false}>
-        <div className="min-h-screen flex w-full bg-background">
+      <>
+        <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <SidebarInset className="w-[calc(100vw-16rem)]">
-            <main className="p-4 lg:p-6 max-w-6xl mx-auto">
+          <main className="pl-16 p-4 lg:p-6 max-w-6xl mx-auto">
               {/* Hero Section */}
               <section className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
@@ -413,14 +412,13 @@ const Integrations = () => {
                 </p>
               </footer>
             </main>
-          </SidebarInset>
         </div>
 
         {/* Modals */}
         <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier={userTier} onChangeTier={() => {}} />
 
         <ConnectServiceModal open={connectModalOpen} onOpenChange={setConnectModalOpen} integration={selectedIntegration} links={linkOptions} onConfirmConnection={handleConfirmConnection} />
-      </SidebarProvider>
+      </>
     </TooltipProvider>;
 };
 export default Integrations;
