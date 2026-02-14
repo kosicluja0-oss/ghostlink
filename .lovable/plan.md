@@ -1,33 +1,28 @@
 
+## Přidání kontaktního odkazu do Settings
 
-## Oprava build erroru v separator.tsx
+### Co se změní
+Do patičky Settings stránky (vedle "Download My Data" a "Delete Account") přidám třetí ghost tlačítko **"Contact Support"** s ikonou obálky, které otevře mailto odkaz (např. `support@ghostlink.app`) nebo externím odkaz na kontaktní formulář.
 
-### Příčina problému
-Soubor `src/components/ui/separator.tsx` má prázdné tělo komponenty – funkce vrací `void` místo JSX elementu. Toto blokuje celý build projektu a způsobuje, že žádná úprava se úspěšně nezkompiluje.
+### Implementace
 
-### Řešení
-Obnovit standardní implementaci Separator komponenty – doplnit `return` statement s JSX.
+**Soubor: `src/pages/Settings.tsx`**
 
-### Technické detaily
-
-**Soubor: `src/components/ui/separator.tsx`**
-
-Nahradit prázdné tělo funkce (řádky 9-32) standardní implementací:
+- Do footer sekce (řádek ~816) přidám nové tlačítko před stávající dvě:
 
 ```tsx
-({ className, orientation = "horizontal", decorative = true, ...props }, ref) => (
-  <SeparatorPrimitive.Root
-    ref={ref}
-    decorative={decorative}
-    orientation={orientation}
-    className={cn(
-      "shrink-0 bg-border",
-      orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
-      className
-    )}
-    {...props}
-  />
-)
+<Button
+  variant="ghost"
+  className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
+  onClick={() => window.location.href = 'mailto:support@ghostlink.app'}
+>
+  <Mail className="w-4 h-4 mr-2" />
+  Contact Support
+</Button>
 ```
 
-Toto je standardní shadcn/ui Separator komponenta. Po této opravě build projde a všechny předchozí i budoucí změny se budou kompilovat správně.
+- Ikona `Mail` je již importována, takže žádné nové závislosti nejsou potřeba.
+- Tlačítko bude vizuálně konzistentní se stávajícími ghost tlačítky v patičce.
+
+### Poznámka
+Email adresu `support@ghostlink.app` můžeš nahradit skutečnou adresou. Případně mohu místo mailto použít externí odkaz (např. na Tally formulář, Crisp chat apod.) -- stačí říct.
