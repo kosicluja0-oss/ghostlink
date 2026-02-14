@@ -5,6 +5,7 @@ import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // kept for potential future use
 import type { TimeRange } from '@/components/analytics/TimeRangeSelector';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { useSidebarState } from '@/hooks/useSidebarState';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -67,6 +68,7 @@ interface Transaction {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const {
     user,
     signOut
@@ -308,7 +310,7 @@ const Dashboard = () => {
       }));
   }, [countryDistribution]);
   return <TooltipProvider>
-      <SidebarProvider defaultOpen={true}>
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         {/* Welcome Wizard Overlay */}
         {showWizard && <WelcomeWizard userName={userName} tier={subscriptionTier} onComplete={handleWizardComplete} onLinkCreated={refetchLinks} />}
         
