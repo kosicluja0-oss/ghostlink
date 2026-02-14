@@ -317,7 +317,7 @@ const Dashboard = () => {
         <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <main className="pl-16 p-4 lg:p-6">
+          <main className="ml-[15vw] p-4 lg:p-6">
               {/* Page Header */}
               <section className="mb-5">
                 <div>

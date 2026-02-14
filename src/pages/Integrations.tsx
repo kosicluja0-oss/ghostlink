@@ -339,7 +339,7 @@ const Integrations = () => {
         <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <main className="pl-16 p-4 lg:p-6 max-w-6xl mx-auto">
+          <main className="ml-[15vw] p-4 lg:p-6 max-w-6xl mx-auto">
               {/* Hero Section */}
               <section className="mb-8">
                 <div className="flex items-center gap-3 mb-2">

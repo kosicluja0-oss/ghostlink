@@ -69,7 +69,7 @@ const Links = () => {
         <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <main className="pl-16 p-4 lg:p-6">
+          <main className="ml-[15vw] p-4 lg:p-6">
               {/* Header */}
               <section className="mb-6">
                 <div className="flex items-center gap-3 mb-2">

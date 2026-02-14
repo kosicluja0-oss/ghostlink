@@ -351,7 +351,7 @@ const Settings = () => {
         <div className="min-h-screen bg-background">
           <AppSidebar />
           
-          <main className="pl-16 p-4 lg:p-6 max-w-7xl mx-auto">
+          <main className="ml-[15vw] p-4 lg:p-6 max-w-7xl mx-auto">
               {/* Header */}
               <section className="mb-5">
                 <div className="flex items-center gap-3">
