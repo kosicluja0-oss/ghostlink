@@ -66,12 +66,12 @@ const Links = () => {
   }, [updateLink]);
   return <TooltipProvider>
       <>
-        <div className="min-h-screen bg-background">
+        <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
           
-          <main className="ml-[15vw] p-4 lg:p-6">
+          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden flex flex-col">
               {/* Header */}
-              <section className="mb-6">
+              <section className="mb-6 shrink-0">
                 <div className="flex items-center gap-3 mb-2">
                   
                   <div>
@@ -83,8 +83,8 @@ const Links = () => {
               </section>
 
               {/* Link Management - same width as dashboard chart (3/5 of available space) */}
-              <section className="w-[60%]">
-                <div className="flex items-center justify-between mb-4">
+              <section className="w-[60%] flex-1 min-h-0 flex flex-col">
+                <div className="flex items-center justify-between mb-4 shrink-0">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">
                       {activeLinksCount} of {tier.maxLinks} links active
@@ -96,7 +96,9 @@ const Links = () => {
                   </Button>
                 </div>
                 
-                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} />
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} />
+                </div>
               </section>
             </main>
         </div>

@@ -383,7 +383,7 @@ export function LinkTable({
   }
 
   return (
-    <div className="bg-card rounded-lg border border-border overflow-hidden">
+    <div className="bg-card rounded-lg border border-border overflow-hidden flex flex-col flex-1 min-h-0">
       {/* Header with Search */}
       <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-3 py-2 border-b border-border bg-card">
         <div className="relative flex-1 max-w-xs">
@@ -413,7 +413,7 @@ export function LinkTable({
       </div>
 
       {/* Rows */}
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="flex-1 overflow-y-auto">
         {filteredAndSortedLinks.length > 0 ? (
           filteredAndSortedLinks.map((link) => (
             <LinkRow
