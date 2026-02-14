@@ -310,12 +310,12 @@ const Dashboard = () => {
       }));
   }, [countryDistribution]);
   return <TooltipProvider>
-      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <SidebarProvider open={false}>
         {/* Welcome Wizard Overlay */}
         {showWizard && <WelcomeWizard userName={userName} tier={subscriptionTier} onComplete={handleWizardComplete} onLinkCreated={refetchLinks} />}
         
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} />
+          <AppSidebar />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6">

@@ -65,9 +65,9 @@ const Links = () => {
     await updateLink(id, updates);
   }, [updateLink]);
   return <TooltipProvider>
-      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <SidebarProvider open={false}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} />
+          <AppSidebar />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6">

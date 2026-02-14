@@ -335,9 +335,9 @@ const Integrations = () => {
   const connectedCount = integrationsWithStatus.filter((i) => i.status === 'connected').length;
   const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
   return <TooltipProvider>
-      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      <SidebarProvider open={false}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} />
+          <AppSidebar />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-6xl mx-auto">
