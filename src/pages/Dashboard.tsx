@@ -314,10 +314,10 @@ const Dashboard = () => {
         {/* Welcome Wizard Overlay */}
         {showWizard && <WelcomeWizard userName={userName} tier={subscriptionTier} onComplete={handleWizardComplete} onLinkCreated={refetchLinks} />}
         
-        <div className="min-h-screen bg-background">
+        <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
           
-          <main className="ml-[15vw] p-4 lg:p-6">
+          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden">
               {/* Page Header */}
               <section className="mb-5">
                 <div>
