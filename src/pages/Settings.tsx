@@ -349,7 +349,7 @@ const Settings = () => {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar userEmail={user?.email} userTier={tier} onOpenSettings={() => {}} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
           
-          <SidebarInset className="flex-1">
+          <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-7xl mx-auto">
               {/* Header */}
               <section className="mb-5">

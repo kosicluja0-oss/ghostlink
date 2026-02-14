@@ -337,7 +337,7 @@ const Integrations = () => {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
           
-          <SidebarInset className="flex-1">
+          <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-6xl mx-auto">
               {/* Hero Section */}
               <section className="mb-8">

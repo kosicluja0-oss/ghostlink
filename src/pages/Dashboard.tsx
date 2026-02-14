@@ -315,7 +315,7 @@ const Dashboard = () => {
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar userEmail={user?.email} userTier={subscriptionTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} openTicketsCount={openTicketsCount} />
           
-          <SidebarInset className="flex-1">
+          <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6">
               {/* Page Header */}
               <section className="mb-5">
