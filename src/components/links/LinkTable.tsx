@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { ExternalLink, Pencil, Search, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { ExternalLink, Pencil, Search, MoreHorizontal, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -55,6 +55,9 @@ interface LinkRowProps {
   isSelected?: boolean;
   onSelect?: (linkId: string) => void;
   sparklineData: number[];
+  isPinned?: boolean;
+  onTogglePin?: (linkId: string) => void;
+  canPin?: boolean;
 }
 
 // Sortable header button component
@@ -161,7 +164,10 @@ function LinkRow({
   onOpenDetail,
   isSelected = false,
   onSelect,
-  sparklineData
+  sparklineData,
+  isPinned = false,
+  onTogglePin,
+  canPin = true
 }: LinkRowProps) {
   const isFreeTier = userTier === 'free';
   const displayUrl = getDisplayUrl(link.alias);
@@ -180,6 +186,7 @@ function LinkRow({
       <div 
         className={cn(
           "flex items-center gap-3 px-3 py-2 border-b border-border/40 transition-all cursor-pointer group",
+          isPinned && "bg-primary/5",
           isSelected 
             ? "bg-primary/8 border-l-2 border-l-primary" 
             : "hover:bg-muted/40 border-l-2 border-l-transparent"
@@ -191,6 +198,7 @@ function LinkRow({
       >
         {/* Link Info - Left */}
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          {isPinned && <Pin className="w-3 h-3 text-primary shrink-0 rotate-45" />}
           <Favicon url={link.targetUrl} />
           <div className="min-w-0 flex-1">
             <span className="text-[13px] font-semibold text-foreground truncate block">{displayUrl}</span>
@@ -262,6 +270,18 @@ function LinkRow({
                   Edit Link
                 </DropdownMenuItem>
               )}
+              {onTogglePin && (isPinned || canPin) && (
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onTogglePin(link.id);
+                }}>
+                  {isPinned ? (
+                    <><PinOff className="h-3.5 w-3.5 mr-2" />Unpin Link</>
+                  ) : (
+                    <><Pin className="h-3.5 w-3.5 mr-2" />Pin Link</>
+                  )}
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={(e) => e.stopPropagation()} asChild>
                 <a href={link.targetUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-3.5 w-3.5 mr-2" />
@@ -325,6 +345,28 @@ export function LinkTable({
     direction: 'desc',
   });
 
+  // Pinned links state (persisted in localStorage)
+  const [pinnedIds, setPinnedIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('ghostlink-pinned-links');
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('ghostlink-pinned-links', JSON.stringify(pinnedIds));
+  }, [pinnedIds]);
+
+  const handleTogglePin = useCallback((linkId: string) => {
+    setPinnedIds(prev => {
+      if (prev.includes(linkId)) return prev.filter(id => id !== linkId);
+      if (prev.length >= 5) return prev;
+      return [...prev, linkId];
+    });
+  }, []);
+
+  const canPinMore = pinnedIds.length < 5;
+
   // Fetch real click history for sparklines
   const linkIds = useMemo(() => links.map(l => l.id), [links]);
   const { sparklineDataByLink } = useMultipleLinksClickHistory(linkIds, 24);
@@ -340,7 +382,6 @@ export function LinkTable({
   const filteredAndSortedLinks = useMemo(() => {
     let filtered = links;
     
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(link => 
@@ -349,28 +390,25 @@ export function LinkTable({
       );
     }
     
-    // Sort
     const sorted = [...filtered].sort((a, b) => {
+      // Pinned links always first
+      const aPinned = pinnedIds.includes(a.id);
+      const bPinned = pinnedIds.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
       let comparison = 0;
       switch (sort.field) {
-        case 'clicks':
-          comparison = a.clicks - b.clicks;
-          break;
-        case 'leads':
-          comparison = a.leads - b.leads;
-          break;
-        case 'sales':
-          comparison = a.sales - b.sales;
-          break;
-        case 'createdAt':
-          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-          break;
+        case 'clicks': comparison = a.clicks - b.clicks; break;
+        case 'leads': comparison = a.leads - b.leads; break;
+        case 'sales': comparison = a.sales - b.sales; break;
+        case 'createdAt': comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); break;
       }
       return sort.direction === 'desc' ? -comparison : comparison;
     });
     
     return sorted;
-  }, [links, searchQuery, sort]);
+  }, [links, searchQuery, sort, pinnedIds]);
 
   const totalCount = links.length;
 
@@ -426,6 +464,9 @@ export function LinkTable({
               isSelected={activeLinkId === link.id}
               onSelect={onLinkSelect}
               sparklineData={sparklineDataByLink[link.id] || emptySparkline}
+              isPinned={pinnedIds.includes(link.id)}
+              onTogglePin={handleTogglePin}
+              canPin={canPinMore}
             />
           ))
         ) : (
