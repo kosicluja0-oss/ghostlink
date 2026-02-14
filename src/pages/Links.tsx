@@ -82,8 +82,8 @@ const Links = () => {
                 </div>
               </section>
 
-              {/* Link Management */}
-              <section>
+              {/* Link Management - same width as dashboard chart (3/5 of available space) */}
+              <section className="w-[60%]">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">
