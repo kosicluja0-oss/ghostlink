@@ -180,25 +180,34 @@ export default {
   					transform: 'translateY(-30px) translateX(5px)'
   				}
   			},
-  			'border-beam': {
-  				'0%': {
-  					transform: 'rotate(0deg)'
-  				},
-  				'100%': {
-  					transform: 'rotate(360deg)'
-  				}
-  			}
-  		},
-  		animation: {
-  			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out',
-  			'fade-in': 'fade-in 0.3s ease-out',
-  			'slide-in-right': 'slide-in-right 0.3s ease-out',
-  			'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
-  			'count-up': 'count-up 0.5s ease-out',
-  			float: 'float 20s ease-in-out infinite',
-  			'border-beam': 'border-beam 10s linear infinite'
-  		}
+			'border-beam': {
+				'0%': {
+					transform: 'rotate(0deg)'
+				},
+				'100%': {
+					transform: 'rotate(360deg)'
+				}
+			},
+			'chart-reveal': {
+				'0%': {
+					clipPath: 'inset(0 100% 0 0)'
+				},
+				'100%': {
+					clipPath: 'inset(0 0% 0 0)'
+				}
+			}
+		},
+		animation: {
+			'accordion-down': 'accordion-down 0.2s ease-out',
+			'accordion-up': 'accordion-up 0.2s ease-out',
+			'fade-in': 'fade-in 0.3s ease-out',
+			'slide-in-right': 'slide-in-right 0.3s ease-out',
+			'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+			'count-up': 'count-up 0.5s ease-out',
+			float: 'float 20s ease-in-out infinite',
+			'border-beam': 'border-beam 10s linear infinite',
+			'chart-reveal': 'chart-reveal 0.7s ease-out forwards'
+		}
   	}
   },
   plugins: [require("tailwindcss-animate")],
