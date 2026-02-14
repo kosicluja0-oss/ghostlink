@@ -315,7 +315,7 @@ const Dashboard = () => {
         {showWizard && <WelcomeWizard userName={userName} tier={subscriptionTier} onComplete={handleWizardComplete} onLinkCreated={refetchLinks} />}
         
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={subscriptionTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} />
+          <AppSidebar onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6">

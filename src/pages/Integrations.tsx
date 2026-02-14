@@ -337,7 +337,7 @@ const Integrations = () => {
   return <TooltipProvider>
       <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
+          <AppSidebar onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-6xl mx-auto">
