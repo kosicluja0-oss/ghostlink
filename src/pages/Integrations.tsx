@@ -23,7 +23,7 @@ import { ConnectServiceModal } from '@/components/integrations/ConnectServiceMod
 import { DeveloperWebhookCard } from '@/components/integrations/DeveloperWebhookCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useLinks } from '@/hooks/useLinks';
-import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+
 import { useIntegrations } from '@/hooks/useIntegrations';
 import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
@@ -266,7 +266,7 @@ const Integrations = () => {
   const {
     links
   } = useLinks();
-  const openTicketsCount = useOpenTicketsCount();
+  
   const {
     tier: userTier
   } = useSubscription();
@@ -335,7 +335,7 @@ const Integrations = () => {
   return <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
+          <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-6xl mx-auto">

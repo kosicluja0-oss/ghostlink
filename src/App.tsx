@@ -14,8 +14,6 @@ import Dashboard from "./pages/Dashboard";
 import Integrations from "./pages/Integrations";
 import Links from "./pages/Links";
 import Settings from "./pages/Settings";
-import Support from "./pages/Support";
-import AdminSupport from "./pages/AdminSupport";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -41,9 +39,6 @@ const App = () => (
           <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
           <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-          <Route path="/support/:ticketId" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-          <Route path="/admin/support" element={<ProtectedRoute><AdminSupport /></ProtectedRoute>} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

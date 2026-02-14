@@ -1,4 +1,4 @@
-import { Ghost, LayoutDashboard, Puzzle, Link2, Settings, LogOut, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { Ghost, LayoutDashboard, Puzzle, Link2, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -23,7 +23,6 @@ interface AppSidebarProps {
   onOpenSettings: () => void;
   onOpenDataIntegration: () => void;
   onSignOut: () => void;
-  openTicketsCount?: number;
 }
 
 export function AppSidebar({
@@ -32,7 +31,6 @@ export function AppSidebar({
   onOpenSettings,
   onOpenDataIntegration,
   onSignOut,
-  openTicketsCount
 }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,13 +60,6 @@ export function AppSidebar({
     onClick: () => navigate('/integrations'),
     path: '/integrations',
     badge: undefined as number | undefined
-  },
-  {
-    title: 'Support',
-    icon: HelpCircle,
-    onClick: () => navigate('/support'),
-    path: '/support',
-    badge: openTicketsCount && openTicketsCount > 0 ? openTicketsCount : undefined
   },
   {
     title: 'Settings',

@@ -12,7 +12,7 @@ import { LinkDetailPanel } from '@/components/links/LinkDetailPanel';
 import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+
 import type { GhostLink } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ const Links = () => {
     updateLink,
     deleteLink
   } = useLinks();
-  const openTicketsCount = useOpenTicketsCount();
+  
   const tier = TIERS[userTier];
   const activeLinksCount = links.length;
 
@@ -65,7 +65,7 @@ const Links = () => {
   return <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
+          <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6">
