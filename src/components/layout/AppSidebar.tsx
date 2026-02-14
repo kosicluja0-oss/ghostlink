@@ -20,7 +20,7 @@ export function AppSidebar() {
         onClick={() => navigate('/dashboard')}
         className="mb-auto"
       >
-        <Ghost className="h-7 w-7 text-foreground/80 hover:text-foreground transition-colors" />
+        <Ghost className="h-6 w-6 text-foreground/80 hover:text-foreground transition-colors" />
       </button>
 
       {/* Nav icons centered at ~65% from top */}
@@ -39,7 +39,7 @@ export function AppSidebar() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <item.icon className="h-7 w-7" strokeWidth={isActive ? 2.2 : 1.5} />
+                  <item.icon className="h-6 w-6" strokeWidth={isActive ? 2.2 : 1.5} />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -63,7 +63,7 @@ export function AppSidebar() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Settings className="h-7 w-7" strokeWidth={location.pathname === '/settings' ? 2.2 : 1.5} />
+              <Settings className="h-6 w-6" strokeWidth={location.pathname === '/settings' ? 2.2 : 1.5} />
             </button>
           </TooltipTrigger>
           <TooltipContent side="right">
