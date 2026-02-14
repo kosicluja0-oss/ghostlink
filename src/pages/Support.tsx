@@ -53,8 +53,8 @@ export default function Support() {
     return <SidebarProvider defaultOpen>
         <div className="flex min-h-screen w-full bg-background">
           <AppSidebar userEmail={user?.email} userTier="free" onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} openTicketsCount={openTicketsCount} />
-          <SidebarInset className="flex-1">
-          <main className="flex-1 p-6">
+          <SidebarInset className="w-[calc(100vw-16rem)]">
+           <main className="flex-1 p-6">
             <TicketDetail ticketId={ticketId} isAdmin={isAdmin} onBack={() => navigate('/support')} />
           </main>
         </SidebarInset>
@@ -66,7 +66,7 @@ export default function Support() {
   return <SidebarProvider defaultOpen>
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar userEmail={user?.email} userTier="free" onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} openTicketsCount={openTicketsCount} />
-        <SidebarInset className="flex-1">
+        <SidebarInset className="w-[calc(100vw-16rem)]">
           <main className="flex-1 p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
