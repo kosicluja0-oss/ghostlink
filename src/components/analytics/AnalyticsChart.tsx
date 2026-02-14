@@ -523,10 +523,15 @@ export function AnalyticsChart({
         ref={chartContainerRef}
         className="h-[240px] w-full relative">
 
-        <MainChart
-          displayData={chartData}
-          activeMetric={activeMetric}
-          tickInterval={tickInterval} />
+        <div
+          key={activeMetric}
+          className="w-full h-full animate-chart-reveal"
+        >
+          <MainChart
+            displayData={chartData}
+            activeMetric={activeMetric}
+            tickInterval={tickInterval} />
+        </div>
 
         <Watermark />
       </div>
