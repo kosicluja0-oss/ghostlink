@@ -44,6 +44,7 @@ interface LinkTableProps {
   onLinkSelect?: (linkId: string) => void;
   onOpenDetail?: (link: GhostLink) => void;
   onCreateLink?: () => void;
+  maxLinks?: number;
 }
 
 interface LinkRowProps {
@@ -337,7 +338,8 @@ export function LinkTable({
   activeLinkId,
   onLinkSelect,
   onOpenDetail,
-  onCreateLink
+  onCreateLink,
+  maxLinks
 }: LinkTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sort, setSort] = useState<{ field: SortField; direction: SortDirection }>({
@@ -434,7 +436,7 @@ export function LinkTable({
           />
         </div>
         <span className="text-[11px] text-muted-foreground">
-          {totalCount} link{totalCount !== 1 ? 's' : ''}
+          {totalCount}{maxLinks ? ` of ${maxLinks}` : ''} link{totalCount !== 1 ? 's' : ''} active
         </span>
       </div>
 

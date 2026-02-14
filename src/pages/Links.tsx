@@ -84,19 +84,14 @@ const Links = () => {
 
               {/* Link Management - same width as dashboard chart (3/5 of available space) */}
               <section className="w-[60%] flex-1 min-h-0 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between mb-4 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      {activeLinksCount} of {tier.maxLinks} links active
-                    </span>
-                  </div>
+                <div className="flex items-center justify-end mb-4 shrink-0">
                   <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
                     <Plus className="h-4 w-4 mr-1" />
                     New Link
                   </Button>
                 </div>
                 
-                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} />
+                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} />
               </section>
             </main>
         </div>
