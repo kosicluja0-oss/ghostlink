@@ -1,10 +1,9 @@
-import { Ghost, LayoutDashboard, Puzzle, Link2, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Ghost, LayoutDashboard, Puzzle, Link2, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -12,32 +11,22 @@ import {
   SidebarSeparator,
   useSidebar } from
 '@/components/ui/sidebar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { TierType } from '@/types';
 
 interface AppSidebarProps {
-  userEmail?: string;
-  userTier: TierType;
   onOpenSettings: () => void;
   onOpenDataIntegration: () => void;
-  onSignOut: () => void;
 }
 
 export function AppSidebar({
-  userEmail,
-  userTier,
   onOpenSettings,
   onOpenDataIntegration,
-  onSignOut,
 }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === 'collapsed';
-
-  const userInitial = userEmail ? userEmail.charAt(0).toUpperCase() : 'U';
 
   const navItems = [
   {
@@ -168,56 +157,6 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarContent>
 
-      {/* Footer with User Profile */}
-      <SidebarFooter className="p-2">
-        <SidebarSeparator className="mb-2" />
-        <div className={cn(
-          "flex items-center p-2 rounded-lg bg-ghost-surface",
-          isCollapsed ? "justify-center" : "gap-2"
-        )}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Avatar className="h-8 w-8 flex-shrink-0 cursor-pointer">
-                <AvatarFallback className="bg-primary/20 text-primary text-sm">
-                  {userInitial}
-                </AvatarFallback>
-              </Avatar>
-            </TooltipTrigger>
-            {isCollapsed &&
-            <TooltipContent side="right">
-                {userEmail}
-              </TooltipContent>
-            }
-          </Tooltip>
-          {!isCollapsed &&
-          <>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-foreground truncate max-w-[100px]">
-                  {userEmail}
-                </p>
-                <p className="text-[10px] text-muted-foreground capitalize">
-                  {userTier} Plan
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                  onClick={onSignOut}>
-
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  Sign Out
-                </TooltipContent>
-              </Tooltip>
-            </>
-          }
-        </div>
-      </SidebarFooter>
     </Sidebar>);
 
 }

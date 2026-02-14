@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle, Download } from 'lucide-react';
+import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle, Download, LogOut } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useSidebarState } from '@/hooks/useSidebarState';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -349,7 +349,7 @@ const Settings = () => {
   return <TooltipProvider>
       <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={tier} onOpenSettings={() => {}} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
+          <AppSidebar onOpenSettings={() => {}} onOpenDataIntegration={() => navigate('/integrations')} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-7xl mx-auto">
@@ -815,10 +815,14 @@ const Settings = () => {
                 </Accordion>
 
                 {/* 6. Footer Actions - GDPR Export & Delete Account */}
-                <div className="pt-3 flex justify-center gap-3">
+                <div className="pt-3 flex justify-center gap-3 flex-wrap">
                   <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted/50" onClick={() => window.location.href = 'mailto:support@ghostlink.app'}>
                     <Mail className="w-4 h-4 mr-2" />
                     Contact Support
+                  </Button>
+                  <Button variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-muted/50" onClick={signOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
                   </Button>
                   <Button variant="ghost" onClick={exportData} disabled={isExporting} className="text-muted-foreground hover:text-foreground hover:bg-muted/50">
                     {isExporting ? <>
