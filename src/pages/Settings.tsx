@@ -17,7 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+
 import { usePasswordStrength } from '@/hooks/usePasswordStrength';
 import { openCustomerPortal, createCheckoutSession } from '@/lib/stripe';
 import { TIERS, TierType } from '@/types';
@@ -49,7 +49,7 @@ const Settings = () => {
     isLoading: subscriptionLoading,
     refetch: refetchSubscription
   } = useSubscription();
-  const openTicketsCount = useOpenTicketsCount();
+  
   const {
     isAdmin
   } = useUserRole();
@@ -347,7 +347,7 @@ const Settings = () => {
   return <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={tier} onOpenSettings={() => {}} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} openTicketsCount={openTicketsCount} />
+          <AppSidebar userEmail={user?.email} userTier={tier} onOpenSettings={() => {}} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6 max-w-7xl mx-auto">

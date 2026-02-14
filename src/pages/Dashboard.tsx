@@ -21,7 +21,7 @@ import { LiveSignalIndicator } from '@/components/wizard/LiveSignalIndicator';
 import { useLinks } from '@/hooks/useLinks';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useAuth } from '@/hooks/useAuth';
-import { useOpenTicketsCount } from '@/hooks/useOpenTicketsCount';
+
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTimezone } from '@/hooks/useTimezone';
@@ -118,7 +118,7 @@ const Dashboard = () => {
   } = useDashboardData({
     activityLimit
   });
-  const openTicketsCount = useOpenTicketsCount();
+  
 
   // Check if wizard should be shown on mount
   useEffect(() => {
@@ -313,7 +313,7 @@ const Dashboard = () => {
         {showWizard && <WelcomeWizard userName={userName} tier={subscriptionTier} onComplete={handleWizardComplete} onLinkCreated={refetchLinks} />}
         
         <div className="min-h-screen flex w-full bg-background">
-          <AppSidebar userEmail={user?.email} userTier={subscriptionTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} openTicketsCount={openTicketsCount} />
+          <AppSidebar userEmail={user?.email} userTier={subscriptionTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => setDataIntegrationOpen(true)} onSignOut={signOut} />
           
           <SidebarInset className="w-[calc(100vw-16rem)]">
             <main className="p-4 lg:p-6">
