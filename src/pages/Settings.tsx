@@ -814,6 +814,10 @@ const Settings = () => {
 
                 {/* 6. Footer Actions - GDPR Export & Delete Account */}
                 <div className="pt-3 flex justify-center gap-3">
+                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted/50" onClick={() => window.location.href = 'mailto:support@ghostlink.app'}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Contact Support
+                  </Button>
                   <Button variant="ghost" onClick={exportData} disabled={isExporting} className="text-muted-foreground hover:text-foreground hover:bg-muted/50">
                     {isExporting ? <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
