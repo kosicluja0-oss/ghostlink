@@ -1,18 +1,33 @@
 
 
-## Zmírnění jasnosti progress barů v Top kartách
+## Oprava build erroru v separator.tsx
 
-### Problem
-Aktuální progress bary v kartách Top Countries, Top Placements a Top Links používají plnou sytost barvy metriky, což působí příliš křiklavě oproti tmavému designu dashboardu.
+### Příčina problému
+Soubor `src/components/ui/separator.tsx` má prázdné tělo komponenty – funkce vrací `void` místo JSX elementu. Toto blokuje celý build projektu a způsobuje, že žádná úprava se úspěšně nezkompiluje.
 
 ### Řešení
-Přidám na progress bar indicator snížení opacity na cca 40-50 %, čímž se barva zjemní a bude lépe ladit s dark-mode estetikou. Barva zůstane stejná, jen bude tlumenější.
+Obnovit standardní implementaci Separator komponenty – doplnit `return` statement s JSX.
 
 ### Technické detaily
 
-**Soubor: `src/components/ui/progress.tsx`**
-- Na `ProgressPrimitive.Indicator` přidám `opacity: 0.45` do inline stylů, ale pouze když je `indicatorColor` zadaný (aby se neovlivnily jiné progress bary v aplikaci).
-- Alternativně lze opacity řešit přímo v komponentě přes nový prop, ale nejjednodušší a nejčistší řešení je aplikovat sníženou opacity přímo na indicator element, když se používá custom barva.
+**Soubor: `src/components/ui/separator.tsx`**
 
-Výsledek: bary budou mít stejný odstín jako graf, ale ve výrazně jemnější, tlumenější variantě.
+Nahradit prázdné tělo funkce (řádky 9-32) standardní implementací:
 
+```tsx
+({ className, orientation = "horizontal", decorative = true, ...props }, ref) => (
+  <SeparatorPrimitive.Root
+    ref={ref}
+    decorative={decorative}
+    orientation={orientation}
+    className={cn(
+      "shrink-0 bg-border",
+      orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
+      className
+    )}
+    {...props}
+  />
+)
+```
+
+Toto je standardní shadcn/ui Separator komponenta. Po této opravě build projde a všechny předchozí i budoucí změny se budou kompilovat správně.
