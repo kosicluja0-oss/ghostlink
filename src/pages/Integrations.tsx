@@ -14,6 +14,7 @@ import beehiivLogo from '@/assets/logos/beehiiv.png';
 import convertkitLogo from '@/assets/logos/convertkit.png';
 import slackLogo from '@/assets/logos/slack.png';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { useSidebarState } from '@/hooks/useSidebarState';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
@@ -259,6 +260,7 @@ const CATEGORIES = [{
 }];
 const Integrations = () => {
   const navigate = useNavigate();
+  const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const {
     user,
     signOut
@@ -333,7 +335,7 @@ const Integrations = () => {
   const connectedCount = integrationsWithStatus.filter((i) => i.status === 'connected').length;
   const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
   return <TooltipProvider>
-      <SidebarProvider defaultOpen={true}>
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
           

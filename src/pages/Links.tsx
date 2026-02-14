@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link2, Plus } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { useSidebarState } from '@/hooks/useSidebarState';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
@@ -18,6 +19,7 @@ import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
 const Links = () => {
   const navigate = useNavigate();
+  const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const {
     user,
     signOut
@@ -63,7 +65,7 @@ const Links = () => {
     await updateLink(id, updates);
   }, [updateLink]);
   return <TooltipProvider>
-      <SidebarProvider defaultOpen={true}>
+      <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar userEmail={user?.email} userTier={userTier} onOpenSettings={() => setSettingsOpen(true)} onOpenDataIntegration={() => navigate('/integrations')} onSignOut={signOut} />
           
