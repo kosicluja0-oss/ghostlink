@@ -125,7 +125,7 @@ function Sparkline({ data }: { data: number[] }) {
       <polyline
         points={points}
         fill="none"
-        stroke="hsl(var(--primary))"
+        stroke="hsl(var(--chart-clicks))"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -217,18 +217,30 @@ function LinkRow({
 
         {/* Metrics - Middle */}
         <div className="flex items-center gap-4 shrink-0">
-          <div className="text-right w-14">
-            <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.clicks.toLocaleString()}</p>
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Clicks</p>
-          </div>
-          <div className={cn("text-right w-14 hidden sm:block", isFreeTier && "opacity-40")}>
-            <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.leads.toLocaleString()}</p>
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Leads</p>
-          </div>
-          <div className={cn("text-right w-14 hidden sm:block", isFreeTier && "opacity-40")}>
-            <p className="text-[13px] font-semibold text-foreground tabular-nums">{link.sales.toLocaleString()}</p>
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wide">Sales</p>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-right w-14 cursor-default">
+                <p className="text-[13px] font-semibold tabular-nums" style={{ color: 'hsl(var(--chart-clicks))' }}>{link.clicks.toLocaleString()}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">Clicks</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn("text-right w-14 hidden sm:block cursor-default", isFreeTier && "opacity-40")}>
+                <p className="text-[13px] font-semibold tabular-nums" style={{ color: 'hsl(var(--warning))' }}>{link.leads.toLocaleString()}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">Leads</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn("text-right w-14 hidden sm:block cursor-default", isFreeTier && "opacity-40")}>
+                <p className="text-[13px] font-semibold tabular-nums" style={{ color: 'hsl(var(--success))' }}>{link.sales.toLocaleString()}</p>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">Sales</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Actions - Right */}
