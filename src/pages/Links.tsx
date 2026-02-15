@@ -111,7 +111,6 @@ const Links = () => {
 
         <EditLinkModal open={editModalOpen} onOpenChange={setEditModalOpen} link={editingLink} userTier={userTier} onSave={handleSaveLink} />
 
-        <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
       </>
     </TooltipProvider>;
 };
