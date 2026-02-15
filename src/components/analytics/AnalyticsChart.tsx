@@ -83,26 +83,12 @@ function getTimeKey(date: Date, range: TimeRange): string {
   }
 }
 
-// Get tick interval based on time range
-function getTickInterval(range: TimeRange, dataLength: number): number {
-  switch (range) {
-    case '30m':
-      return Math.max(1, Math.floor(dataLength / 6));
-    case '6h':
-      return Math.max(1, Math.floor(dataLength / 8));
-    case '1d':
-      return Math.max(1, Math.floor(dataLength / 8));
-    case '1w':
-      return 1; // Show every day
-    case '1m':
-      return Math.max(1, Math.floor(dataLength / 10)); // ~every 3 days
-    case '1y':
-      return Math.max(1, Math.floor(dataLength / 12)); // ~monthly
-    case '3y':
-      return Math.max(1, Math.floor(dataLength / 12)); // ~quarterly
-    default:
-      return Math.max(1, Math.floor(dataLength / 10));
-  }
+// Only render first and last X-axis labels
+function createTickFormatter(dataLength: number) {
+  return (value: string, index: number) => {
+    if (index === 0 || index === dataLength - 1) return value;
+    return '';
+  };
 }
 
 export type MetricKey = 'clicks' | 'leads' | 'sales' | 'revenue' | 'cr' | 'epc';
@@ -240,12 +226,7 @@ function formatTooltipValue(value: number, metric: MetricKey): string {
 const MainChart = memo(({
   displayData,
   activeMetric,
-  tickInterval
-
-
-
-
-}: {displayData: any[];activeMetric: MetricKey;tickInterval: number;}) => {
+}: {displayData: any[];activeMetric: MetricKey;}) => {
   const metricFormat = METRIC_FORMAT[activeMetric];
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -298,9 +279,24 @@ const MainChart = memo(({
           tickLine={false}
           axisLine={{ stroke: 'hsl(var(--border))', strokeOpacity: 0.5 }}
           dy={10}
-          interval={tickInterval}
-          padding={{ left: 10, right: 10 }}
-          textAnchor="middle" />
+          interval={0}
+          tick={({ x, y, payload, index }: any) => {
+            const isFirst = index === 0;
+            const isLast = index === displayData.length - 1;
+            if (!isFirst && !isLast) return <g />;
+            return (
+              <text
+                x={x}
+                y={y + 10}
+                textAnchor={isFirst ? 'start' : 'end'}
+                fill="hsl(var(--muted-foreground))"
+                fontSize={11}
+              >
+                {payload.value}
+              </text>
+            );
+          }}
+          padding={{ left: 10, right: 10 }} />
 
         <YAxis
           stroke="hsl(var(--muted-foreground))"
@@ -463,10 +459,7 @@ export function AnalyticsChart({
     });
   }, [data, timeRange, activeLinkId]);
 
-  // Calculate tick interval based on data length
-  const tickInterval = useMemo(() => {
-    return getTickInterval(timeRange, chartData.length);
-  }, [timeRange, chartData.length]);
+
 
   // Watermark component
   const Watermark = () =>
@@ -529,8 +522,7 @@ export function AnalyticsChart({
         >
           <MainChart
             displayData={chartData}
-            activeMetric={activeMetric}
-            tickInterval={tickInterval} />
+            activeMetric={activeMetric} />
         </div>
 
         <Watermark />
