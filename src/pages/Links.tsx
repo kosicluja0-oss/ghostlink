@@ -52,10 +52,16 @@ const Links = () => {
     setActiveLinkId(prev => prev === linkId ? null : linkId);
   }, []);
   const handleOpenDetail = useCallback((link: GhostLink) => {
-    setDetailLink(link);
-    setDetailOpen(true);
-    setActiveLinkId(link.id);
-  }, []);
+    if (detailLink?.id === link.id && detailOpen) {
+      setDetailOpen(false);
+      setDetailLink(null);
+      setActiveLinkId(null);
+    } else {
+      setDetailLink(link);
+      setDetailOpen(true);
+      setActiveLinkId(link.id);
+    }
+  }, [detailLink, detailOpen]);
   const handleEditLink = useCallback((link: GhostLink) => {
     setEditingLink(link);
     setEditModalOpen(true);
