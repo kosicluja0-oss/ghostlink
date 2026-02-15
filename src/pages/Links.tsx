@@ -84,7 +84,7 @@ const Links = () => {
 
               {/* Link Management - same width as dashboard chart (3/5 of available space) */}
               <section className="w-[60%] flex-1 min-h-0 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-end mb-4 shrink-0">
+                <div className="flex items-center justify-start mb-4 shrink-0">
                   <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
                     <Plus className="h-4 w-4 mr-1" />
                     New Link
