@@ -442,17 +442,7 @@ export function LinkTable({
         </span>
       </div>
 
-      {/* Table Header with Sortable Columns */}
-      <div className="flex items-center gap-3 px-3 py-1.5 border-b border-border/40 bg-muted/20 text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
-        <div className="flex-1">Link</div>
-        <div className="w-16 shrink-0 hidden lg:block text-center">Trend</div>
-        <div className="flex items-center gap-4 shrink-0">
-          <SortableHeader label="Clicks" field="clicks" currentSort={sort} onSort={handleSort} />
-          <span className="hidden sm:block"><SortableHeader label="Leads" field="leads" currentSort={sort} onSort={handleSort} /></span>
-          <span className="hidden sm:block"><SortableHeader label="Sales" field="sales" currentSort={sort} onSort={handleSort} /></span>
-        </div>
-        <div className="w-20 shrink-0"></div>
-      </div>
+
 
       {/* Rows */}
       <div className="flex-1 overflow-y-auto">
