@@ -38,6 +38,7 @@ const Links = () => {
   // Use real data hooks
   const {
     links,
+    isLoading: linksLoading,
     addLink,
     updateLink,
     deleteLink
@@ -91,7 +92,7 @@ const Links = () => {
                   </Button>
                 </div>
                 
-                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} />
+                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} isLoading={linksLoading} />
               </section>
             </main>
         </div>

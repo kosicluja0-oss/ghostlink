@@ -45,6 +45,7 @@ interface LinkTableProps {
   onOpenDetail?: (link: GhostLink) => void;
   onCreateLink?: () => void;
   maxLinks?: number;
+  isLoading?: boolean;
 }
 
 interface LinkRowProps {
@@ -339,7 +340,8 @@ export function LinkTable({
   onLinkSelect,
   onOpenDetail,
   onCreateLink,
-  maxLinks
+  maxLinks,
+  isLoading
 }: LinkTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sort, setSort] = useState<{ field: SortField; direction: SortDirection }>({
@@ -417,8 +419,8 @@ export function LinkTable({
   // Default empty sparkline data
   const emptySparkline = Array(12).fill(0);
 
-  // Show enhanced empty state if no links at all
-  if (links.length === 0 && onCreateLink) {
+  // Show enhanced empty state only if not loading and no links
+  if (!isLoading && links.length === 0 && onCreateLink) {
     return <LinksEmptyState onCreateLink={onCreateLink} />;
   }
 
