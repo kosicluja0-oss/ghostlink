@@ -83,17 +83,24 @@ const Links = () => {
                 </div>
               </section>
 
-              {/* Link Management - same width as dashboard chart (3/5 of available space) */}
-              <section className="w-[60%] flex-1 min-h-0 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-start mb-4 shrink-0">
-                  <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    New Link
-                  </Button>
+              {/* Link Management + Detail Panel side by side */}
+              <div className="flex-1 min-h-0 overflow-hidden flex gap-0">
+                <section className={`${detailOpen ? 'w-[50%]' : 'w-[60%]'} flex flex-col transition-all duration-200`}>
+                  <div className="flex items-center justify-start mb-4 shrink-0">
+                    <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      New Link
+                    </Button>
+                  </div>
+                  
+                  <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} isLoading={linksLoading} />
+                </section>
+
+                {/* Inline Detail Panel */}
+                <div className={`${detailOpen ? 'w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+                  <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
                 </div>
-                
-                <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} isLoading={linksLoading} />
-              </section>
+              </div>
             </main>
         </div>
 
