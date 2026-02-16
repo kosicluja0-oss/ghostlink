@@ -8,31 +8,88 @@ import {
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
 
+export type ChartMetric = 'clicks' | 'leads' | 'sales' | 'epc' | 'cr';
+
 interface DataPoint {
   date: string;
   clicks: number;
+  leads: number;
+  sales: number;
+  earnings: number;
 }
 
 interface MiniAreaChartProps {
   data: DataPoint[];
+  metric?: ChartMetric;
 }
 
-export function MiniAreaChart({ data }: MiniAreaChartProps) {
+const METRIC_CONFIG: Record<ChartMetric, {
+  color: string;
+  label: string;
+  format: (v: number) => string;
+}> = {
+  clicks: {
+    color: 'hsl(var(--chart-clicks))',
+    label: 'Clicks',
+    format: (v) => v.toLocaleString(),
+  },
+  leads: {
+    color: 'hsl(var(--chart-warning))',
+    label: 'Leads',
+    format: (v) => v.toLocaleString(),
+  },
+  sales: {
+    color: 'hsl(var(--chart-success))',
+    label: 'Sales',
+    format: (v) => v.toLocaleString(),
+  },
+  epc: {
+    color: 'hsl(var(--chart-clicks))',
+    label: 'EPC',
+    format: (v) => `$${v.toFixed(2)}`,
+  },
+  cr: {
+    color: 'hsl(var(--chart-clicks))',
+    label: 'CR',
+    format: (v) => `${v.toFixed(1)}%`,
+  },
+};
+
+function computeValue(point: DataPoint, metric: ChartMetric): number {
+  switch (metric) {
+    case 'clicks': return point.clicks;
+    case 'leads': return point.leads;
+    case 'sales': return point.sales;
+    case 'epc': return point.clicks > 0 ? point.earnings / point.clicks : 0;
+    case 'cr': return point.clicks > 0 ? ((point.leads + point.sales) / point.clicks) * 100 : 0;
+  }
+}
+
+export function MiniAreaChart({ data, metric = 'clicks' }: MiniAreaChartProps) {
+  const config = METRIC_CONFIG[metric];
+
   if (!data || data.length === 0) {
     return (
       <div className="h-[120px] flex items-center justify-center text-xs text-muted-foreground">
-        No click data yet
+        No data yet
       </div>
     );
   }
 
+  const chartData = data.map((p) => ({
+    date: p.date,
+    value: computeValue(p, metric),
+  }));
+
+  const gradientId = `miniGradient-${metric}`;
+
   return (
     <ResponsiveContainer width="100%" height={120}>
-      <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+      <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
         <defs>
-          <linearGradient id="miniClickGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0.3} />
-            <stop offset="100%" stopColor="hsl(var(--chart-clicks))" stopOpacity={0} />
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={config.color} stopOpacity={0.3} />
+            <stop offset="100%" stopColor={config.color} stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
@@ -47,15 +104,17 @@ export function MiniAreaChart({ data }: MiniAreaChartProps) {
               return val;
             }
           }}
-          interval={Math.floor(data.length / 4)}
+          interval={Math.floor(chartData.length / 4)}
         />
         <YAxis
           axisLine={false}
           tickLine={false}
           tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
           width={36}
-          allowDecimals={false}
+          allowDecimals={metric === 'epc' || metric === 'cr'}
           tickFormatter={(val) => {
+            if (metric === 'epc') return `$${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val.toFixed(val < 1 ? 2 : 0)}`;
+            if (metric === 'cr') return `${val.toFixed(0)}%`;
             if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
             return String(val);
           }}
@@ -76,14 +135,14 @@ export function MiniAreaChart({ data }: MiniAreaChartProps) {
               return String(val);
             }
           }}
-          formatter={(value: number) => [value, 'Clicks']}
+          formatter={(value: number) => [config.format(value), config.label]}
         />
         <Area
           type="monotone"
-          dataKey="clicks"
-          stroke="hsl(var(--chart-clicks))"
+          dataKey="value"
+          stroke={config.color}
           strokeWidth={1.5}
-          fill="url(#miniClickGradient)"
+          fill={`url(#${gradientId})`}
         />
       </AreaChart>
     </ResponsiveContainer>

@@ -7,6 +7,9 @@ import { parsePlacement } from '@/components/analytics/PlacementBadge';
 interface DailyClickPoint {
   date: string;
   clicks: number;
+  leads: number;
+  sales: number;
+  earnings: number;
 }
 
 interface PlacementData {
@@ -72,7 +75,7 @@ export function useLinkAnalytics(linkId: string | null, days: number | null = 30
       });
       if (error) throw error;
       return data as {
-        daily_clicks: { date: string; clicks: number }[];
+        daily_clicks: { date: string; clicks: number; leads: number; sales: number; earnings: number }[];
         placements: { source: string; clicks: number; leads: number; sales: number; earnings: number }[];
         countries: { code: string; clicks: number; leads: number; sales: number; earnings: number }[];
         funnel: {
@@ -93,19 +96,19 @@ export function useLinkAnalytics(linkId: string | null, days: number | null = 30
   const dailyClicks = useMemo((): DailyClickPoint[] => {
     const serverDays = raw?.daily_clicks ?? [];
     if (days !== null) {
-      const map = new Map<string, number>();
+      const map = new Map<string, DailyClickPoint>();
       for (let i = days - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        map.set(d.toISOString().slice(0, 10), 0);
+        const key = d.toISOString().slice(0, 10);
+        map.set(key, { date: key, clicks: 0, leads: 0, sales: 0, earnings: 0 });
       }
-      serverDays.forEach((p) => map.set(p.date, p.clicks));
-      return Array.from(map.entries())
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([date, clicks]) => ({ date, clicks }));
+      serverDays.forEach((p) => map.set(p.date, { date: p.date, clicks: p.clicks, leads: p.leads, sales: p.sales, earnings: Number(p.earnings) }));
+      return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
     }
-    // all-time: just return server data sorted
-    return [...serverDays].sort((a, b) => a.date.localeCompare(b.date));
+    return [...serverDays]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((p) => ({ date: p.date, clicks: p.clicks, leads: p.leads, sales: p.sales, earnings: Number(p.earnings) }));
   }, [raw, days]);
 
   const placements = useMemo((): PlacementData[] => {
