@@ -452,7 +452,7 @@ const Dashboard = () => {
               </section>
 
               {/* Countries + Placements + Links Row */}
-              <section className="mb-5">
+              <section className="pb-2">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <TopCountriesCard countries={countryAnalytics} activeMetric={activeMetric} metricColor={METRIC_COLORS[activeMetric]} />
                   <TopPlacementsCard placements={placementAnalytics} activeMetric={activeMetric} metricColor={METRIC_COLORS[activeMetric]} />
