@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MousePointerClick, User, DollarSign, ChevronDown, ChevronUp } from 'lucide-react';
+import { PlacementBadge } from '@/components/analytics/PlacementBadge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useTimezone } from '@/hooks/useTimezone';
@@ -170,10 +171,10 @@ export function LinkRecentActivity({ linkId }: LinkRecentActivityProps) {
             {displayEvents.map(ev => (
               <TableRow key={ev.id} className="border-border hover:bg-muted/50 transition-colors">
                 <TableCell className="py-1.5 px-2">{getTypeBadge(ev.type)}</TableCell>
-                <TableCell className="py-1.5 px-2">
-                  <span className="text-[11px] text-foreground truncate max-w-[80px] block">
-                    {getDescription(ev.type)}
-                  </span>
+                <TableCell className="py-1.5 px-1.5">
+                  <div className="scale-90 origin-left">
+                    <PlacementBadge source={ev.source} />
+                  </div>
                 </TableCell>
                 <TableCell className="text-right py-1.5 px-2 font-mono text-[11px]">
                   {ev.amount !== null ? (
