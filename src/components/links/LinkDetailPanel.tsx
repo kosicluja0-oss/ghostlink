@@ -66,9 +66,10 @@ function KpiItem({ icon, label, value, dimmed, active, onClick, accentColor }: K
       onClick={onClick}
       className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
         active
-          ? 'bg-primary/10 ring-1 ring-primary/30 hover:bg-primary/15'
+          ? 'ring-1 ring-primary/30'
           : 'bg-muted/20 hover:bg-muted/40 hover:-translate-y-0.5 hover:shadow-sm'
       } ${dimmed ? 'opacity-50' : ''}`}
+      style={active && accentColor ? { backgroundColor: `${accentColor}15`, boxShadow: `0 0 12px -3px ${accentColor}66` } : undefined}
     >
       <div style={accentColor ? { color: accentColor } : undefined} className={accentColor ? '' : 'text-muted-foreground'}>{icon}</div>
       <AnimatedValue value={value} className="text-sm font-bold text-foreground tabular-nums" />
