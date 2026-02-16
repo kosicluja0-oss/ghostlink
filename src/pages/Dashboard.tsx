@@ -355,20 +355,6 @@ const Dashboard = () => {
 
               {/* Stats Banner - Compact */}
               <section className="mb-5">
-                {selectedLinkId && selectedLinkAlias && (
-                  <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
-                    <Link2 className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span className="text-xs font-medium text-primary">
-                      Filtering by: /{selectedLinkAlias}
-                    </span>
-                    <button
-                      onClick={() => setSelectedLinkId(null)}
-                      className="ml-auto text-primary/60 hover:text-primary transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                   <StatCard label="Total Clicks" value={displayStats.totalClicks.toLocaleString()} icon={MousePointer} trend={selectedLinkId ? undefined : (clicksTrend ?? undefined)} accentColor="primary" customColor="hsl(var(--chart-clicks))" compact tooltip="Total number of times someone clicked on your tracking link. Every visit counts — even repeat visitors." isActive={activeMetric === 'clicks'} onClick={() => handleMetricChange('clicks')} />
                   <StatCard label="Total Leads" value={displayStats.totalLeads.toLocaleString()} icon={Users} trend={selectedLinkId ? undefined : (leadsTrend ?? undefined)} isLocked={isFreeTier} accentColor="warning" compact tooltip="People who took a desired action after clicking — like signing up, submitting a form, or opting in. A lead means someone showed real interest." isActive={activeMetric === 'leads'} onClick={() => handleMetricChange('leads')} />
