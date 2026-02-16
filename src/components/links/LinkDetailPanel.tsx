@@ -118,10 +118,10 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="h-full overflow-y-auto border-l border-border bg-card p-4"
+          className="h-full overflow-y-auto bg-card p-4"
         >
           {/* Header */}
-          <div className="pb-4 border-b border-border mb-4">
+          <div className="pb-4 mb-4">
             <div className="flex items-center gap-2.5">
               <Favicon url={link.targetUrl} />
               <div className="min-w-0 flex-1">
