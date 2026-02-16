@@ -194,7 +194,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
 
               <TopPlacementsCard placements={placements} activeMetric={chartMetric === 'epc' ? 'epc' : chartMetric === 'cr' ? 'cr' : chartMetric as MetricKey} metricColor={chartMetric === 'cr' ? 'hsl(var(--foreground))' : chartMetric === 'epc' ? 'hsl(var(--chart-conversions))' : `hsl(var(--chart-${chartMetric}))`} />
 
-              <LinkRecentActivity linkId={link.id} />
+              <LinkRecentActivity linkId={link.id} typeFilter={chartMetric === 'leads' ? 'lead' : chartMetric === 'sales' ? 'sale' : null} />
 
             </div>
           )}
