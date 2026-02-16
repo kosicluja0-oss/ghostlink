@@ -54,9 +54,10 @@ interface KpiItemProps {
   dimmed?: boolean;
   active?: boolean;
   onClick?: () => void;
+  accentColor?: string;
 }
 
-function KpiItem({ icon, label, value, dimmed, active, onClick }: KpiItemProps) {
+function KpiItem({ icon, label, value, dimmed, active, onClick, accentColor }: KpiItemProps) {
   return (
     <button
       onClick={onClick}
@@ -66,7 +67,7 @@ function KpiItem({ icon, label, value, dimmed, active, onClick }: KpiItemProps) 
           : 'bg-muted/20 hover:bg-muted/40'
       } ${dimmed ? 'opacity-50' : ''}`}
     >
-      <div className="text-muted-foreground">{icon}</div>
+      <div style={accentColor ? { color: accentColor } : undefined} className={accentColor ? '' : 'text-muted-foreground'}>{icon}</div>
       <span className="text-sm font-bold text-foreground tabular-nums">{value}</span>
       <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
     </button>
@@ -147,11 +148,11 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
           ) : (
             <div className="space-y-5">
               <div className="grid grid-cols-5 gap-1.5">
-                <KpiItem icon={<MousePointerClick className="w-3.5 h-3.5" />} label="Clicks" value={funnel.totalClicks.toLocaleString()} active={chartMetric === 'clicks'} onClick={() => setChartMetric('clicks')} />
-                <KpiItem icon={<Users className="w-3.5 h-3.5" />} label="Leads" value={funnel.totalLeads.toLocaleString()} active={chartMetric === 'leads'} onClick={() => setChartMetric('leads')} />
-                <KpiItem icon={<DollarSign className="w-3.5 h-3.5" />} label="Sales" value={funnel.totalSales.toLocaleString()} active={chartMetric === 'sales'} onClick={() => setChartMetric('sales')} />
-                <KpiItem icon={<TrendingUp className="w-3.5 h-3.5" />} label="EPC" value={`$${funnel.epc.toFixed(2)}`} active={chartMetric === 'epc'} onClick={() => setChartMetric('epc')} />
-                <KpiItem icon={<Percent className="w-3.5 h-3.5" />} label="CR" value={`${funnel.conversionRate.toFixed(1)}%`} active={chartMetric === 'cr'} onClick={() => setChartMetric('cr')} />
+                <KpiItem icon={<MousePointerClick className="w-3.5 h-3.5" />} label="Clicks" value={funnel.totalClicks.toLocaleString()} active={chartMetric === 'clicks'} onClick={() => setChartMetric('clicks')} accentColor="hsl(var(--chart-clicks))" />
+                <KpiItem icon={<Users className="w-3.5 h-3.5" />} label="Leads" value={funnel.totalLeads.toLocaleString()} active={chartMetric === 'leads'} onClick={() => setChartMetric('leads')} accentColor="hsl(var(--chart-leads))" />
+                <KpiItem icon={<DollarSign className="w-3.5 h-3.5" />} label="Sales" value={funnel.totalSales.toLocaleString()} active={chartMetric === 'sales'} onClick={() => setChartMetric('sales')} accentColor="hsl(var(--chart-sales))" />
+                <KpiItem icon={<TrendingUp className="w-3.5 h-3.5" />} label="EPC" value={`$${funnel.epc.toFixed(2)}`} active={chartMetric === 'epc'} onClick={() => setChartMetric('epc')} accentColor="hsl(var(--chart-conversions))" />
+                <KpiItem icon={<Percent className="w-3.5 h-3.5" />} label="CR" value={`${funnel.conversionRate.toFixed(1)}%`} active={chartMetric === 'cr'} onClick={() => setChartMetric('cr')} accentColor="hsl(var(--foreground))" />
               </div>
 
               <div>
