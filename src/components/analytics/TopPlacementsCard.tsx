@@ -1,10 +1,8 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { PlatformIcon } from '@/components/ui/platform-icon';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { MetricKey } from './AnalyticsChart';
-import { Button } from '@/components/ui/button';
 
 export interface PlacementData {
   platform: string;
@@ -55,7 +53,6 @@ function formatValue(value: number, metric: MetricKey): string {
 }
 
 export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricColor }: TopPlacementsCardProps) => {
-  const [showAll, setShowAll] = useState(false);
 
   const allSorted = useMemo(() => {
     const withValues = placements.map((p) => ({
@@ -75,8 +72,7 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricC
     }));
   }, [placements, activeMetric]);
 
-  const topPlacements = showAll ? allSorted : allSorted.slice(0, 5);
-  const hasMore = allSorted.length > 5;
+  const topPlacements = allSorted.slice(0, 5);
 
   if (topPlacements.length === 0) {
     return (
@@ -102,7 +98,7 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricC
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden flex-1">
-        <div className={`space-y-3 pr-1 flex-1 ${showAll ? 'overflow-y-auto max-h-[240px]' : ''}`}>
+        <div className="space-y-3 pr-1 flex-1">
           {topPlacements.map((placement) =>
           <div key={`${placement.platform}-${placement.placement}`} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
@@ -120,20 +116,6 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricC
             </div>
           )}
         </div>
-        {hasMore &&
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowAll(!showAll)}
-          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-2 shrink-0">
-
-            {showAll ?
-          <>Show less <ChevronUp className="w-3 h-3" /></> :
-
-          <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
-          }
-          </Button>
-        }
       </CardContent>
     </Card>);
 
