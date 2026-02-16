@@ -3,7 +3,7 @@ import { ExternalLink, TrendingUp, MousePointerClick, Users, DollarSign, Percent
 import { AnimatePresence, motion } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MiniAreaChart } from '@/components/analytics/MiniAreaChart';
+import { MiniAreaChart, type ChartMetric } from '@/components/analytics/MiniAreaChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
 import { TopCountriesCard } from '@/components/analytics/TopCountriesCard';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
@@ -52,15 +52,24 @@ interface KpiItemProps {
   label: string;
   value: string | number;
   dimmed?: boolean;
+  active?: boolean;
+  onClick?: () => void;
 }
 
-function KpiItem({ icon, label, value, dimmed }: KpiItemProps) {
+function KpiItem({ icon, label, value, dimmed, active, onClick }: KpiItemProps) {
   return (
-    <div className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg bg-muted/20 ${dimmed ? 'opacity-50' : ''}`}>
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-colors cursor-pointer ${
+        active
+          ? 'bg-primary/10 ring-1 ring-primary/30'
+          : 'bg-muted/20 hover:bg-muted/40'
+      } ${dimmed ? 'opacity-50' : ''}`}
+    >
       <div className="text-muted-foreground">{icon}</div>
       <span className="text-sm font-bold text-foreground tabular-nums">{value}</span>
       <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
-    </div>
+    </button>
   );
 }
 
@@ -84,11 +93,13 @@ function LoadingSkeleton() {
 
 export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelProps) {
   const [timeRange, setTimeRange] = useState<DetailTimeRange>('30d');
+  const [chartMetric, setChartMetric] = useState<ChartMetric>('clicks');
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  // Reset to 30d whenever the link changes or panel reopens
+  // Reset to defaults whenever the link changes or panel reopens
   useEffect(() => {
     setTimeRange('30d');
+    setChartMetric('clicks');
   }, [link?.id, open]);
 
   const days = RANGE_TO_DAYS[timeRange];
@@ -136,11 +147,11 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
           ) : (
             <div className="space-y-5">
               <div className="grid grid-cols-5 gap-1.5">
-                <KpiItem icon={<MousePointerClick className="w-3.5 h-3.5" />} label="Clicks" value={funnel.totalClicks.toLocaleString()} />
-                <KpiItem icon={<Users className="w-3.5 h-3.5" />} label="Leads" value={funnel.totalLeads.toLocaleString()} />
-                <KpiItem icon={<DollarSign className="w-3.5 h-3.5" />} label="Sales" value={funnel.totalSales.toLocaleString()} />
-                <KpiItem icon={<TrendingUp className="w-3.5 h-3.5" />} label="EPC" value={`$${funnel.epc.toFixed(2)}`} />
-                <KpiItem icon={<Percent className="w-3.5 h-3.5" />} label="CR" value={`${funnel.conversionRate.toFixed(1)}%`} />
+                <KpiItem icon={<MousePointerClick className="w-3.5 h-3.5" />} label="Clicks" value={funnel.totalClicks.toLocaleString()} active={chartMetric === 'clicks'} onClick={() => setChartMetric('clicks')} />
+                <KpiItem icon={<Users className="w-3.5 h-3.5" />} label="Leads" value={funnel.totalLeads.toLocaleString()} active={chartMetric === 'leads'} onClick={() => setChartMetric('leads')} />
+                <KpiItem icon={<DollarSign className="w-3.5 h-3.5" />} label="Sales" value={funnel.totalSales.toLocaleString()} active={chartMetric === 'sales'} onClick={() => setChartMetric('sales')} />
+                <KpiItem icon={<TrendingUp className="w-3.5 h-3.5" />} label="EPC" value={`$${funnel.epc.toFixed(2)}`} active={chartMetric === 'epc'} onClick={() => setChartMetric('epc')} />
+                <KpiItem icon={<Percent className="w-3.5 h-3.5" />} label="CR" value={`${funnel.conversionRate.toFixed(1)}%`} active={chartMetric === 'cr'} onClick={() => setChartMetric('cr')} />
               </div>
 
               <div>
@@ -173,7 +184,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
                   </Popover>
                 </div>
                 <div className="bg-muted/10 rounded-lg p-2 border border-border/50">
-                  <MiniAreaChart data={dailyClicks} />
+                  <MiniAreaChart data={dailyClicks} metric={chartMetric} />
                 </div>
               </div>
 
