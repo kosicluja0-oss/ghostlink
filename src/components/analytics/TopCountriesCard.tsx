@@ -1,11 +1,10 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronUp, List, Globe } from 'lucide-react';
+import { List, Globe } from 'lucide-react';
 import { CircleFlag } from '@/components/ui/circle-flag';
 import { COUNTRIES } from '@/lib/countries';
 import { useMemo, useState } from 'react';
 import type { MetricKey } from './AnalyticsChart';
-import { Button } from '@/components/ui/button';
 import { WorldHeatMap } from './WorldHeatMap';
 
 export interface CountryData {
@@ -64,7 +63,6 @@ function formatValue(value: number, metric: MetricKey): string {
 }
 
 export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricColor }: TopCountriesCardProps) => {
-  const [showAll, setShowAll] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const allSorted = useMemo(() => {
@@ -85,8 +83,7 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
     }));
   }, [countries, activeMetric]);
 
-  const topCountries = showAll ? allSorted : allSorted.slice(0, 5);
-  const hasMore = allSorted.length > 5;
+  const topCountries = allSorted.slice(0, 5);
 
   if (topCountries.length === 0) {
     return (
@@ -133,7 +130,7 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
           </div>
         ) : (
         <>
-        <div className={`space-y-3 pr-1 flex-1 ${showAll ? 'overflow-y-auto max-h-[240px]' : ''}`}>
+        <div className="space-y-3 pr-1 flex-1">
           {topCountries.map((country) => {
             const { name } = getCountryInfo(country.code);
             return (
@@ -151,20 +148,6 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
               </div>);
           })}
         </div>
-        {hasMore &&
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowAll(!showAll)}
-          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-2 shrink-0">
-
-            {showAll ?
-          <>Show less <ChevronUp className="w-3 h-3" /></> :
-
-          <>Show all ({allSorted.length}) <ChevronDown className="w-3 h-3" /></>
-          }
-          </Button>
-        }
         </>
         )}
       </CardContent>
