@@ -94,15 +94,15 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricC
   }
 
   return (
-    <Card className="bg-card border-border">
+    <Card className="bg-card border-border h-full flex flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
           
           Top Placements by {METRIC_LABELS[activeMetric]}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden">
-        <div className={showAll ? "overflow-y-auto max-h-[240px] space-y-3 pr-1" : "space-y-3"}>
+      <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden flex-1">
+        <div className={showAll ? "overflow-y-auto max-h-[240px] space-y-3 pr-1 flex-1" : "space-y-3 flex-1"}>
           {topPlacements.map((placement) =>
           <div key={`${placement.platform}-${placement.placement}`} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
