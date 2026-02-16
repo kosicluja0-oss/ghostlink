@@ -194,12 +194,6 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
                 <TopCountriesCard countries={countries} />
               </div>
 
-              <div>
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Conversion Funnel</h3>
-                <div className="bg-card rounded-lg p-3 border border-border">
-                  <ConversionFunnel clicks={funnel.totalClicks} leads={funnel.totalLeads} sales={funnel.totalSales} />
-                </div>
-              </div>
             </div>
           )}
         </motion.div>
