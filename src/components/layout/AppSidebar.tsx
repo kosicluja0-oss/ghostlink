@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const navItems = [
-  { title: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { title: 'Overview', icon: LayoutDashboard, path: '/dashboard' },
   { title: 'Links', icon: Link2, path: '/links' },
   { title: 'Integrations', icon: Puzzle, path: '/integrations' },
 ];
