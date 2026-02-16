@@ -184,7 +184,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="bg-muted/10 rounded-xl p-2 border border-border/50">
+                <div key={chartMetric} className="bg-muted/10 rounded-xl p-2 border border-border/50 animate-chart-reveal">
                   <MiniAreaChart data={dailyClicks} metric={chartMetric} />
                 </div>
               </div>
