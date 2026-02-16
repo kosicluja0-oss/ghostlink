@@ -417,7 +417,7 @@ const Dashboard = () => {
                                     </span>
                                   </TableCell>
                                   <TableCell className="text-right py-2 px-2 font-mono text-xs hidden sm:table-cell">
-                                    {tx.amount !== null ? <span className="text-foreground font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
+                                    {tx.amount !== null ? <span className="text-[hsl(var(--chart-sales))] font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
                                   </TableCell>
                                   <TableCell className="text-right py-2 px-1.5">
                                     <span className="text-[11px] text-muted-foreground font-mono whitespace-nowrap">
