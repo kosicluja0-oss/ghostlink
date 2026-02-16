@@ -205,10 +205,10 @@ const Dashboard = () => {
 
   // Show only the last 6 events
   const paginatedTransactions = useMemo(() => {
-    return showAllEvents ? filteredTransactions : filteredTransactions.slice(0, 8);
+    return showAllEvents ? filteredTransactions : filteredTransactions.slice(0, 7);
   }, [filteredTransactions, showAllEvents]);
 
-  const hasMoreEvents = filteredTransactions.length > 8;
+  const hasMoreEvents = filteredTransactions.length > 7;
   const handleMetricChange = useCallback((metric: MetricKey) => setActiveMetric(metric), []);
 
   // Calculate stats based on global time range + optional link filter
@@ -399,7 +399,7 @@ const Dashboard = () => {
                       </div>
                     ) : (
                       <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '311px' }}>
-                        <div className="flex-1 min-h-0 overflow-y-auto">
+                        <div className={`flex-1 min-h-0 ${showAllEvents ? 'overflow-y-auto' : 'overflow-hidden'}`}>
                           <Table>
                             <TableBody>
                               {paginatedTransactions.map(tx => (
