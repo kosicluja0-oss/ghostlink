@@ -91,7 +91,7 @@ const Links = () => {
 
               {/* Link Management + Detail Panel side by side */}
               <div className="flex-1 min-h-0 overflow-hidden flex gap-0">
-                <section className={`${detailOpen ? 'w-[50%]' : 'w-[60%]'} flex flex-col transition-all duration-200`}>
+                <section className="w-[60%] flex flex-col shrink-0">
                   <div className="flex items-center justify-start mb-4 shrink-0">
                     <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
                       <Plus className="h-4 w-4 mr-1" />
