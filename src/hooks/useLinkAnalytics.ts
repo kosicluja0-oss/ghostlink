@@ -43,165 +43,113 @@ interface LinkAnalyticsResult {
   error: Error | null;
 }
 
+const EMPTY_FUNNEL: FunnelStats = {
+  totalClicks: 0,
+  totalLeads: 0,
+  totalSales: 0,
+  epc: 0,
+  conversionRate: 0,
+};
+
 /**
- * Fetches 30-day analytics for a single link.
- * 2 DB queries max: clicks + conversions.
+ * Fetches analytics for a single link using a server-side RPC function.
+ * No row-count limits – aggregation happens in Postgres.
  */
 export function useLinkAnalytics(linkId: string | null, days: number | null = 30): LinkAnalyticsResult {
   const { user } = useAuth();
 
-  const cutoff = useMemo(() => {
-    if (days === null) return null; // all-time
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString();
-  }, [days]);
-
-  // Query 1: clicks for this link (last 30 days)
   const {
-    data: clicks,
-    isLoading: clicksLoading,
-    error: clicksError,
+    data: raw,
+    isLoading,
+    error,
   } = useQuery({
-    queryKey: ['link-analytics-clicks', linkId, days, user?.id],
+    queryKey: ['link-analytics', linkId, days, user?.id],
     queryFn: async () => {
-      if (!linkId || !user?.id) return [];
-      let query = supabase
-        .from('clicks')
-        .select('id, created_at, source, country')
-        .eq('link_id', linkId);
-      if (cutoff) {
-        query = query.gte('created_at', cutoff);
-      }
-      const { data, error } = await query.order('created_at', { ascending: true });
+      if (!linkId || !user?.id) return null;
+      const { data, error } = await supabase.rpc('get_link_analytics', {
+        p_link_id: linkId,
+        p_days: days,
+      });
       if (error) throw error;
-      return data ?? [];
+      return data as {
+        daily_clicks: { date: string; clicks: number }[];
+        placements: { source: string; clicks: number; leads: number; sales: number; earnings: number }[];
+        countries: { code: string; clicks: number; leads: number; sales: number; earnings: number }[];
+        funnel: {
+          total_clicks: number;
+          total_leads: number;
+          total_sales: number;
+          total_earnings: number;
+          epc: number;
+          conversion_rate: number;
+        };
+      };
     },
     enabled: !!linkId && !!user?.id,
     staleTime: 1000 * 60 * 5,
   });
 
-  // Query 2: conversions for clicks belonging to this link
-  const clickIds = useMemo(() => (clicks ?? []).map((c) => c.id), [clicks]);
-
-  const {
-    data: conversions,
-    isLoading: conversionsLoading,
-    error: conversionsError,
-  } = useQuery({
-    queryKey: ['link-analytics-conversions', linkId, clickIds.length, user?.id],
-    queryFn: async () => {
-      if (!user?.id || clickIds.length === 0) return [];
-      // Batch in chunks of 200 to stay under Supabase filter limits
-      const all: { type: string; value: number }[] = [];
-      for (let i = 0; i < clickIds.length; i += 200) {
-        const chunk = clickIds.slice(i, i + 200);
-        const { data, error } = await supabase
-          .from('conversions')
-          .select('type, value')
-          .in('click_id', chunk);
-        if (error) throw error;
-        if (data) all.push(...data);
-      }
-      return all;
-    },
-    enabled: !!user?.id && clickIds.length > 0,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  // Compute derived data
+  // Fill daily clicks for fixed-day ranges
   const dailyClicks = useMemo((): DailyClickPoint[] => {
-    const map = new Map<string, number>();
-    const fillDays = days ?? 365; // for all-time, pre-fill based on actual data range
+    const serverDays = raw?.daily_clicks ?? [];
     if (days !== null) {
+      const map = new Map<string, number>();
       for (let i = days - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0, 10);
-        map.set(key, 0);
+        map.set(d.toISOString().slice(0, 10), 0);
       }
+      serverDays.forEach((p) => map.set(p.date, p.clicks));
+      return Array.from(map.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([date, clicks]) => ({ date, clicks }));
     }
-    (clicks ?? []).forEach((c) => {
-      const key = c.created_at.slice(0, 10);
-      map.set(key, (map.get(key) || 0) + 1);
-    });
-    return Array.from(map.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([date, count]) => ({
-        date,
-        clicks: count,
-      }));
-  }, [clicks, days]);
+    // all-time: just return server data sorted
+    return [...serverDays].sort((a, b) => a.date.localeCompare(b.date));
+  }, [raw, days]);
 
   const placements = useMemo((): PlacementData[] => {
-    const countMap = new Map<string, { platform: string; placement: string; clicks: number }>();
-    (clicks ?? []).forEach((c) => {
-      const parsed = parsePlacement(c.source);
-      const key = parsed
-        ? `${parsed.platform}:${parsed.placement}`
-        : 'direct:Direct';
-      const existing = countMap.get(key);
-      if (existing) {
-        existing.clicks++;
-      } else {
-        countMap.set(key, {
-          platform: parsed?.platform ?? 'direct',
-          placement: parsed?.placement ?? 'Direct',
-          clicks: 1,
-        });
-      }
+    return (raw?.placements ?? []).map((p) => {
+      const parsed = parsePlacement(p.source === 'direct' ? null : p.source);
+      return {
+        platform: parsed?.platform ?? 'direct',
+        placement: parsed?.placement ?? 'Direct',
+        clicks: p.clicks,
+        leads: p.leads,
+        sales: p.sales,
+        earnings: Number(p.earnings),
+      };
     });
-    return Array.from(countMap.values())
-      .sort((a, b) => b.clicks - a.clicks)
-      .slice(0, 5)
-      .map((p) => ({
-        ...p,
-        leads: 0,
-        sales: 0,
-        earnings: 0,
-      }));
-  }, [clicks]);
+  }, [raw]);
 
   const countries = useMemo((): CountryData[] => {
-    const countMap = new Map<string, number>();
-    (clicks ?? []).forEach((c) => {
-      const code = c.country?.toUpperCase() || 'UNKNOWN';
-      countMap.set(code, (countMap.get(code) || 0) + 1);
-    });
-    return Array.from(countMap.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([code, clickCount]) => ({
-        code,
-        clicks: clickCount,
-        leads: 0,
-        sales: 0,
-        earnings: 0,
-      }));
-  }, [clicks]);
+    return (raw?.countries ?? []).map((c) => ({
+      code: c.code,
+      clicks: c.clicks,
+      leads: c.leads,
+      sales: c.sales,
+      earnings: Number(c.earnings),
+    }));
+  }, [raw]);
 
   const funnel = useMemo((): FunnelStats => {
-    const totalClicks = (clicks ?? []).length;
-    const leads = (conversions ?? []).filter((c) => c.type === 'lead').length;
-    const sales = (conversions ?? []).filter((c) => c.type === 'sale').length;
-    const totalRevenue = (conversions ?? [])
-      .filter((c) => c.type === 'sale')
-      .reduce((sum, c) => sum + Number(c.value), 0);
+    if (!raw?.funnel) return EMPTY_FUNNEL;
+    const f = raw.funnel;
     return {
-      totalClicks,
-      totalLeads: leads,
-      totalSales: sales,
-      epc: totalClicks > 0 ? totalRevenue / totalClicks : 0,
-      conversionRate: totalClicks > 0 ? (leads / totalClicks) * 100 : 0,
+      totalClicks: f.total_clicks,
+      totalLeads: f.total_leads,
+      totalSales: f.total_sales,
+      epc: Number(f.epc),
+      conversionRate: Number(f.conversion_rate),
     };
-  }, [clicks, conversions]);
+  }, [raw]);
 
   return {
     dailyClicks,
     placements,
     countries,
     funnel,
-    isLoading: clicksLoading || conversionsLoading,
-    error: (clicksError ?? conversionsError) as Error | null,
+    isLoading,
+    error: error as Error | null,
   };
 }
