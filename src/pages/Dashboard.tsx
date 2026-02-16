@@ -398,9 +398,9 @@ const Dashboard = () => {
                                     </button>
                                   </TableCell>
                                   <TableCell className="py-2 px-2 hidden xl:table-cell">
-                                    <span className="text-xs text-foreground truncate max-w-[80px] block">
-                                      {tx.description}
-                                    </span>
+                                    <div className="scale-90 origin-left">
+                                      <PlacementBadge source={tx.placement} />
+                                    </div>
                                   </TableCell>
                                   <TableCell className="text-right py-2 px-2 font-mono text-xs hidden sm:table-cell">
                                     {tx.amount !== null ? <span className="text-[hsl(var(--chart-sales))] font-medium">${tx.amount.toFixed(2)}</span> : <span className="text-muted-foreground">—</span>}
