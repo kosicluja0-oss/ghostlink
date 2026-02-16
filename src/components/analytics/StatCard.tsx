@@ -55,8 +55,8 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative bg-card rounded-lg border transition-ghost",
-        isActive ? "border-primary/60 ring-1 ring-primary/20" : "border-border hover:border-primary/30",
+        "relative bg-card rounded-lg border transition-all duration-200",
+        isActive ? "border-primary/60 ring-1 ring-primary/20" : "border-border hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-sm",
         onClick && "cursor-pointer",
         compact ? "p-3" : "p-5"
       )}
