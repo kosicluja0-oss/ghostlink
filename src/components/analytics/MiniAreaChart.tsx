@@ -34,12 +34,12 @@ const METRIC_CONFIG: Record<ChartMetric, {
     format: (v) => v.toLocaleString(),
   },
   leads: {
-    color: 'hsl(var(--chart-warning))',
+    color: 'hsl(var(--chart-leads))',
     label: 'Leads',
     format: (v) => v.toLocaleString(),
   },
   sales: {
-    color: 'hsl(var(--chart-success))',
+    color: 'hsl(var(--chart-sales))',
     label: 'Sales',
     format: (v) => v.toLocaleString(),
   },
