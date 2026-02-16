@@ -191,7 +191,14 @@ const Dashboard = () => {
     }
   }, [timeRange]);
 
-  // Apply time range filter + optional link filter
+  // Derive activity type filter from activeMetric
+  const activityTypeFilter = useMemo<TransactionType | null>(() => {
+    if (activeMetric === 'leads') return 'lead';
+    if (activeMetric === 'sales') return 'sale';
+    return null; // clicks, revenue, cr, epc → show all
+  }, [activeMetric]);
+
+  // Apply time range filter + optional link filter + metric-based type filter
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
     // Global time range filter
@@ -200,8 +207,12 @@ const Dashboard = () => {
     if (selectedLinkId) {
       filtered = filtered.filter(t => t.linkId === selectedLinkId);
     }
+    // Type filter from KPI card selection
+    if (activityTypeFilter) {
+      filtered = filtered.filter(t => t.type === activityTypeFilter);
+    }
     return filtered;
-  }, [transactions, timeRangeCutoff, selectedLinkId]);
+  }, [transactions, timeRangeCutoff, selectedLinkId, activityTypeFilter]);
 
   // Show only the last 6 events
   const paginatedTransactions = useMemo(() => {
