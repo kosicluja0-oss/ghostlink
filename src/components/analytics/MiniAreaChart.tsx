@@ -44,12 +44,12 @@ const METRIC_CONFIG: Record<ChartMetric, {
     format: (v) => v.toLocaleString(),
   },
   epc: {
-    color: 'hsl(var(--chart-clicks))',
+    color: 'hsl(var(--chart-conversions))',
     label: 'EPC',
     format: (v) => `$${v.toFixed(2)}`,
   },
   cr: {
-    color: 'hsl(var(--chart-clicks))',
+    color: 'hsl(var(--foreground))',
     label: 'CR',
     format: (v) => `${v.toFixed(1)}%`,
   },
