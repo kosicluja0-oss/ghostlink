@@ -23,6 +23,7 @@ interface ActivityEvent {
 
 interface LinkRecentActivityProps {
   linkId: string;
+  typeFilter?: 'lead' | 'sale' | null;
 }
 
 function useRecentLinkActivity(linkId: string) {
@@ -133,17 +134,23 @@ function getDescription(type: EventType): string {
   }
 }
 
-export function LinkRecentActivity({ linkId }: LinkRecentActivityProps) {
+export function LinkRecentActivity({ linkId, typeFilter }: LinkRecentActivityProps) {
   const [showAll, setShowAll] = useState(false);
   const { formatInTimezone } = useTimezone();
   const { data: events, isLoading } = useRecentLinkActivity(linkId);
 
   const displayEvents = useMemo(() => {
     if (!events) return [];
-    return showAll ? events : events.slice(0, 7);
-  }, [events, showAll]);
+    const filtered = typeFilter ? events.filter(e => e.type === typeFilter) : events;
+    return showAll ? filtered : filtered.slice(0, 7);
+  }, [events, showAll, typeFilter]);
 
-  const hasMore = (events?.length || 0) > 7;
+  const totalFiltered = useMemo(() => {
+    if (!events) return 0;
+    return typeFilter ? events.filter(e => e.type === typeFilter).length : events.length;
+  }, [events, typeFilter]);
+
+  const hasMore = totalFiltered > 7;
 
   if (isLoading) {
     return <Skeleton className="h-[200px] rounded-xl" />;
@@ -204,7 +211,7 @@ export function LinkRecentActivity({ linkId }: LinkRecentActivityProps) {
             {showAll ? (
               <>Show less <ChevronUp className="w-3 h-3" /></>
             ) : (
-              <>Show all ({events.length}) <ChevronDown className="w-3 h-3" /></>
+              <>Show all ({totalFiltered}) <ChevronDown className="w-3 h-3" /></>
             )}
           </Button>
         </div>
