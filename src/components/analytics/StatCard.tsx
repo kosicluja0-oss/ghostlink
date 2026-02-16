@@ -77,17 +77,19 @@ export function StatCard({
           {value}
         </p>
         
-        {trend && (
-          <div className={cn("flex items-center gap-1", compact ? "mt-1" : "mt-2")}>
-            <span className={cn(
-              'text-xs font-medium',
-              trend.isPositive ? 'text-success' : 'text-destructive'
-            )}>
-              {trend.isPositive ? '+' : ''}{trend.value}%
-            </span>
-            {!compact && <span className="text-xs text-muted-foreground">vs last period</span>}
-          </div>
-        )}
+        <div className={cn("flex items-center gap-1", compact ? "mt-1 h-4" : "mt-2 h-5")}>
+          {trend && (
+            <>
+              <span className={cn(
+                'text-xs font-medium',
+                trend.isPositive ? 'text-success' : 'text-destructive'
+              )}>
+                {trend.isPositive ? '+' : ''}{trend.value}%
+              </span>
+              {!compact && <span className="text-xs text-muted-foreground">vs last period</span>}
+            </>
+          )}
+        </div>
       </div>
 
       {isLocked && (
