@@ -61,7 +61,7 @@ function KpiItem({ icon, label, value, dimmed, active, onClick, accentColor }: K
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-colors cursor-pointer ${
+      className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-colors cursor-pointer ${
         active
           ? 'bg-primary/10 ring-1 ring-primary/30'
           : 'bg-muted/20 hover:bg-muted/40'
@@ -79,15 +79,15 @@ function LoadingSkeleton() {
     <div className="space-y-6 p-1">
       <div className="grid grid-cols-5 gap-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 rounded-lg" />
+          <Skeleton key={i} className="h-16 rounded-xl" />
         ))}
       </div>
-      <Skeleton className="h-[120px] rounded-lg" />
+      <Skeleton className="h-[120px] rounded-xl" />
       <div className="grid grid-cols-2 gap-3">
-        <Skeleton className="h-[140px] rounded-lg" />
-        <Skeleton className="h-[140px] rounded-lg" />
+        <Skeleton className="h-[140px] rounded-xl" />
+        <Skeleton className="h-[140px] rounded-xl" />
       </div>
-      <Skeleton className="h-[100px] rounded-lg" />
+      <Skeleton className="h-[100px] rounded-xl" />
     </div>
   );
 }
@@ -159,7 +159,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
                 <div className="flex items-center gap-2 mb-2">
                   <Popover onOpenChange={setPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-md bg-card border border-border hover:bg-muted/50">
+                      <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-xl bg-card border border-border hover:bg-muted/50">
                         <CalendarDays className="w-3.5 h-3.5" />
                         {DETAIL_RANGES.find(r => r.value === timeRange)?.label}
                         <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${popoverOpen ? 'rotate-180' : ''}`} />
@@ -171,7 +171,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
                           <button
                             key={range.value}
                             onClick={() => setTimeRange(range.value)}
-                            className={`text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
+                            className={`text-left px-3 py-1.5 text-xs rounded-xl transition-colors ${
                               timeRange === range.value
                                 ? 'bg-primary text-primary-foreground font-medium'
                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
@@ -184,7 +184,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
                     </PopoverContent>
                   </Popover>
                 </div>
-                <div className="bg-muted/10 rounded-lg p-2 border border-border/50">
+                <div className="bg-muted/10 rounded-xl p-2 border border-border/50">
                   <MiniAreaChart data={dailyClicks} metric={chartMetric} />
                 </div>
               </div>
