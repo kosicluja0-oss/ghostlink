@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Skeleton } from '@/components/ui/skeleton';
 import { MiniAreaChart, type ChartMetric } from '@/components/analytics/MiniAreaChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
+import { LinkRecentActivity } from '@/components/links/LinkRecentActivity';
 
 import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
@@ -192,6 +193,8 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
               </div>
 
               <TopPlacementsCard placements={placements} activeMetric={chartMetric === 'epc' ? 'epc' : chartMetric === 'cr' ? 'cr' : chartMetric as MetricKey} metricColor={chartMetric === 'cr' ? 'hsl(var(--foreground))' : chartMetric === 'epc' ? 'hsl(var(--chart-conversions))' : `hsl(var(--chart-${chartMetric}))`} />
+
+              <LinkRecentActivity linkId={link.id} />
 
             </div>
           )}
