@@ -100,7 +100,7 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', metricColor, sele
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden flex-1">
-        <div className="overflow-y-auto space-y-3 pr-1 flex-1">
+        <div className={`space-y-3 pr-1 flex-1 ${showAll ? 'overflow-y-auto max-h-[240px]' : ''}`}>
           {topLinks.map((link) => {
             const isSelected = selectedLinkId === link.id;
             return (
