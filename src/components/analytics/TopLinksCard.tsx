@@ -100,13 +100,13 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', metricColor, sele
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden flex-1">
-        <div className={`space-y-3 pr-1 flex-1 ${showAll ? 'overflow-y-auto max-h-[240px]' : ''}`}>
+        <div className={`space-y-1.5 pr-1 flex-1 ${showAll ? 'overflow-y-auto max-h-[240px]' : ''}`}>
           {topLinks.map((link) => {
             const isSelected = selectedLinkId === link.id;
             return (
               <div
                 key={link.id}
-                className={`space-y-1.5 rounded-lg px-2 py-1 -mx-2 transition-colors cursor-pointer ${
+                className={`space-y-1 rounded-md px-1.5 py-0.5 -mx-1.5 transition-colors cursor-pointer ${
                 isSelected ?
                 'bg-primary/10 ring-1 ring-primary/30' :
                 'hover:bg-muted/50'}`
@@ -114,12 +114,8 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', metricColor, sele
                 onClick={() => handleLinkClick(link.id)}>
 
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
-                    isSelected ? 'bg-primary/20' : 'bg-muted'}`
-                    }>
-                      <Link2 className={`w-3 h-3 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Link2 className={`w-3 h-3 shrink-0 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
                     <span className={`font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                       /{link.alias}
                     </span>
