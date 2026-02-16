@@ -16,8 +16,8 @@ export const ConversionFunnel = forwardRef<HTMLDivElement, ConversionFunnelProps
         label: 'Clicks',
         value: clicks,
         width: 100,
-        color: 'bg-primary',
-        textColor: 'text-primary',
+        color: 'bg-[hsl(var(--chart-clicks))]',
+        textColor: 'text-[hsl(var(--chart-clicks))]',
       },
       {
         label: 'Leads',
