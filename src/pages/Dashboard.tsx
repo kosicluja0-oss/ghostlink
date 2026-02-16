@@ -246,17 +246,17 @@ const Dashboard = () => {
   const getTypeBadge = (type: TransactionType) => {
     switch (type) {
       case 'sale':
-        return <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/25 px-2.5 py-0.5 rounded-full">
+        return <Badge className="bg-[hsl(var(--chart-sales))]/15 text-[hsl(var(--chart-sales))] border-[hsl(var(--chart-sales))]/30 hover:bg-[hsl(var(--chart-sales))]/25 px-2.5 py-0.5 rounded-full">
             <DollarSign className="w-3 h-3 mr-1" />
             Sale
           </Badge>;
       case 'lead':
-        return <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-2.5 py-0.5 rounded-full">
+        return <Badge className="bg-[hsl(var(--chart-leads))]/15 text-[hsl(var(--chart-leads))] border-[hsl(var(--chart-leads))]/30 hover:bg-[hsl(var(--chart-leads))]/25 px-2.5 py-0.5 rounded-full">
             <User className="w-3 h-3 mr-1" />
             Lead
           </Badge>;
       case 'click':
-        return <Badge variant="secondary" className="bg-muted/80 text-muted-foreground border-border px-2.5 py-0.5 rounded-full">
+        return <Badge className="bg-[hsl(var(--chart-clicks))]/15 text-[hsl(var(--chart-clicks))] border-[hsl(var(--chart-clicks))]/30 hover:bg-[hsl(var(--chart-clicks))]/25 px-2.5 py-0.5 rounded-full">
             <MousePointerClick className="w-3 h-3 mr-1" />
             Click
           </Badge>;
