@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MiniAreaChart, type ChartMetric } from '@/components/analytics/MiniAreaChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
 import { TopCountriesCard } from '@/components/analytics/TopCountriesCard';
+import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { useLinkAnalytics } from '@/hooks/useLinkAnalytics';
 import { getDisplayUrl } from '@/lib/trackingUrl';
@@ -190,8 +191,8 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <TopPlacementsCard placements={placements} />
-                <TopCountriesCard countries={countries} />
+                <TopPlacementsCard placements={placements} activeMetric={chartMetric === 'epc' ? 'epc' : chartMetric === 'cr' ? 'cr' : chartMetric as MetricKey} metricColor={chartMetric === 'cr' ? 'hsl(var(--foreground))' : chartMetric === 'epc' ? 'hsl(var(--chart-conversions))' : `hsl(var(--chart-${chartMetric}))`} />
+                <TopCountriesCard countries={countries} activeMetric={chartMetric === 'epc' ? 'epc' : chartMetric === 'cr' ? 'cr' : chartMetric as MetricKey} metricColor={chartMetric === 'cr' ? 'hsl(var(--foreground))' : chartMetric === 'epc' ? 'hsl(var(--chart-conversions))' : `hsl(var(--chart-${chartMetric}))`} />
               </div>
 
             </div>
