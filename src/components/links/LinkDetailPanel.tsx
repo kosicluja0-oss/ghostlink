@@ -1,5 +1,7 @@
-import { ExternalLink, TrendingUp, MousePointerClick, Users, DollarSign, Percent } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ExternalLink, TrendingUp, MousePointerClick, Users, DollarSign, Percent, CalendarDays, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MiniAreaChart } from '@/components/analytics/MiniAreaChart';
 import { TopPlacementsCard } from '@/components/analytics/TopPlacementsCard';
@@ -8,6 +10,22 @@ import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { useLinkAnalytics } from '@/hooks/useLinkAnalytics';
 import { getDisplayUrl } from '@/lib/trackingUrl';
 import type { GhostLink } from '@/types';
+
+type DetailTimeRange = 'all' | '30d' | '7d' | '24h';
+
+const DETAIL_RANGES: { value: DetailTimeRange; label: string }[] = [
+  { value: 'all', label: 'All time history' },
+  { value: '30d', label: '30 day history' },
+  { value: '7d', label: '7 day history' },
+  { value: '24h', label: '24 hours history' },
+];
+
+const RANGE_TO_DAYS: Record<DetailTimeRange, number | null> = {
+  all: null,
+  '30d': 30,
+  '7d': 7,
+  '24h': 1,
+};
 
 interface LinkDetailPanelProps {
   link: GhostLink | null;
@@ -65,8 +83,18 @@ function LoadingSkeleton() {
 }
 
 export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelProps) {
+  const [timeRange, setTimeRange] = useState<DetailTimeRange>('30d');
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  // Reset to 30d whenever the link changes or panel reopens
+  useEffect(() => {
+    setTimeRange('30d');
+  }, [link?.id, open]);
+
+  const days = RANGE_TO_DAYS[timeRange];
   const { dailyClicks, placements, countries, funnel, isLoading } = useLinkAnalytics(
-    open && link ? link.id : null
+    open && link ? link.id : null,
+    days
   );
 
   return (
@@ -116,7 +144,34 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
               </div>
 
               <div>
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">30-Day Clicks</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <Popover onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-md bg-card border border-border hover:bg-muted/50">
+                        <CalendarDays className="w-3.5 h-3.5" />
+                        {DETAIL_RANGES.find(r => r.value === timeRange)?.label}
+                        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${popoverOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-auto p-1.5 bg-card border border-border">
+                      <div className="flex flex-col gap-0.5">
+                        {DETAIL_RANGES.map((range) => (
+                          <button
+                            key={range.value}
+                            onClick={() => setTimeRange(range.value)}
+                            className={`text-left px-3 py-1.5 text-xs rounded-md transition-colors ${
+                              timeRange === range.value
+                                ? 'bg-primary text-primary-foreground font-medium'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                            }`}
+                          >
+                            {range.label}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <div className="bg-muted/10 rounded-lg p-2 border border-border/50">
                   <MiniAreaChart data={dailyClicks} />
                 </div>
