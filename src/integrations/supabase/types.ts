@@ -341,6 +341,10 @@ export type Database = {
         Args: { p_days?: number; p_user_id: string }
         Returns: Json
       }
+      get_link_analytics: {
+        Args: { p_days?: number; p_link_id: string }
+        Returns: Json
+      }
       get_link_limit_info: {
         Args: { p_user_id: string }
         Returns: {
