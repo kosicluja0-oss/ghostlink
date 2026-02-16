@@ -34,21 +34,69 @@ export function StatCard({
 }: StatCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [displayValue, setDisplayValue] = useState(value);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevValueRef = useRef(value);
+  const rafRef = useRef<number | null>(null);
 
-  // Animate value changes
+  // Count-up animation for numeric values
   useEffect(() => {
-    if (prevValueRef.current === value) return;
-    prevValueRef.current = value;
-    setIsTransitioning(true);
-    const t = setTimeout(() => {
+    const valStr = String(value);
+    const prevStr = String(displayValue);
+    if (valStr === prevStr) return;
+
+    // Extract numeric part: supports "$1,234.56", "12.34%", "1,000", plain numbers
+    const parseNum = (s: string) => {
+      const match = s.match(/[\d,.]+/);
+      return match ? parseFloat(match[0].replace(/,/g, '')) : null;
+    };
+
+    const targetNum = parseNum(valStr);
+    const startNum = parseNum(prevStr);
+
+    // If both are numeric, animate; otherwise snap
+    if (targetNum === null || startNum === null || isNaN(targetNum) || isNaN(startNum)) {
       setDisplayValue(value);
-      setIsTransitioning(false);
-    }, 150);
-    return () => clearTimeout(t);
-  }, [value]);
+      return;
+    }
+
+    // Determine formatting from target value string
+    const prefix = valStr.match(/^[^0-9]*/)?.[0] || '';
+    const suffix = valStr.match(/[^0-9.]*$/)?.[0] || '';
+    const decimals = valStr.includes('.') ? (valStr.split('.')[1]?.replace(/[^0-9]/g, '').length || 0) : 0;
+    const useCommas = valStr.includes(',');
+
+    const formatAnimated = (n: number) => {
+      let formatted = decimals > 0 ? n.toFixed(decimals) : Math.round(n).toString();
+      if (useCommas) {
+        const [int, dec] = formatted.split('.');
+        formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (dec ? '.' + dec : '');
+      }
+      return prefix + formatted + suffix;
+    };
+
+    const duration = 400; // ms
+    const startTime = performance.now();
+    const diff = targetNum - startNum;
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = startNum + diff * eased;
+      setDisplayValue(formatAnimated(current));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      } else {
+        // Snap to exact target string to avoid formatting drift
+        setDisplayValue(value);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ... keep existing code (handleMouseEnter, handleMouseLeave, colorClasses)
   const handleMouseEnter = useCallback(() => {
@@ -90,8 +138,6 @@ export function StatCard({
           className={cn(
             !customColor && colorClasses[accentColor],
             compact ? "text-xl font-bold tabular-nums" : "stat-number",
-            "transition-all duration-200",
-            isTransitioning ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"
           )}
           style={customColor ? { color: customColor } : undefined}
         >
@@ -102,9 +148,8 @@ export function StatCard({
           {trend && (
             <>
               <span className={cn(
-                'text-xs font-medium transition-all duration-200',
+                'text-xs font-medium',
                 trend.isPositive ? 'text-success' : 'text-destructive',
-                isTransitioning ? 'opacity-0' : 'opacity-100'
               )}>
                 {trend.isPositive ? '+' : ''}{trend.value}%
               </span>
