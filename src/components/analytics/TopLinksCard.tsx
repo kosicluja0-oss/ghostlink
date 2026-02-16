@@ -1,6 +1,7 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link2 } from 'lucide-react';
+import { AnimatedValue } from './AnimatedValue';
 import type { GhostLink } from '@/types';
 import { useMemo } from 'react';
 import type { MetricKey } from './AnalyticsChart';
@@ -117,9 +118,7 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', metricColor, sele
                       /{link.alias}
                     </span>
                   </div>
-                  <span className="text-muted-foreground font-mono shrink-0 ml-2">
-                    {formatValue(link.metricValue, activeMetric)}
-                  </span>
+                  <AnimatedValue value={formatValue(link.metricValue, activeMetric)} className="text-muted-foreground font-mono shrink-0 ml-2" />
                 </div>
                 <Progress value={link.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
               </div>);

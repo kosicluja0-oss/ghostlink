@@ -4,6 +4,7 @@ import { List, Globe } from 'lucide-react';
 import { CircleFlag } from '@/components/ui/circle-flag';
 import { COUNTRIES } from '@/lib/countries';
 import { useMemo, useState } from 'react';
+import { AnimatedValue } from './AnimatedValue';
 import type { MetricKey } from './AnalyticsChart';
 import { WorldHeatMap } from './WorldHeatMap';
 
@@ -140,9 +141,7 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
                     <CircleFlag code={country.code} size={18} />
                     <span className="text-foreground font-medium">{name}</span>
                   </div>
-                  <span className="text-muted-foreground font-mono">
-                    {formatValue(country.metricValue, activeMetric)}
-                  </span>
+                   <AnimatedValue value={formatValue(country.metricValue, activeMetric)} className="text-muted-foreground font-mono" />
                 </div>
                 <Progress value={country.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
               </div>);

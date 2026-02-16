@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ExternalLink, TrendingUp, MousePointerClick, Users, DollarSign, Percent, CalendarDays, ChevronDown } from 'lucide-react';
+import { AnimatedValue } from '@/components/analytics/AnimatedValue';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -69,7 +70,7 @@ function KpiItem({ icon, label, value, dimmed, active, onClick, accentColor }: K
       } ${dimmed ? 'opacity-50' : ''}`}
     >
       <div style={accentColor ? { color: accentColor } : undefined} className={accentColor ? '' : 'text-muted-foreground'}>{icon}</div>
-      <span className="text-sm font-bold text-foreground tabular-nums">{value}</span>
+      <AnimatedValue value={value} className="text-sm font-bold text-foreground tabular-nums" />
       <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
     </button>
   );
