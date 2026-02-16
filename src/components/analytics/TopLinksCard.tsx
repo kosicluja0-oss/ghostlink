@@ -99,44 +99,45 @@ export const TopLinksCard = ({ links, activeMetric = 'clicks', metricColor, sele
           Top Links by {METRIC_LABELS[activeMetric]}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
-        {topLinks.map((link) => {
-          const isSelected = selectedLinkId === link.id;
-          return (
-            <div
-              key={link.id}
-              className={`space-y-1.5 rounded-lg px-2 py-1.5 -mx-2 transition-colors cursor-pointer ${
-              isSelected ?
-              'bg-primary/10 ring-1 ring-primary/30' :
-              'hover:bg-muted/50'}`
-              }
-              onClick={() => handleLinkClick(link.id)}>
+      <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden">
+        <div className={showAll ? "overflow-y-auto max-h-[240px] space-y-3 pr-1" : "space-y-3"}>
+          {topLinks.map((link) => {
+            const isSelected = selectedLinkId === link.id;
+            return (
+              <div
+                key={link.id}
+                className={`space-y-1.5 rounded-lg px-2 py-1.5 -mx-2 transition-colors cursor-pointer ${
+                isSelected ?
+                'bg-primary/10 ring-1 ring-primary/30' :
+                'hover:bg-muted/50'}`
+                }
+                onClick={() => handleLinkClick(link.id)}>
 
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
-                  isSelected ? 'bg-primary/20' : 'bg-muted'}`
-                  }>
-                    <Link2 className={`w-3 h-3 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
+                    isSelected ? 'bg-primary/20' : 'bg-muted'}`
+                    }>
+                      <Link2 className={`w-3 h-3 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                    </div>
+                    <span className={`font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                      /{link.alias}
+                    </span>
                   </div>
-                  <span className={`font-medium truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                    /{link.alias}
+                  <span className="text-muted-foreground font-mono shrink-0 ml-2">
+                    {formatValue(link.metricValue, activeMetric)}
                   </span>
                 </div>
-                <span className="text-muted-foreground font-mono shrink-0 ml-2">
-                  {formatValue(link.metricValue, activeMetric)}
-                </span>
-              </div>
-              <Progress value={link.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
-            </div>);
-
-        })}
+                <Progress value={link.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
+              </div>);
+          })}
+        </div>
         {hasMore &&
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowAll(!showAll)}
-          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1">
+          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-2 shrink-0">
 
             {showAll ?
           <>Show less <ChevronUp className="w-3 h-3" /></> :

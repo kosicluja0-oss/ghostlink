@@ -109,30 +109,31 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
           Top Countries by {METRIC_LABELS[activeMetric]}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
-        {topCountries.map((country) => {
-          const { name } = getCountryInfo(country.code);
-          return (
-            <div key={country.code} className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <CircleFlag code={country.code} size={18} />
-                  <span className="text-foreground font-medium">{name}</span>
+      <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden">
+        <div className={showAll ? "overflow-y-auto max-h-[240px] space-y-3 pr-1" : "space-y-3"}>
+          {topCountries.map((country) => {
+            const { name } = getCountryInfo(country.code);
+            return (
+              <div key={country.code} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <CircleFlag code={country.code} size={18} />
+                    <span className="text-foreground font-medium">{name}</span>
+                  </div>
+                  <span className="text-muted-foreground font-mono">
+                    {formatValue(country.metricValue, activeMetric)}
+                  </span>
                 </div>
-                <span className="text-muted-foreground font-mono">
-                  {formatValue(country.metricValue, activeMetric)}
-                </span>
-              </div>
-              <Progress value={country.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
-            </div>);
-
-        })}
+                <Progress value={country.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
+              </div>);
+          })}
+        </div>
         {hasMore &&
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowAll(!showAll)}
-          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-1">
+          className="w-full text-xs text-muted-foreground hover:text-foreground gap-1 h-7 mt-2 shrink-0">
 
             {showAll ?
           <>Show less <ChevronUp className="w-3 h-3" /></> :
