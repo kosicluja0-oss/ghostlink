@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { LucideIcon, Lock } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface StatCardProps {
   label: string;
@@ -33,8 +33,24 @@ export function StatCard({
   onClick
 }: StatCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [displayValue, setDisplayValue] = useState(value);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevValueRef = useRef(value);
 
+  // Animate value changes
+  useEffect(() => {
+    if (prevValueRef.current === value) return;
+    prevValueRef.current = value;
+    setIsTransitioning(true);
+    const t = setTimeout(() => {
+      setDisplayValue(value);
+      setIsTransitioning(false);
+    }, 150);
+    return () => clearTimeout(t);
+  }, [value]);
+
+  // ... keep existing code (handleMouseEnter, handleMouseLeave, colorClasses)
   const handleMouseEnter = useCallback(() => {
     if (!tooltip) return;
     timerRef.current = setTimeout(() => setShowTooltip(true), 1000);
@@ -70,19 +86,25 @@ export function StatCard({
       </div>
       
       <div className={cn('relative', isLocked && 'tier-locked')}>
-        <p className={cn(
-          !customColor && colorClasses[accentColor],
-          compact ? "text-xl font-bold tabular-nums" : "stat-number"
-        )} style={customColor ? { color: customColor } : undefined}>
-          {value}
+        <p
+          className={cn(
+            !customColor && colorClasses[accentColor],
+            compact ? "text-xl font-bold tabular-nums" : "stat-number",
+            "transition-all duration-200",
+            isTransitioning ? "opacity-0 translate-y-1" : "opacity-100 translate-y-0"
+          )}
+          style={customColor ? { color: customColor } : undefined}
+        >
+          {displayValue}
         </p>
         
         <div className={cn("flex items-center gap-1", compact ? "mt-1 h-4" : "mt-2 h-5")}>
           {trend && (
             <>
               <span className={cn(
-                'text-xs font-medium',
-                trend.isPositive ? 'text-success' : 'text-destructive'
+                'text-xs font-medium transition-all duration-200',
+                trend.isPositive ? 'text-success' : 'text-destructive',
+                isTransitioning ? 'opacity-0' : 'opacity-100'
               )}>
                 {trend.isPositive ? '+' : ''}{trend.value}%
               </span>
