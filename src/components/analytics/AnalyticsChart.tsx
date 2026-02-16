@@ -226,7 +226,8 @@ function formatTooltipValue(value: number, metric: MetricKey): string {
 const MainChart = memo(({
   displayData,
   activeMetric,
-}: {displayData: any[];activeMetric: MetricKey;}) => {
+  animationKey,
+}: {displayData: any[];activeMetric: MetricKey;animationKey: string;}) => {
   const metricFormat = METRIC_FORMAT[activeMetric];
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -326,7 +327,9 @@ const MainChart = memo(({
           fill="url(#metricGradient)"
           dot={false}
           activeDot={{ r: 4, fill: METRIC_COLORS[activeMetric], stroke: 'hsl(var(--background))', strokeWidth: 2 }}
-          isAnimationActive={false} />
+          isAnimationActive={true}
+          animationDuration={700}
+          animationEasing="ease-out" />
 
       </AreaChart>
     </ResponsiveContainer>);
@@ -517,12 +520,13 @@ export function AnalyticsChart({
         className="h-[240px] w-full relative">
 
         <div
-          key={activeMetric}
+          key={`${activeMetric}-${activeLinkId ?? 'all'}`}
           className="w-full h-full animate-chart-reveal"
         >
           <MainChart
             displayData={chartData}
-            activeMetric={activeMetric} />
+            activeMetric={activeMetric}
+            animationKey={`${activeMetric}-${activeLinkId ?? 'all'}`} />
         </div>
 
         <Watermark />
