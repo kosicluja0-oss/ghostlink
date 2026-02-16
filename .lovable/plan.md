@@ -1,57 +1,35 @@
 
-# Heat Mapa pro Top Countries kartu
+# Odstraneni "Show all" tlacitek z Top karet
 
 ## Co se zmeni
 
-Karta "Top Countries" dostane v pravem hornim rohu prepinac (toggle switch) mezi dvema zobrazenim:
-1. **List view** (soucasny stav) -- tabulka se zeme + progress bary
-2. **Heat Map view** -- kompaktni mapa sveta s barevnym zvyraznenim
+Ze tri karet (Top Links, Top Placements, Top Countries) se odstrani:
+- State `showAll` a jeho setter
+- Import `ChevronDown` a `ChevronUp` ikon (pokud se nepouzivaji jinde)
+- Tlacitko "Show all / Show less" a jeho podminkove renderovani
+- Promenna `hasMore`
+- Podminkove tridy pro scrollovani (`overflow-y-auto max-h-[240px]`)
 
-## Logika "Interest Score"
+Zobrazovat se bude vzdy jen prvnich 5 polozek (`.slice(0, 5)`).
 
-Kazda zeme dostane jedno cislo v procentech reprezentujici celkovou aktivitu. Vypocet:
+## Dotcene soubory
 
-```
-interest = clicks + (leads * 10) + (sales * 50) + (earnings * 2)
-```
+1. **`src/components/analytics/TopLinksCard.tsx`**
+   - Odebrat `useState` pro `showAll`
+   - Odebrat import `ChevronDown`, `ChevronUp`, `Button`
+   - `topLinks` = `allSorted.slice(0, 5)` (bez podminky)
+   - Odebrat `hasMore`
+   - Odebrat tlacitko "Show all/Show less"
+   - Odebrat tridu `overflow-y-auto max-h-[240px]` z kontejneru
 
-Kazda metrika ma jinou vahu, protoze lead je cennejsi nez klik a sale cennejsi nez lead. Earnings se pocitaji s nizsim nasobkem, protoze uz jsou zachyceny v sales. Hodnoty se potom normalizuji na 0-100%, kde zeme s nejvyssim score = 100%.
+2. **`src/components/analytics/TopPlacementsCard.tsx`**
+   - Stejna uprava jako TopLinksCard
 
-Pri najeti kurzoru na stat se zobrazi tooltip: **"Czech Republic: 34.2%"**.
+3. **`src/components/analytics/TopCountriesCard.tsx`**
+   - Stejna uprava jako TopLinksCard (pouze v list view casti)
 
-## UI Design
+## Co se NEMENI
 
-- Prepinac: maly toggle (ikony `List` a `Globe` nebo `Map`) v pravem hornim rohu CardHeader, vedle titulku
-- Heat mapa: SVG mapa sveta (pouzijeme verejne dostupnou zjednodussenou SVG world map s ISO kody)
-- Barvy: gradient od pruhledne/sede (0%) po barvu aktivni metriky (`metricColor`) pro 100%
-- Mapa bude mit pan/zoom pomoci mysi (drag + scroll) ale zustavat ve fixnich rozmerech karty
-- Staty bez dat budou sede
-
-## Technicke kroky
-
-1. **Novy soubor `src/components/analytics/WorldHeatMap.tsx`**
-   - SVG komponenta s cestami pro kazdy stat (ISO 3166-1 alpha-2 kody)
-   - Pouzije zjednodussenou SVG world map (inline, cca 50 nejdulezitejsich zemi + "rest of world" skupiny)
-   - Prijem dat: `countries: CountryData[]`, `metricColor: string`
-   - Interni vypocet interest score a normalizace
-   - Hover tooltip s nazvem zeme + procenta
-   - Interni pan/zoom stav (transform matrix) -- drag mysi pro posun, scroll pro zoom
-   - Kontejner s `overflow: hidden` a fixni vyskou aby nepresahoval kartu
-
-2. **Uprava `src/components/analytics/TopCountriesCard.tsx`**
-   - Novy state: `viewMode: 'list' | 'map'`
-   - Do CardHeader pridat toggle prepinac (dve male ikony `List` a `Globe`)
-   - Podminkove renderovani: list view (soucasny kod) nebo `<WorldHeatMap />` komponenta
-   - Props se nemeni -- karta prijima stejna data jako dosud
-
-3. **Novy soubor `src/lib/worldMapPaths.ts`**
-   - Export SVG path data pro jednotlive staty (klicovane ISO kodem)
-   - Zjednodussena verze -- cca 60 nejdulezitejsich zemi s rozpoznatelnymi tvary
-
-## Vizualni chovani
-
-- Mapa zabira presne stejny prostor jako list view (zadna zmena velikosti karty)
-- Zoom: scroll kolecekem (min 1x, max 4x)
-- Pan: drag mysi
-- Reset: double-click vrati na vychozi pozici
-- Tooltip: maly popup u kurzoru s vlajkou + nazev + procenta
+- Zadna jina logika, styling, props ani struktura karet
+- Heat mapa zustava beze zmeny
+- Razeni a vypocty metrik zustavaji beze zmeny
