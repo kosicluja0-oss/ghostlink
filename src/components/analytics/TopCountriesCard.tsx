@@ -1,11 +1,12 @@
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, List, Globe } from 'lucide-react';
 import { CircleFlag } from '@/components/ui/circle-flag';
 import { COUNTRIES } from '@/lib/countries';
 import { useMemo, useState } from 'react';
 import type { MetricKey } from './AnalyticsChart';
 import { Button } from '@/components/ui/button';
+import { WorldHeatMap } from './WorldHeatMap';
 
 export interface CountryData {
   code: string;
@@ -64,6 +65,7 @@ function formatValue(value: number, metric: MetricKey): string {
 
 export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricColor }: TopCountriesCardProps) => {
   const [showAll, setShowAll] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const allSorted = useMemo(() => {
     const withValues = countries.map((c) => ({
@@ -104,12 +106,33 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
   return (
     <Card className="bg-card border-border h-full flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
-          
-          Top Countries by {METRIC_LABELS[activeMetric]}
+        <CardTitle className="text-sm font-medium flex items-center justify-between text-foreground">
+          <span className="flex items-center gap-2">
+            Top Countries {viewMode === 'list' ? `by ${METRIC_LABELS[activeMetric]}` : '— Interest'}
+          </span>
+          <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1 rounded transition-colors ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`p-1 rounded transition-colors ${viewMode === 'map' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 flex flex-col min-h-0 overflow-hidden flex-1">
+        {viewMode === 'map' ? (
+          <div className="flex-1 min-h-[180px]">
+            <WorldHeatMap countries={countries} metricColor={metricColor} />
+          </div>
+        ) : (
+        <>
         <div className={`space-y-3 pr-1 flex-1 ${showAll ? 'overflow-y-auto max-h-[240px]' : ''}`}>
           {topCountries.map((country) => {
             const { name } = getCountryInfo(country.code);
@@ -142,6 +165,8 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
           }
           </Button>
         }
+        </>
+        )}
       </CardContent>
     </Card>);
 
