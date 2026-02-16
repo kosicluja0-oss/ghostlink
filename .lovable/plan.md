@@ -1,30 +1,57 @@
 
-## Přesun uživatelského profilu a odhlášení z lišty do Settings
+# Heat Mapa pro Top Countries kartu
 
-### Co se změní
+## Co se zmeni
 
-1. **Sidebar (AppSidebar.tsx)** -- kompletně odstraním celou footer sekci (avatar, email, tier badge, tlačítko odhlášení). Sidebar bude končit navigačním menu, čímž bude vizuálně čistší.
+Karta "Top Countries" dostane v pravem hornim rohu prepinac (toggle switch) mezi dvema zobrazenim:
+1. **List view** (soucasny stav) -- tabulka se zeme + progress bary
+2. **Heat Map view** -- kompaktni mapa sveta s barevnym zvyraznenim
 
-2. **Settings stránka** -- do footer sekce (vedle Contact Support, Download My Data, Delete Account) přidám tlačítko **"Sign Out"** s ikonou `LogOut`. Bude mít stejný ghost styl jako ostatní tlačítka v patičce.
+## Logika "Interest Score"
 
-3. **Zjednodušení props** -- z `AppSidebar` odstraním props `userEmail`, `userTier` a `onSignOut`, které už nebudou potřeba. Všechny stránky (Dashboard, Links, Integrations, Settings), které tyto props předávají, se odpovídajícím způsobem vyčistí.
+Kazda zeme dostane jedno cislo v procentech reprezentujici celkovou aktivitu. Vypocet:
 
-### Technické detaily
-
-**`src/components/layout/AppSidebar.tsx`:**
-- Smazat celý `SidebarFooter` blok (řádky ~171-223)
-- Odstranit nepoužívané importy (`Avatar`, `AvatarFallback`, `LogOut`, `SidebarFooter`, `SidebarSeparator`)
-- Odstranit props `userEmail`, `userTier`, `onSignOut` z interface
-
-**`src/pages/Settings.tsx`:**
-- Do footer sekce přidat:
-```tsx
-<Button variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-muted/50" onClick={signOut}>
-  <LogOut className="w-4 h-4 mr-2" />
-  Sign Out
-</Button>
+```
+interest = clicks + (leads * 10) + (sales * 50) + (earnings * 2)
 ```
 
-**`src/pages/Dashboard.tsx`, `Links.tsx`, `Integrations.tsx`:**
-- Odebrat předávání `userEmail`, `userTier`, `onSignOut` do `AppSidebar`
+Kazda metrika ma jinou vahu, protoze lead je cennejsi nez klik a sale cennejsi nez lead. Earnings se pocitaji s nizsim nasobkem, protoze uz jsou zachyceny v sales. Hodnoty se potom normalizuji na 0-100%, kde zeme s nejvyssim score = 100%.
 
+Pri najeti kurzoru na stat se zobrazi tooltip: **"Czech Republic: 34.2%"**.
+
+## UI Design
+
+- Prepinac: maly toggle (ikony `List` a `Globe` nebo `Map`) v pravem hornim rohu CardHeader, vedle titulku
+- Heat mapa: SVG mapa sveta (pouzijeme verejne dostupnou zjednodussenou SVG world map s ISO kody)
+- Barvy: gradient od pruhledne/sede (0%) po barvu aktivni metriky (`metricColor`) pro 100%
+- Mapa bude mit pan/zoom pomoci mysi (drag + scroll) ale zustavat ve fixnich rozmerech karty
+- Staty bez dat budou sede
+
+## Technicke kroky
+
+1. **Novy soubor `src/components/analytics/WorldHeatMap.tsx`**
+   - SVG komponenta s cestami pro kazdy stat (ISO 3166-1 alpha-2 kody)
+   - Pouzije zjednodussenou SVG world map (inline, cca 50 nejdulezitejsich zemi + "rest of world" skupiny)
+   - Prijem dat: `countries: CountryData[]`, `metricColor: string`
+   - Interni vypocet interest score a normalizace
+   - Hover tooltip s nazvem zeme + procenta
+   - Interni pan/zoom stav (transform matrix) -- drag mysi pro posun, scroll pro zoom
+   - Kontejner s `overflow: hidden` a fixni vyskou aby nepresahoval kartu
+
+2. **Uprava `src/components/analytics/TopCountriesCard.tsx`**
+   - Novy state: `viewMode: 'list' | 'map'`
+   - Do CardHeader pridat toggle prepinac (dve male ikony `List` a `Globe`)
+   - Podminkove renderovani: list view (soucasny kod) nebo `<WorldHeatMap />` komponenta
+   - Props se nemeni -- karta prijima stejna data jako dosud
+
+3. **Novy soubor `src/lib/worldMapPaths.ts`**
+   - Export SVG path data pro jednotlive staty (klicovane ISO kodem)
+   - Zjednodussena verze -- cca 60 nejdulezitejsich zemi s rozpoznatelnymi tvary
+
+## Vizualni chovani
+
+- Mapa zabira presne stejny prostor jako list view (zadna zmena velikosti karty)
+- Zoom: scroll kolecekem (min 1x, max 4x)
+- Pan: drag mysi
+- Reset: double-click vrati na vychozi pozici
+- Tooltip: maly popup u kurzoru s vlajkou + nazev + procenta
