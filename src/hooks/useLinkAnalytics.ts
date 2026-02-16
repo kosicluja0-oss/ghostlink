@@ -47,14 +47,15 @@ interface LinkAnalyticsResult {
  * Fetches 30-day analytics for a single link.
  * 2 DB queries max: clicks + conversions.
  */
-export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
+export function useLinkAnalytics(linkId: string | null, days: number | null = 30): LinkAnalyticsResult {
   const { user } = useAuth();
 
   const cutoff = useMemo(() => {
+    if (days === null) return null; // all-time
     const d = new Date();
-    d.setDate(d.getDate() - 30);
+    d.setDate(d.getDate() - days);
     return d.toISOString();
-  }, []);
+  }, [days]);
 
   // Query 1: clicks for this link (last 30 days)
   const {
@@ -62,15 +63,17 @@ export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
     isLoading: clicksLoading,
     error: clicksError,
   } = useQuery({
-    queryKey: ['link-analytics-clicks', linkId, user?.id],
+    queryKey: ['link-analytics-clicks', linkId, days, user?.id],
     queryFn: async () => {
       if (!linkId || !user?.id) return [];
-      const { data, error } = await supabase
+      let query = supabase
         .from('clicks')
         .select('id, created_at, source, country')
-        .eq('link_id', linkId)
-        .gte('created_at', cutoff)
-        .order('created_at', { ascending: true });
+        .eq('link_id', linkId);
+      if (cutoff) {
+        query = query.gte('created_at', cutoff);
+      }
+      const { data, error } = await query.order('created_at', { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
@@ -109,22 +112,26 @@ export function useLinkAnalytics(linkId: string | null): LinkAnalyticsResult {
   // Compute derived data
   const dailyClicks = useMemo((): DailyClickPoint[] => {
     const map = new Map<string, number>();
-    // Pre-fill 30 days
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      map.set(key, 0);
+    const fillDays = days ?? 365; // for all-time, pre-fill based on actual data range
+    if (days !== null) {
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        map.set(key, 0);
+      }
     }
     (clicks ?? []).forEach((c) => {
       const key = c.created_at.slice(0, 10);
-      if (map.has(key)) map.set(key, (map.get(key) || 0) + 1);
+      map.set(key, (map.get(key) || 0) + 1);
     });
-    return Array.from(map.entries()).map(([date, count]) => ({
-      date,
-      clicks: count,
-    }));
-  }, [clicks]);
+    return Array.from(map.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([date, count]) => ({
+        date,
+        clicks: count,
+      }));
+  }, [clicks, days]);
 
   const placements = useMemo((): PlacementData[] => {
     const countMap = new Map<string, { platform: string; placement: string; clicks: number }>();
