@@ -2,6 +2,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlatformIcon } from '@/components/ui/platform-icon';
 import { useMemo } from 'react';
+import { AnimatedValue } from './AnimatedValue';
 import type { MetricKey } from './AnalyticsChart';
 
 export interface PlacementData {
@@ -108,9 +109,7 @@ export const TopPlacementsCard = ({ placements, activeMetric = 'clicks', metricC
                     {placement.platform === 'direct' ? 'Direct' : placement.placement}
                   </span>
                 </div>
-                <span className="text-muted-foreground font-mono">
-                  {formatValue(placement.metricValue, activeMetric)}
-                </span>
+                <AnimatedValue value={formatValue(placement.metricValue, activeMetric)} className="text-muted-foreground font-mono" />
               </div>
               <Progress value={placement.percentage} className="h-1.5 bg-muted" indicatorColor={metricColor} />
             </div>
