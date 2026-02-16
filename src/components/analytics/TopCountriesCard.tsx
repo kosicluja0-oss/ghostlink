@@ -108,18 +108,18 @@ export const TopCountriesCard = ({ countries, activeMetric = 'clicks', metricCol
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center justify-between text-foreground">
           <span className="flex items-center gap-2">
-            Top Countries {viewMode === 'list' ? `by ${METRIC_LABELS[activeMetric]}` : '— Interest'}
+            Top Countries by Interest
           </span>
-          <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1 rounded transition-colors ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`p-1 rounded transition-colors ${viewMode === 'list' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <List className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('map')}
-              className={`p-1 rounded transition-colors ${viewMode === 'map' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`p-1 rounded transition-colors ${viewMode === 'map' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Globe className="w-3.5 h-3.5" />
             </button>
