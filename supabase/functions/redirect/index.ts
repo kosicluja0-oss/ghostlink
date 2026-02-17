@@ -135,12 +135,25 @@ Deno.serve(async (req) => {
       console.log(`Click logged for link: ${link.id}, click_id: ${clickData?.id}, source: ${source}, country: ${country}`);
     }
 
+    // Append gl_click parameter to target URL for precise attribution
+    let finalUrl = link.target_url;
+    if (clickData?.id) {
+      try {
+        const targetUrlObj = new URL(finalUrl);
+        targetUrlObj.searchParams.set('gl_click', clickData.id);
+        finalUrl = targetUrlObj.toString();
+      } catch {
+        // If URL parsing fails, append manually
+        finalUrl += (finalUrl.includes('?') ? '&' : '?') + `gl_click=${clickData.id}`;
+      }
+    }
+
     // Direct redirect
     return new Response(null, {
       status: 302,
       headers: {
         ...corsHeaders,
-        'Location': link.target_url,
+        'Location': finalUrl,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     });

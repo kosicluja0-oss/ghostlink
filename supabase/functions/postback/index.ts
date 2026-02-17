@@ -149,41 +149,63 @@ Deno.serve(async (req) => {
 
       const assignedLinkIds = (assignedLinks || []).map((r: { link_id: string }) => r.link_id);
 
-      // Find the most recent click for attribution
+      // --- Precise attribution via gl_click ---
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const glClick = (payload['gl_click'] || payload['click_id'] || url.searchParams.get('gl_click')) as string | undefined;
+
       let attributedClickId: string | null = null;
 
-      if (assignedLinkIds.length > 0) {
-        // Specific links assigned — find recent click across assigned links
-        const { data: recentClick } = await supabase
+      if (glClick && typeof glClick === 'string' && uuidRegex.test(glClick)) {
+        // Verify click exists and belongs to one of the assigned/user links
+        const { data: exactClick } = await supabase
           .from('clicks')
-          .select('id')
-          .in('link_id', assignedLinkIds)
-          .order('created_at', { ascending: false })
-          .limit(1)
+          .select('id, link_id')
+          .eq('id', glClick)
           .single();
 
-        if (recentClick) {
-          attributedClickId = recentClick.id;
+        if (exactClick) {
+          let validLinkIds: string[] = assignedLinkIds;
+          if (validLinkIds.length === 0) {
+            // Global mode — get all user links
+            const { data: userLinks } = await supabase
+              .from('links')
+              .select('id')
+              .eq('user_id', integration.user_id);
+            validLinkIds = (userLinks || []).map((l: { id: string }) => l.id);
+          }
+          if (validLinkIds.includes(exactClick.link_id)) {
+            attributedClickId = exactClick.id;
+            console.log('Precise attribution via gl_click:', attributedClickId);
+          }
         }
-      } else {
-        // "All Links (Global)" — no specific links assigned, search all user's links
-        const { data: userLinks } = await supabase
-          .from('links')
-          .select('id')
-          .eq('user_id', integration.user_id);
+      }
 
-        if (userLinks && userLinks.length > 0) {
-          const linkIds = userLinks.map((l: { id: string }) => l.id);
+      // --- Fallback: most recent click ---
+      if (!attributedClickId) {
+        if (assignedLinkIds.length > 0) {
           const { data: recentClick } = await supabase
             .from('clicks')
-            .select('id, link_id')
-            .in('link_id', linkIds)
+            .select('id')
+            .in('link_id', assignedLinkIds)
             .order('created_at', { ascending: false })
             .limit(1)
             .single();
-
-          if (recentClick) {
-            attributedClickId = recentClick.id;
+          if (recentClick) attributedClickId = recentClick.id;
+        } else {
+          const { data: userLinks } = await supabase
+            .from('links')
+            .select('id')
+            .eq('user_id', integration.user_id);
+          if (userLinks && userLinks.length > 0) {
+            const linkIds = userLinks.map((l: { id: string }) => l.id);
+            const { data: recentClick } = await supabase
+              .from('clicks')
+              .select('id')
+              .in('link_id', linkIds)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            if (recentClick) attributedClickId = recentClick.id;
           }
         }
       }
