@@ -111,6 +111,42 @@ export type Database = {
           },
         ]
       }
+      integration_links: {
+        Row: {
+          created_at: string
+          id: string
+          integration_id: string
+          link_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          integration_id: string
+          link_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          integration_id?: string
+          link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_links_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integration_links_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integrations: {
         Row: {
           config: Json | null

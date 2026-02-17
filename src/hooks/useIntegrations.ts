@@ -105,7 +105,31 @@ export function useIntegrations() {
     enabled: !!user?.id,
   });
 
-  // Get integration status for a service — no special cases
+  // Fetch integration_links for all user's integrations
+  const { data: dbIntegrationLinks } = useQuery({
+    queryKey: ['integration-links', user?.id],
+    queryFn: async (): Promise<{ id: string; integration_id: string; link_id: string }[]> => {
+      if (!dbIntegrations || dbIntegrations.length === 0) return [];
+      const integrationIds = dbIntegrations.map(i => i.id);
+      const client = supabase as any;
+      const { data, error } = await client
+        .from('integration_links')
+        .select('id, integration_id, link_id')
+        .in('integration_id', integrationIds);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id && !!dbIntegrations && dbIntegrations.length > 0,
+  });
+
+  // Get assigned link IDs for an integration
+  const getAssignedLinkIds = (integrationId: string): string[] => {
+    return (dbIntegrationLinks || [])
+      .filter(il => il.integration_id === integrationId)
+      .map(il => il.link_id);
+  };
+
+  // Get integration status for a service
   const getIntegrationStatus = (serviceId: string): IntegrationStatus => {
     const integration = dbIntegrations?.find(i => i.service_id === serviceId);
     return (integration?.status as IntegrationStatus) || 'not_connected';
@@ -116,7 +140,7 @@ export function useIntegrations() {
     return dbIntegrations?.find(i => i.service_id === serviceId);
   };
 
-  // Connect a new integration — generates unique token and assigns link
+  // Connect a new integration
   const connectMutation = useMutation({
     mutationFn: async ({ serviceId, linkId, config, webhookToken }: { serviceId: string; linkId?: string | null; config?: Record<string, unknown>; webhookToken?: string }) => {
       if (!user?.id) throw new Error('User not authenticated');
@@ -137,10 +161,22 @@ export function useIntegrations() {
       });
       
       if (error) throw error;
-      return data as UserIntegration;
+      const result = data as UserIntegration;
+
+      // Also insert into integration_links if a specific link was chosen
+      if (linkId && result?.id) {
+        const client = supabase as any;
+        await client.from('integration_links').upsert(
+          { integration_id: result.id, link_id: linkId },
+          { onConflict: 'integration_id,link_id' }
+        );
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      queryClient.invalidateQueries({ queryKey: ['integration-links'] });
     },
   });
 
@@ -168,7 +204,39 @@ export function useIntegrations() {
     },
   });
 
-  // Update integration's assigned link
+  // Update integration's assigned links (multi-link)
+  const updateLinksMutation = useMutation({
+    mutationFn: async ({ serviceId, linkIds }: { serviceId: string; linkIds: string[] }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      const integration = dbIntegrations?.find(i => i.service_id === serviceId);
+      if (!integration) throw new Error('Integration not found');
+
+      const client = supabase as any;
+      
+      // Delete all existing integration_links for this integration
+      await client.from('integration_links').delete().eq('integration_id', integration.id);
+      
+      // Insert new ones
+      if (linkIds.length > 0) {
+        const rows = linkIds.map(linkId => ({ integration_id: integration.id, link_id: linkId }));
+        const { error } = await client.from('integration_links').insert(rows);
+        if (error) throw error;
+      }
+
+      // Also update the legacy link_id column for backwards compat
+      await queryIntegrations(user.id, 'update', {
+        serviceId,
+        data: { link_id: linkIds.length === 1 ? linkIds[0] : null }
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      queryClient.invalidateQueries({ queryKey: ['integration-links'] });
+    },
+  });
+
+  // Keep legacy updateLink for backward compat
   const updateLinkMutation = useMutation({
     mutationFn: async ({ serviceId, linkId }: { serviceId: string; linkId: string | null }) => {
       if (!user?.id) throw new Error('User not authenticated');
@@ -185,6 +253,7 @@ export function useIntegrations() {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
     },
   });
+
   const disconnectMutation = useMutation({
     mutationFn: async (serviceId: string) => {
       if (!user?.id) throw new Error('User not authenticated');
@@ -194,6 +263,7 @@ export function useIntegrations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['integrations'] });
+      queryClient.invalidateQueries({ queryKey: ['integration-links'] });
     },
   });
 
@@ -202,9 +272,11 @@ export function useIntegrations() {
     isLoading,
     getIntegrationStatus,
     getIntegration,
+    getAssignedLinkIds,
     connect: connectMutation.mutateAsync,
     updateStatus: updateStatusMutation.mutateAsync,
     updateLink: updateLinkMutation.mutateAsync,
+    updateLinks: updateLinksMutation.mutateAsync,
     disconnect: disconnectMutation.mutateAsync,
     isConnecting: connectMutation.isPending,
     isDisconnecting: disconnectMutation.isPending,
