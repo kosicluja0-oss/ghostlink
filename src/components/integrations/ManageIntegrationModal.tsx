@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Check, Unplug, RefreshCw, Clock } from 'lucide-react';
+import { Copy, Check, Unplug, RefreshCw, Clock, Zap, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -57,6 +57,8 @@ export function ManageIntegrationModal({
   const [copied, setCopied] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isUpdatingLink, setIsUpdatingLink] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
 
   if (!integration || !dbIntegration) return null;
 
@@ -96,6 +98,38 @@ export function ManageIntegrationModal({
       toast.error('Failed to update link');
     } finally {
       setIsUpdatingLink(false);
+    }
+  };
+
+  const handleTestWebhook = async () => {
+    if (!webhookUrl) return;
+    setIsTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'lead',
+          value: 0,
+          event: 'test',
+          source: 'ghost_link_test',
+        }),
+      });
+      if (res.ok) {
+        setTestResult('success');
+        toast.success('Test webhook sent successfully! Check your dashboard for the test lead.');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setTestResult('error');
+        toast.error(`Webhook test failed: ${(data as Record<string, string>).message || res.statusText}`);
+      }
+    } catch {
+      setTestResult('error');
+      toast.error('Failed to reach webhook endpoint');
+    } finally {
+      setIsTesting(false);
+      setTimeout(() => setTestResult(null), 4000);
     }
   };
 
@@ -189,13 +223,48 @@ export function ManageIntegrationModal({
             </Select>
           </div>
 
+          {/* Test Webhook */}
+          <div>
+            <Button
+              variant="outline"
+              className={`w-full ${
+                testResult === 'success'
+                  ? 'border-success/30 text-success hover:bg-success/10'
+                  : testResult === 'error'
+                  ? 'border-destructive/30 text-destructive hover:bg-destructive/10'
+                  : 'border-border'
+              }`}
+              onClick={handleTestWebhook}
+              disabled={isTesting}
+            >
+              {isTesting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : testResult === 'success' ? (
+                <Check className="w-4 h-4 mr-2" />
+              ) : testResult === 'error' ? (
+                <Unplug className="w-4 h-4 mr-2" />
+              ) : (
+                <Zap className="w-4 h-4 mr-2" />
+              )}
+              {isTesting
+                ? 'Sending test...'
+                : testResult === 'success'
+                ? 'Test passed!'
+                : testResult === 'error'
+                ? 'Test failed'
+                : 'Send Test Webhook'}
+            </Button>
+            <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+              Sends a test lead (value $0) to verify connectivity
+            </p>
+          </div>
+
           {/* Connected At */}
           {dbIntegration.connected_at && (
             <div className="text-xs text-muted-foreground">
               Connected since: {formatDate(dbIntegration.connected_at)}
             </div>
           )}
-
           {/* Disconnect */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
