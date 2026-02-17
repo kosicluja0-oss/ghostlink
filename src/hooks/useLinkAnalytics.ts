@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -60,6 +61,7 @@ const EMPTY_FUNNEL: FunnelStats = {
  */
 export function useLinkAnalytics(linkId: string | null, days: number | null = 30): LinkAnalyticsResult {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const {
     data: raw,
@@ -91,6 +93,25 @@ export function useLinkAnalytics(linkId: string | null, days: number | null = 30
     enabled: !!linkId && !!user?.id,
     staleTime: 1000 * 60 * 5,
   });
+
+  // Realtime subscription for conversions — invalidate cache on new events
+  useEffect(() => {
+    if (!linkId || !user?.id) return;
+
+    const channel = supabase
+      .channel(`link-analytics-${linkId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'conversions' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['link-analytics', linkId] });
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'clicks' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['link-analytics', linkId] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [linkId, user?.id, queryClient]);
 
   // Fill daily clicks for fixed-day ranges
   const dailyClicks = useMemo((): DailyClickPoint[] => {

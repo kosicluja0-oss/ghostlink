@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Check, Unplug, RefreshCw, Clock, Zap, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -8,13 +8,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +20,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Integration } from './IntegrationCard';
 import type { UserIntegration } from '@/hooks/useIntegrations';
 
@@ -41,8 +35,9 @@ interface ManageIntegrationModalProps {
   integration: Integration | null;
   dbIntegration: UserIntegration | undefined;
   links: Link[];
+  assignedLinkIds: string[];
   onDisconnect: (serviceId: string) => Promise<void>;
-  onUpdateLink: (serviceId: string, linkId: string | null) => Promise<void>;
+  onUpdateLinks: (serviceId: string, linkIds: string[]) => Promise<void>;
 }
 
 export function ManageIntegrationModal({
@@ -51,19 +46,26 @@ export function ManageIntegrationModal({
   integration,
   dbIntegration,
   links,
+  assignedLinkIds,
   onDisconnect,
-  onUpdateLink,
+  onUpdateLinks,
 }: ManageIntegrationModalProps) {
   const [copied, setCopied] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [isUpdatingLink, setIsUpdatingLink] = useState(false);
+  const [isUpdatingLinks, setIsUpdatingLinks] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
+
+  // Sync selected links when modal opens or assignedLinkIds change
+  useEffect(() => {
+    setSelectedLinkIds(assignedLinkIds);
+  }, [assignedLinkIds, open]);
 
   if (!integration || !dbIntegration) return null;
 
   const webhookUrl = dbIntegration.webhook_url || '';
-  const currentLinkId = dbIntegration.link_id || 'all';
+  const isGlobalMode = selectedLinkIds.length === 0;
 
   const handleCopy = async () => {
     try {
@@ -89,17 +91,31 @@ export function ManageIntegrationModal({
     }
   };
 
-  const handleLinkChange = async (value: string) => {
-    setIsUpdatingLink(true);
+  const handleToggleLink = (linkId: string) => {
+    setSelectedLinkIds((prev) =>
+      prev.includes(linkId) ? prev.filter((id) => id !== linkId) : [...prev, linkId]
+    );
+  };
+
+  const handleToggleGlobal = () => {
+    setSelectedLinkIds([]);
+  };
+
+  const handleSaveLinks = async () => {
+    setIsUpdatingLinks(true);
     try {
-      await onUpdateLink(integration.id, value === 'all' ? null : value);
+      await onUpdateLinks(integration.id, selectedLinkIds);
       toast.success('Link assignment updated');
     } catch {
-      toast.error('Failed to update link');
+      toast.error('Failed to update links');
     } finally {
-      setIsUpdatingLink(false);
+      setIsUpdatingLinks(false);
     }
   };
+
+  // Check if link selection changed
+  const linksChanged =
+    JSON.stringify([...selectedLinkIds].sort()) !== JSON.stringify([...assignedLinkIds].sort());
 
   const handleTestWebhook = async () => {
     if (!webhookUrl) return;
@@ -201,26 +217,48 @@ export function ManageIntegrationModal({
             </div>
           </div>
 
-          {/* Assigned Link */}
+          {/* Assigned Links (Multi-select) */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Assigned Link</label>
-            <Select
-              value={currentLinkId}
-              onValueChange={handleLinkChange}
-              disabled={isUpdatingLink}
-            >
-              <SelectTrigger className="bg-background border-border">
-                <SelectValue placeholder="Select a link" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border">
-                <SelectItem value="all">All Links (Global)</SelectItem>
-                {links.map((link) => (
-                  <SelectItem key={link.id} value={link.id}>
-                    {link.alias}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Assigned Links</label>
+            <div className="bg-background rounded-lg border border-border p-3 space-y-2 max-h-48 overflow-y-auto">
+              {/* Global option */}
+              <label className="flex items-center gap-2.5 cursor-pointer py-1 px-1 rounded hover:bg-muted/50 transition-colors">
+                <Checkbox
+                  checked={isGlobalMode}
+                  onCheckedChange={handleToggleGlobal}
+                />
+                <span className="text-sm text-foreground font-medium">All Links (Global)</span>
+              </label>
+              {links.length > 0 && (
+                <div className="border-t border-border pt-2 space-y-1">
+                  {links.map((link) => (
+                    <label
+                      key={link.id}
+                      className="flex items-center gap-2.5 cursor-pointer py-1 px-1 rounded hover:bg-muted/50 transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedLinkIds.includes(link.id)}
+                        onCheckedChange={() => handleToggleLink(link.id)}
+                      />
+                      <span className="text-sm text-foreground">{link.alias}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            {linksChanged && (
+              <Button
+                size="sm"
+                className="mt-2 w-full"
+                onClick={handleSaveLinks}
+                disabled={isUpdatingLinks}
+              >
+                {isUpdatingLinks ? (
+                  <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                ) : null}
+                Save Link Assignment
+              </Button>
+            )}
           </div>
 
           {/* Test Webhook */}

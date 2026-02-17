@@ -76,9 +76,10 @@ const Integrations = () => {
   const {
     getIntegrationStatus,
     getIntegration,
+    getAssignedLinkIds,
     connect,
     disconnect,
-    updateLink,
+    updateLinks,
     isConnecting,
     isLoading: integrationsLoading,
   } = useIntegrations();
@@ -147,10 +148,10 @@ const Integrations = () => {
     await disconnect(serviceId);
   }, [disconnect]);
 
-  // Update link handler
-  const handleUpdateLink = useCallback(async (serviceId: string, linkId: string | null) => {
-    await updateLink({ serviceId, linkId });
-  }, [updateLink]);
+  // Update links handler (multi-link)
+  const handleUpdateLinks = useCallback(async (serviceId: string, linkIds: string[]) => {
+    await updateLinks({ serviceId, linkIds });
+  }, [updateLinks]);
 
   const connectedCount = integrationsWithStatus.filter((i) => i.status === 'connected').length;
   const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
@@ -264,8 +265,9 @@ const Integrations = () => {
           integration={selectedIntegration}
           dbIntegration={selectedDbIntegration}
           links={linkOptions}
+          assignedLinkIds={selectedDbIntegration ? getAssignedLinkIds(selectedDbIntegration.id) : []}
           onDisconnect={handleDisconnect}
-          onUpdateLink={handleUpdateLink}
+          onUpdateLinks={handleUpdateLinks}
         />
       </>
     </TooltipProvider>

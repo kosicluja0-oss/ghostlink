@@ -140,17 +140,24 @@ Deno.serve(async (req) => {
 
       const value = extractValue(payload);
       const type = detectType(payload);
-      const linkId = integration.link_id;
+
+      // Read assigned links from integration_links table
+      const { data: assignedLinks } = await supabase
+        .from('integration_links')
+        .select('link_id')
+        .eq('integration_id', integration.id);
+
+      const assignedLinkIds = (assignedLinks || []).map((r: { link_id: string }) => r.link_id);
 
       // Find the most recent click for attribution
       let attributedClickId: string | null = null;
 
-      if (linkId) {
-        // Specific link assigned — find recent click for that link
+      if (assignedLinkIds.length > 0) {
+        // Specific links assigned — find recent click across assigned links
         const { data: recentClick } = await supabase
           .from('clicks')
           .select('id')
-          .eq('link_id', linkId)
+          .in('link_id', assignedLinkIds)
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
@@ -159,7 +166,7 @@ Deno.serve(async (req) => {
           attributedClickId = recentClick.id;
         }
       } else {
-        // "All Links (Global)" — find recent click across ALL user's links
+        // "All Links (Global)" — no specific links assigned, search all user's links
         const { data: userLinks } = await supabase
           .from('links')
           .select('id')
@@ -182,9 +189,8 @@ Deno.serve(async (req) => {
       }
 
       // If no click exists, create a virtual click for record-keeping
-      // Use the specific link, or the user's most recent link for global mode
       if (!attributedClickId) {
-        let targetLinkId = linkId;
+        let targetLinkId = assignedLinkIds.length > 0 ? assignedLinkIds[0] : null;
         
         if (!targetLinkId) {
           const { data: fallbackLink } = await supabase

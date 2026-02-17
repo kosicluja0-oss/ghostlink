@@ -129,7 +129,9 @@ export function useDashboardData(options?: UseDashboardDataOptions) {
       queryClient.invalidateQueries({ queryKey: ['dashboard-chart'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-activity'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-distribution'] });
-    }, 3000);
+      queryClient.invalidateQueries({ queryKey: ['link-analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['link-recent-activity'] });
+    }, 1000);
   }, [queryClient]);
 
   // Realtime subscriptions — trigger cache invalidation, not local state
