@@ -23,16 +23,6 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-// Periodic cleanup to avoid memory leaks (every 5 min)
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, hits] of ipHits) {
-    const valid = hits.filter((t) => now - t < RATE_WINDOW_MS);
-    if (valid.length === 0) ipHits.delete(ip);
-    else ipHits.set(ip, valid);
-  }
-}, 300_000);
-
 // Try to extract a monetary value from any JSON payload
 function extractValue(payload: Record<string, unknown>): number {
   const valueKeys = ['value', 'price', 'amount', 'total', 'revenue', 'subtotal', 'sale_price', 'unit_amount'];
