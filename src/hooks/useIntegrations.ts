@@ -118,11 +118,11 @@ export function useIntegrations() {
 
   // Connect a new integration — generates unique token and assigns link
   const connectMutation = useMutation({
-    mutationFn: async ({ serviceId, linkId, config }: { serviceId: string; linkId?: string | null; config?: Record<string, unknown> }) => {
+    mutationFn: async ({ serviceId, linkId, config, webhookToken }: { serviceId: string; linkId?: string | null; config?: Record<string, unknown>; webhookToken?: string }) => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      const webhookToken = generateToken();
-      const webhookUrl = getWebhookUrl(webhookToken);
+      const token = webhookToken || generateToken();
+      const webhookUrl = getWebhookUrl(token);
       
       const { data, error } = await queryIntegrations(user.id, 'upsert', {
         data: {
@@ -130,7 +130,7 @@ export function useIntegrations() {
           service_id: serviceId,
           status: 'pending',
           webhook_url: webhookUrl,
-          webhook_token: webhookToken,
+          webhook_token: token,
           link_id: linkId || null,
           config: config || {},
         }
@@ -168,7 +168,23 @@ export function useIntegrations() {
     },
   });
 
-  // Disconnect an integration
+  // Update integration's assigned link
+  const updateLinkMutation = useMutation({
+    mutationFn: async ({ serviceId, linkId }: { serviceId: string; linkId: string | null }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      const { data, error } = await queryIntegrations(user.id, 'update', {
+        serviceId,
+        data: { link_id: linkId }
+      });
+      
+      if (error) throw error;
+      return data as UserIntegration;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['integrations'] });
+    },
+  });
   const disconnectMutation = useMutation({
     mutationFn: async (serviceId: string) => {
       if (!user?.id) throw new Error('User not authenticated');
@@ -188,6 +204,7 @@ export function useIntegrations() {
     getIntegration,
     connect: connectMutation.mutateAsync,
     updateStatus: updateStatusMutation.mutateAsync,
+    updateLink: updateLinkMutation.mutateAsync,
     disconnect: disconnectMutation.mutateAsync,
     isConnecting: connectMutation.isPending,
     isDisconnecting: disconnectMutation.isPending,

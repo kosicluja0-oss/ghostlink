@@ -152,10 +152,11 @@ Deno.serve(async (req) => {
       const type = detectType(payload);
       const linkId = integration.link_id;
 
-      // Find the most recent click for this link (for attribution)
+      // Find the most recent click for attribution
       let attributedClickId: string | null = null;
 
       if (linkId) {
+        // Specific link assigned — find recent click for that link
         const { data: recentClick } = await supabase
           .from('clicks')
           .select('id')
@@ -167,28 +168,66 @@ Deno.serve(async (req) => {
         if (recentClick) {
           attributedClickId = recentClick.id;
         }
+      } else {
+        // "All Links (Global)" — find recent click across ALL user's links
+        const { data: userLinks } = await supabase
+          .from('links')
+          .select('id')
+          .eq('user_id', integration.user_id);
+
+        if (userLinks && userLinks.length > 0) {
+          const linkIds = userLinks.map((l: { id: string }) => l.id);
+          const { data: recentClick } = await supabase
+            .from('clicks')
+            .select('id, link_id')
+            .in('link_id', linkIds)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (recentClick) {
+            attributedClickId = recentClick.id;
+          }
+        }
       }
 
       // If no click exists, create a virtual click for record-keeping
-      if (!attributedClickId && linkId) {
-        const { data: virtualClick, error: vcError } = await supabase
-          .from('clicks')
-          .insert({
-            link_id: linkId,
-            source: `integration:${integration.service_id}`,
-          })
-          .select('id')
-          .single();
+      // Use the specific link, or the user's most recent link for global mode
+      if (!attributedClickId) {
+        let targetLinkId = linkId;
+        
+        if (!targetLinkId) {
+          const { data: fallbackLink } = await supabase
+            .from('links')
+            .select('id')
+            .eq('user_id', integration.user_id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          
+          if (fallbackLink) targetLinkId = fallbackLink.id;
+        }
 
-        if (!vcError && virtualClick) {
-          attributedClickId = virtualClick.id;
+        if (targetLinkId) {
+          const { data: virtualClick, error: vcError } = await supabase
+            .from('clicks')
+            .insert({
+              link_id: targetLinkId,
+              source: `integration:${integration.service_id}`,
+            })
+            .select('id')
+            .single();
+
+          if (!vcError && virtualClick) {
+            attributedClickId = virtualClick.id;
+          }
         }
       }
 
       if (!attributedClickId) {
-        console.error('No link assigned to integration or click creation failed:', integration.id);
+        console.error('No links found for user or click creation failed:', integration.id);
         return new Response(
-          JSON.stringify({ status: 'error', message: 'No link assigned to this integration. Assign a link in Ghost Link settings.' }),
+          JSON.stringify({ status: 'error', message: 'No links found. Create at least one link in Ghost Link first.' }),
           { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
