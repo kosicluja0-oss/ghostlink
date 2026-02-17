@@ -1,87 +1,85 @@
 
 
-# Oprava integrací a analytiky -- 3 problémy
+# Presna atribuce konverzi pomoci click_id
 
-## Problem 1: Konverze se nezobrazují v detail panelu ani na overview
+## Jak to bude fungovat
 
-### Příčina
-RPC funkce `get_link_analytics` seskupuje konverze podle data KLIKU (`DATE(c.created_at)`), ne podle data konverze. Konverze z 17.2. jsou navázané na click z 7.2. -- při filtrování na "7d" nebo "24h" click vypadne z rozsahu a konverze s ním.
+Kdyz nekdo klikne na tvuj tracking link (napr. `ghstlink.com/gumroad`), redirect funkce uz dnes vytvori unikatni `click_id` v databazi. Jediny problem je, ze tento click_id se nikam nepredava -- ztrati se.
 
-### Oprava
-Přepsat `get_link_analytics` tak, aby `daily_clicks` CTE používal dvě separátní agregace (clicks + conversions) spojené přes FULL OUTER JOIN -- stejný pattern, jaký už funguje v `get_daily_analytics`:
+Reseni: Redirect funkce pripoji `click_id` jako query parametr do cilove URL. Pokud treti strana (Gumroad, Stripe...) vrati tento click_id ve webhooku, postback funkce ho pouzije pro presnou atribuci. Pokud ne, pouzije se stavajici fallback (posledni klik).
 
 ```text
-click_agg:  GROUP BY DATE(c.created_at)   -- clicks podle data kliku
-conv_agg:   GROUP BY DATE(cv.created_at)  -- konverze podle data konverze
-FULL OUTER JOIN na date
+Uzivatel klikne:  ghstlink.com/gumroad?s=ig-story
+                         |
+                  Redirect funkce vytvori click (id: abc-123)
+                         |
+                  302 redirect na:
+                  gumroad.com/l/produkt?gl_click=abc-123
+                         |
+                  Uzivatel nakoupi na Gumroadu
+                         |
+                  Gumroad posle webhook (Ping) s URL parametry
+                  vcetne ?gl_click=abc-123 (pokud to platforma podporuje)
+                         |
+                  Postback funkce:
+                    1. Najde gl_click=abc-123 v payloadu? -> PRESNA atribuce
+                    2. Nenajde? -> Fallback na posledni klik (jako dosud)
 ```
 
-Totéž pro `placements` a `countries` sekce -- konverze se musí filtrovat podle `cv.created_at`, ne `c.created_at`.
+## Co se zmeni
 
-Funnel sekce zůstane beze změny (počítá celkové sumy, ne denní).
+### 1. Redirect Edge Function (`supabase/functions/redirect/index.ts`)
+- Po vytvoreni clicku pripojit `?gl_click={click_id}` do `target_url`
+- Respektovat existujici query parametry v cilove URL (pouzit `&` pokud uz ma `?`)
 
-### Soubor
-- DB migrace: `ALTER FUNCTION get_link_analytics` s přepsaným SQL
+### 2. Postback Edge Function (`supabase/functions/postback/index.ts`)
+- V Token modu: pred hledanim "posledniho kliku" zkontrolovat, zda payload nebo query params obsahuji `gl_click` (nebo `click_id`)
+- Pokud ano, overit ze click existuje a patri k jednomu z prirazenych linku -> pouzit presnou atribuci
+- Pokud ne, pouzit stavajici fallback logiku
 
----
+### 3. Zadne zmeny v DB
+Databaze uz ma vse potrebne -- `clicks.id` uz existuje, jen se nepredava dal.
 
-## Problem 2: Chybějící realtime refresh
+## Technicke detaily
 
-### Příčina
-Hook `useLinkAnalytics` nemá žádnou realtime subscription. Po test webhooku se data v detail panelu neaktualizují, dokud nevyprší 5min cache.
+### Redirect funkce -- zmena (radky 126-146)
 
-Hook `useDashboardData` má realtime subscription na `conversions`, ale s 3s debounce -- a neinvaliduje `link-analytics` query key.
+Aktualne:
+```text
+insert click -> get click_id
+redirect to link.target_url
+```
 
-### Oprava
+Nove:
+```text
+insert click -> get click_id
+append gl_click=click_id to target_url
+redirect to modified URL
+```
 
-**`src/hooks/useLinkAnalytics.ts`:**
-- Přidat realtime subscription na tabulku `conversions` (INSERT event)
-- Při nové konverzi invalidovat query cache pro aktuální link
+Logika pripojeni parametru:
+```text
+if target_url contains '?' -> append '&gl_click=click_id'
+else -> append '?gl_click=click_id'
+```
 
-**`src/hooks/useDashboardData.ts`:**
-- Rozšířit `invalidateAll` o invalidaci `link-analytics` a `link-recent-activity` query keys
-- Snížit debounce z 3s na 1s
+### Postback funkce -- zmena v Token modu
 
----
+Pred radkem "Find the most recent click for attribution" pridat:
+```text
+1. Zkontrolovat payload['gl_click'] nebo payload['click_id'] nebo query param gl_click
+2. Pokud existuje a je validni UUID:
+   a. Overit ze click existuje v DB
+   b. Overit ze click.link_id patri k assignedLinkIds (nebo user's links pro global)
+   c. Pokud OK -> pouzit jako attributedClickId (preskocit fallback)
+3. Pokud neexistuje -> pokracovat stavajici logikou (posledni klik)
+```
 
-## Problem 3: Pouze jeden link na integraci
+## Soubory k uprave
+- `supabase/functions/redirect/index.ts` -- pripojit gl_click do cilove URL
+- `supabase/functions/postback/index.ts` -- prioritne hledat gl_click v payloadu
 
-### Příčina
-Tabulka `integrations` má sloupec `link_id` (jeden UUID). Nelze přiřadit víc linků jedné integraci.
-
-### Oprava
-
-**Databáze:**
-- Vytvořit tabulku `integration_links` (integration_id, link_id) s RLS
-- Migrovat existující `integrations.link_id` data do nové tabulky
-
-**`supabase/functions/postback/index.ts`:**
-- Místo čtení `integration.link_id` načíst všechny link_id z `integration_links`
-- Hledat nejnovější click napříč přiřazenými linky (pokud empty = global mode)
-
-**`src/components/integrations/ManageIntegrationModal.tsx`:**
-- Nahradit Select za multi-select s checkboxy
-- "All Links (Global)" jako výchozí, jinak výběr konkrétních linků
-
-**`src/hooks/useIntegrations.ts`:**
-- Upravit CRUD operace pro novou tabulku
-
----
-
-## Pořadí implementace
-
-1. DB migrace (nová tabulka + opravená RPC funkce)
-2. Postback edge function (multi-link attribution)
-3. Frontend hooks (realtime subscriptions)
-4. UI (multi-select v Manage modalu)
-5. Test end-to-end
-
-## Soubory k úpravě
-
-- DB migrace (SQL): nová tabulka `integration_links`, přepsaná funkce `get_link_analytics`
-- `supabase/functions/postback/index.ts` -- multi-link logika
-- `src/hooks/useLinkAnalytics.ts` -- realtime subscription
-- `src/hooks/useDashboardData.ts` -- rozšířená invalidace
-- `src/components/integrations/ManageIntegrationModal.tsx` -- multi-select UI
-- `src/hooks/useIntegrations.ts` -- CRUD pro integration_links
-
+## Omezeni
+- Ne vsechny platformy predavaji URL parametry zpet ve webhooku (Gumroad Ping ano, nektere jine ne)
+- Pro platformy ktere to nepodporuji, fallback na "posledni klik" zustava funkcni
+- Parametr `gl_click` v cilove URL je neviditelny pro bezneho uzivatele, ale muze byt viditelny v URL bare na cilove strance
