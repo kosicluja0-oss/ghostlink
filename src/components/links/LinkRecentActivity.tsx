@@ -172,7 +172,7 @@ export function LinkRecentActivity({ linkId, typeFilter }: LinkRecentActivityPro
 
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col">
-      <div className={`flex-1 min-h-0 ${showAll ? 'overflow-y-auto max-h-[300px]' : 'overflow-hidden'}`}>
+      <div className={`flex-1 min-h-0 ${showAll ? 'overflow-y-auto max-h-[300px] scrollbar-hide' : 'overflow-hidden'}`}>
         <Table>
           <TableBody>
             {displayEvents.map(ev => (
