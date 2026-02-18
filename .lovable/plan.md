@@ -1,85 +1,118 @@
 
 
-# Presna atribuce konverzi pomoci click_id
+# Oprava Overview dashboardu -- 3 problémy
 
-## Jak to bude fungovat
+## Problem 1: Top Placements ukazuje "Direct" víckrát
 
-Kdyz nekdo klikne na tvuj tracking link (napr. `ghstlink.com/gumroad`), redirect funkce uz dnes vytvori unikatni `click_id` v databazi. Jediny problem je, ze tento click_id se nikam nepredava -- ztrati se.
+### Příčina
+Databáze obsahuje zdroje ve dvou formátech:
+- **Shortcode placements** (z tracking URL parametru `?s=`): `ig-reels`, `tt-video`, `yt-shorts` -- ty `parsePlacement()` správně rozpozná
+- **Generic sources** (z mockovaných/starých dat): `instagram`, `email`, `tiktok`, `google`, `facebook` -- ty `parsePlacement()` NEZNÁ, vrátí `null`, a UI je zobrazí jako "Direct"
+- Navíc `source = NULL` a `source = 'direct'` jsou v DB dva různé řádky
 
-Reseni: Redirect funkce pripoji `click_id` jako query parametr do cilove URL. Pokud treti strana (Gumroad, Stripe...) vrati tento click_id ve webhooku, postback funkce ho pouzije pro presnou atribuci. Pokud ne, pouzije se stavajici fallback (posledni klik).
+Výsledek: 3+ řádků "Direct" s různými hodnotami.
 
+### Oprava
+
+**`get_traffic_distribution` RPC funkce** -- sjednotit zdroje na úrovni SQL:
+- Sloučit `NULL` a `'direct'` do jedné skupiny
+- Namapovat generické názvy (`instagram`, `facebook` atd.) na odpovídající platformy přímo v SQL, aby se nesloučily pod "direct"
+
+**`parsePlacement()` v `PlacementBadge.tsx`** -- rozšířit mapu o generické názvy:
+- Přidat `instagram` -> `{ platform: 'instagram', placement: 'Instagram' }`
+- Přidat `facebook`, `tiktok`, `youtube`, `twitter`, `google`, `email`, `reddit`, `newsletter`
+- Zachovat existující shortcodes beze změny
+
+**Dashboard.tsx `placementAnalytics`** -- po rozpoznání agregovat duplicity:
+- Seskupit řádky se stejným `platform + placement` a sečíst metriky
+
+---
+
+## Problem 2: CR graf zkreslený test webhooky
+
+### Příčina
+Test webhooky vytvářejí reálné konverze (leads/sales) v databázi. Na dnech s málo kliky to způsobuje extrémní CR skoky (1400%+).
+
+### Oprava -- mazání testovacích dat
+
+**Postback Edge Function**: Označit testovací konverze přidáním pole do tabulky conversions:
+- Přidat sloupec `is_test` (boolean, default false) do tabulky `conversions`
+- Když postback přijme `event: 'test'` nebo `source: 'ghost_link_test'`, nastavit `is_test = true`
+
+**ManageIntegrationModal.tsx**: Po úspěšném test webhooku zobrazit tlačítko "Delete test data":
+- Nová funkce pro smazání testovacích konverzí (a příslušných clicků)
+- Informační text pod Test Webhook tlačítkem: "Test data will appear in your dashboard. You can delete it after testing."
+
+**RPC funkce**: Vyfiltrovat `is_test = true` konverze ze všech analytických dotazů:
+- `get_user_stats`, `get_daily_analytics`, `get_traffic_distribution`, `get_link_analytics`, `get_recent_activity`
+
+---
+
+## Problem 3: Placements a Countries nereagují na time range
+
+### Příčina
+`get_traffic_distribution` je ALL-TIME agregace bez parametru pro časový filtr. Widgety Top Countries a Top Placements na Overview vždy ukazují celkovou historii, i když je vybrán "1 day" nebo "1 week".
+
+### Oprava
+Přidat parametr `p_days` do `get_traffic_distribution` RPC a předat ho z frontendu na základě zvoleného time range.
+
+---
+
+## Technické detaily
+
+### DB migrace
 ```text
-Uzivatel klikne:  ghstlink.com/gumroad?s=ig-story
-                         |
-                  Redirect funkce vytvori click (id: abc-123)
-                         |
-                  302 redirect na:
-                  gumroad.com/l/produkt?gl_click=abc-123
-                         |
-                  Uzivatel nakoupi na Gumroadu
-                         |
-                  Gumroad posle webhook (Ping) s URL parametry
-                  vcetne ?gl_click=abc-123 (pokud to platforma podporuje)
-                         |
-                  Postback funkce:
-                    1. Najde gl_click=abc-123 v payloadu? -> PRESNA atribuce
-                    2. Nenajde? -> Fallback na posledni klik (jako dosud)
+1. ALTER TABLE conversions ADD COLUMN is_test boolean DEFAULT false;
+2. UPDATE conversions SET is_test = true 
+   WHERE click_id IN (SELECT id FROM clicks WHERE source = 'ghost_link_test');
+3. Přepsat get_traffic_distribution s p_days parametrem + COALESCE pro source sjednocení
+4. Přidat WHERE is_test = false do všech analytických RPC funkcí
+5. Přidat RLS policy pro DELETE na conversions (vlastník linku)
 ```
 
-## Co se zmeni
-
-### 1. Redirect Edge Function (`supabase/functions/redirect/index.ts`)
-- Po vytvoreni clicku pripojit `?gl_click={click_id}` do `target_url`
-- Respektovat existujici query parametry v cilove URL (pouzit `&` pokud uz ma `?`)
-
-### 2. Postback Edge Function (`supabase/functions/postback/index.ts`)
-- V Token modu: pred hledanim "posledniho kliku" zkontrolovat, zda payload nebo query params obsahuji `gl_click` (nebo `click_id`)
-- Pokud ano, overit ze click existuje a patri k jednomu z prirazenych linku -> pouzit presnou atribuci
-- Pokud ne, pouzit stavajici fallback logiku
-
-### 3. Zadne zmeny v DB
-Databaze uz ma vse potrebne -- `clicks.id` uz existuje, jen se nepredava dal.
-
-## Technicke detaily
-
-### Redirect funkce -- zmena (radky 126-146)
-
-Aktualne:
+### PlacementBadge.tsx
+Rozšířit PLACEMENT_MAP o:
 ```text
-insert click -> get click_id
-redirect to link.target_url
+'instagram' -> { platform: 'instagram', placement: 'Instagram' }
+'facebook'  -> { platform: 'facebook', placement: 'Facebook' }
+'tiktok'    -> { platform: 'tiktok', placement: 'TikTok' }
+'youtube'   -> { platform: 'youtube', placement: 'YouTube' }
+'twitter'   -> { platform: 'x', placement: 'X / Twitter' }
+'google'    -> { platform: 'google', placement: 'Google' }
+'email'     -> { platform: 'email', placement: 'Email' }
+'reddit'    -> { platform: 'reddit', placement: 'Reddit' }
+'newsletter'-> { platform: 'email', placement: 'Newsletter' }
 ```
 
-Nove:
-```text
-insert click -> get click_id
-append gl_click=click_id to target_url
-redirect to modified URL
-```
+### Dashboard.tsx
+- V `placementAnalytics` useMemo přidat agregaci duplicit (GROUP BY platform+placement, SUM metrik)
+- Předat `timeRange` do `useDashboardData` a použít v `get_traffic_distribution`
 
-Logika pripojeni parametru:
-```text
-if target_url contains '?' -> append '&gl_click=click_id'
-else -> append '?gl_click=click_id'
-```
+### ManageIntegrationModal.tsx
+- Pod Test Webhook tlačítko přidat varování: "Test events create real data. Delete after testing."
+- Po úspěšném testu zobrazit "Delete test data" tlačítko
+- Delete funkce: smaže conversions WHERE is_test = true pro danou integraci
 
-### Postback funkce -- zmena v Token modu
+### Postback Edge Function
+- Detekovat test event (`event === 'test'` nebo `source === 'ghost_link_test'`)
+- Při insertu konverze nastavit `is_test = true`
 
-Pred radkem "Find the most recent click for attribution" pridat:
-```text
-1. Zkontrolovat payload['gl_click'] nebo payload['click_id'] nebo query param gl_click
-2. Pokud existuje a je validni UUID:
-   a. Overit ze click existuje v DB
-   b. Overit ze click.link_id patri k assignedLinkIds (nebo user's links pro global)
-   c. Pokud OK -> pouzit jako attributedClickId (preskocit fallback)
-3. Pokud neexistuje -> pokracovat stavajici logikou (posledni klik)
-```
+---
 
-## Soubory k uprave
-- `supabase/functions/redirect/index.ts` -- pripojit gl_click do cilove URL
-- `supabase/functions/postback/index.ts` -- prioritne hledat gl_click v payloadu
+## Soubory k úpravě
 
-## Omezeni
-- Ne vsechny platformy predavaji URL parametry zpet ve webhooku (Gumroad Ping ano, nektere jine ne)
-- Pro platformy ktere to nepodporuji, fallback na "posledni klik" zustava funkcni
-- Parametr `gl_click` v cilove URL je neviditelny pro bezneho uzivatele, ale muze byt viditelny v URL bare na cilove strance
+1. **DB migrace** -- nový sloupec, opravené RPC funkce, RLS pro delete
+2. `supabase/functions/postback/index.ts` -- označení testovacích konverzí
+3. `src/components/analytics/PlacementBadge.tsx` -- rozšíření PLACEMENT_MAP
+4. `src/pages/Dashboard.tsx` -- agregace duplicit, time range pro distribuce
+5. `src/hooks/useDashboardData.ts` -- p_days parametr pro distribuce
+6. `src/components/integrations/ManageIntegrationModal.tsx` -- delete test data UI
+
+## Pořadí implementace
+
+1. DB migrace (sloupec + RPC opravy)
+2. Postback (is_test flag)
+3. PlacementBadge (rozšířená mapa)
+4. Dashboard + hooks (agregace, time range)
+5. ManageIntegrationModal (delete test data)
+
