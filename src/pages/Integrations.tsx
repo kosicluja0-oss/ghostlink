@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { CreditCard, Users, ShoppingBag, TrendingUp, Zap, Mail, ChevronDown } from 'lucide-react';
 
 // Brand logos
@@ -17,8 +16,7 @@ import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { IntegrationCard, type Integration } from '@/components/integrations/IntegrationCard';
 import { ConnectedEcosystemBar } from '@/components/integrations/ConnectedEcosystemBar';
-import { ConnectServiceModal } from '@/components/integrations/ConnectServiceModal';
-import { ManageIntegrationModal } from '@/components/integrations/ManageIntegrationModal';
+import { IntegrationDetailPanel } from '@/components/integrations/IntegrationDetailPanel';
 import { DeveloperWebhookCard } from '@/components/integrations/DeveloperWebhookCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useLinks } from '@/hooks/useLinks';
@@ -58,7 +56,7 @@ const INTEGRATIONS: Integration[] = [
   { id: 'substack', name: 'Substack', description: 'Subscription newsletter publishing platform.', logo: 'https://cdn.simpleicons.org/substack/FF6719', status: 'not_connected', category: 'marketing' },
 ];
 
-// Category configuration (removed communication category)
+// Category configuration
 const CATEGORIES = [
   { id: 'payment', label: 'Payment Platforms', icon: CreditCard, description: 'Connect your payment processors to track sales' },
   { id: 'creator', label: 'Creator Economy', icon: Users, description: 'For content creators and membership platforms' },
@@ -69,7 +67,6 @@ const CATEGORIES = [
 ];
 
 const Integrations = () => {
-  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { links } = useLinks();
   const { tier: userTier } = useSubscription();
@@ -85,22 +82,22 @@ const Integrations = () => {
   } = useIntegrations();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
-  const [connectModalOpen, setConnectModalOpen] = useState(false);
-  const [manageModalOpen, setManageModalOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+
+  // Panel state (replaces modal state)
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelMode, setPanelMode] = useState<'connect' | 'manage'>('connect');
+  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) => ({ ...prev, [categoryId]: !prev[categoryId] }));
   };
 
-  // Prepare links for dropdown
   const linkOptions = useMemo(() =>
     links.filter((l) => l.status === 'active').map((l) => ({ id: l.id, alias: l.alias })),
     [links]
   );
 
-  // Map static integrations with real status from database
   const integrationsWithStatus = useMemo(() =>
     INTEGRATIONS.map((integration) => ({
       ...integration,
@@ -109,7 +106,6 @@ const Integrations = () => {
     [getIntegrationStatus]
   );
 
-  // Group integrations by category
   const groupedIntegrations = useMemo(() => {
     const grouped: Record<string, Integration[]> = {};
     CATEGORIES.forEach((cat) => {
@@ -118,21 +114,32 @@ const Integrations = () => {
     return grouped;
   }, [integrationsWithStatus]);
 
-  // Route clicks: connected/pending → Manage, not_connected → Connect
+  // Route clicks: connected/pending → Manage panel, not_connected → Connect panel
   const handleConnect = useCallback((integrationId: string) => {
     const integration = integrationsWithStatus.find((i) => i.id === integrationId);
     if (!integration || integration.comingSoon) return;
 
-    setSelectedIntegration(integration);
-
-    if (integration.status === 'connected' || integration.status === 'pending') {
-      setManageModalOpen(true);
-    } else {
-      setConnectModalOpen(true);
+    // Toggle if same integration clicked
+    if (selectedIntegration?.id === integrationId && panelOpen) {
+      setPanelOpen(false);
+      setSelectedIntegration(null);
+      return;
     }
-  }, [integrationsWithStatus]);
 
-  // Connect handler — now passes the webhook token from the modal
+    setSelectedIntegration(integration);
+    if (integration.status === 'connected' || integration.status === 'pending') {
+      setPanelMode('manage');
+    } else {
+      setPanelMode('connect');
+    }
+    setPanelOpen(true);
+  }, [integrationsWithStatus, selectedIntegration, panelOpen]);
+
+  const handleClosePanel = useCallback(() => {
+    setPanelOpen(false);
+    setSelectedIntegration(null);
+  }, []);
+
   const handleConfirmConnection = useCallback(async (integrationId: string, linkId: string | null, webhookToken: string) => {
     try {
       await connect({ serviceId: integrationId, linkId, webhookToken });
@@ -143,12 +150,11 @@ const Integrations = () => {
     }
   }, [connect]);
 
-  // Disconnect handler
   const handleDisconnect = useCallback(async (serviceId: string) => {
     await disconnect(serviceId);
-  }, [disconnect]);
+    handleClosePanel();
+  }, [disconnect, handleClosePanel]);
 
-  // Update links handler (multi-link)
   const handleUpdateLinks = useCallback(async (serviceId: string, linkIds: string[]) => {
     await updateLinks({ serviceId, linkIds });
   }, [updateLinks]);
@@ -156,25 +162,21 @@ const Integrations = () => {
   const connectedCount = integrationsWithStatus.filter((i) => i.status === 'connected').length;
   const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
 
-  // Get DB integration for manage modal
   const selectedDbIntegration = selectedIntegration ? getIntegration(selectedIntegration.id) : undefined;
 
   return (
     <TooltipProvider>
       <>
-        <div className="min-h-screen bg-background">
+        <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
 
-          <main className="ml-[15vw] p-4 lg:p-6 max-w-6xl mx-auto">
-            {/* Hero Section */}
-            <section className="mb-8">
+          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden flex flex-col">
+            {/* Header */}
+            <section className="mb-6 shrink-0">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-foreground text-sm font-semibold">Data Integrations</h1>
               </div>
-              <p className="text-muted-foreground max-w-lg"></p>
-
-              {/* Quick Stats */}
-              <div className="flex items-center gap-4 mt-4">
+              <div className="flex items-center gap-4">
                 {connectedCount > 0 && (
                   <div className="flex items-center gap-1.5 text-sm text-success">
                     <span className="w-2 h-2 rounded-full bg-success" />
@@ -184,91 +186,91 @@ const Integrations = () => {
                 {pendingCount > 0 && (
                   <div className="flex items-center gap-1.5 text-sm text-warning">
                     <span className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-                    {pendingCount} Pending verification
+                    {pendingCount} Pending
                   </div>
                 )}
               </div>
             </section>
 
-            {/* Connected Ecosystem Bar */}
-            <ConnectedEcosystemBar integrations={integrationsWithStatus} />
+            {/* Content + Detail Panel side by side */}
+            <div className="flex-1 min-h-0 overflow-hidden flex gap-0">
+              {/* Left: Integration cards */}
+              <section className="w-[60%] flex flex-col shrink-0 overflow-y-auto pr-2">
+                <ConnectedEcosystemBar integrations={integrationsWithStatus} />
 
-            {/* Integration Categories */}
-            {CATEGORIES.map((category) => {
-              const categoryIntegrations = groupedIntegrations[category.id];
-              if (!categoryIntegrations || categoryIntegrations.length === 0) return null;
-              const Icon = category.icon;
-              const hasComingSoon = categoryIntegrations.some((i) => i.comingSoon);
-              const isExpanded = expandedCategories[category.id];
-              const hasMoreThanThree = categoryIntegrations.length > 3;
-              const visibleIntegrations = hasMoreThanThree && !isExpanded ? categoryIntegrations.slice(0, 3) : categoryIntegrations;
-              const hiddenCount = categoryIntegrations.length - 3;
+                {CATEGORIES.map((category) => {
+                  const categoryIntegrations = groupedIntegrations[category.id];
+                  if (!categoryIntegrations || categoryIntegrations.length === 0) return null;
+                  const Icon = category.icon;
+                  const hasComingSoon = categoryIntegrations.some((i) => i.comingSoon);
+                  const isExpanded = expandedCategories[category.id];
+                  const hasMoreThanThree = categoryIntegrations.length > 3;
+                  const visibleIntegrations = hasMoreThanThree && !isExpanded ? categoryIntegrations.slice(0, 3) : categoryIntegrations;
+                  const hiddenCount = categoryIntegrations.length - 3;
 
-              return (
-                <section key={category.id} className="mb-8">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Icon className="w-4 h-4 text-primary" />
-                    <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
-                    {hasComingSoon && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">NEW</span>
-                    )}
-                  </div>
+                  return (
+                    <div key={category.id} className="mb-6">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon className="w-4 h-4 text-primary" />
+                        <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
+                        {hasComingSoon && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">NEW</span>
+                        )}
+                      </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {visibleIntegrations.map((integration) => (
-                      <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />
-                    ))}
-                  </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {visibleIntegrations.map((integration) => (
+                          <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />
+                        ))}
+                      </div>
 
-                  {hasMoreThanThree && (
-                    <button
-                      onClick={() => toggleCategory(category.id)}
-                      className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50 group"
-                    >
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                      <span>{isExpanded ? 'Show less' : `Show ${hiddenCount} more`}</span>
-                    </button>
-                  )}
-                </section>
-              );
-            })}
+                      {hasMoreThanThree && (
+                        <button
+                          onClick={() => toggleCategory(category.id)}
+                          className="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50 group"
+                        >
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                          <span>{isExpanded ? 'Show less' : `Show ${hiddenCount} more`}</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
 
-            {/* Developer Section */}
-            <section className="mt-10">
-              <DeveloperWebhookCard />
-            </section>
+                {/* Developer Section */}
+                <div className="mt-4">
+                  <DeveloperWebhookCard />
+                </div>
 
-            {/* Trademark Disclaimer */}
-            <footer className="mt-12 pt-6 border-t border-border">
-              <p className="text-xs text-muted-foreground/60 text-center">
-                All product names, logos, and brands are property of their respective owners.
-                Ghost Link is not affiliated with or endorsed by any of the above companies.
-              </p>
-            </footer>
+                {/* Trademark Disclaimer */}
+                <footer className="mt-8 pt-4 border-t border-border mb-4">
+                  <p className="text-xs text-muted-foreground/60 text-center">
+                    All product names, logos, and brands are property of their respective owners.
+                    Ghost Link is not affiliated with or endorsed by any of the above companies.
+                  </p>
+                </footer>
+              </section>
+
+              {/* Right: Inline Detail Panel */}
+              <div className={`${panelOpen ? 'w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+                <IntegrationDetailPanel
+                  open={panelOpen}
+                  onClose={handleClosePanel}
+                  mode={panelMode}
+                  integration={selectedIntegration}
+                  dbIntegration={selectedDbIntegration}
+                  links={linkOptions}
+                  assignedLinkIds={selectedDbIntegration ? getAssignedLinkIds(selectedDbIntegration.id) : []}
+                  onConfirmConnection={handleConfirmConnection}
+                  onDisconnect={handleDisconnect}
+                  onUpdateLinks={handleUpdateLinks}
+                />
+              </div>
+            </div>
           </main>
         </div>
 
-        {/* Modals */}
         <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier={userTier} onChangeTier={() => {}} />
-
-        <ConnectServiceModal
-          open={connectModalOpen}
-          onOpenChange={setConnectModalOpen}
-          integration={selectedIntegration}
-          links={linkOptions}
-          onConfirmConnection={handleConfirmConnection}
-        />
-
-        <ManageIntegrationModal
-          open={manageModalOpen}
-          onOpenChange={setManageModalOpen}
-          integration={selectedIntegration}
-          dbIntegration={selectedDbIntegration}
-          links={linkOptions}
-          assignedLinkIds={selectedDbIntegration ? getAssignedLinkIds(selectedDbIntegration.id) : []}
-          onDisconnect={handleDisconnect}
-          onUpdateLinks={handleUpdateLinks}
-        />
       </>
     </TooltipProvider>
   );
