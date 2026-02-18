@@ -532,7 +532,7 @@ export function IntegrationDetailPanel({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="h-full overflow-y-auto bg-card p-4"
+          className="h-full overflow-y-auto scrollbar-hide bg-card p-4"
         >
           {/* Header */}
           <div className="flex items-center gap-3 mb-5">

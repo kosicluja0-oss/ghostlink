@@ -426,7 +426,7 @@ const Dashboard = () => {
                       </div>
                     ) : (
                       <div className="border border-border rounded-xl overflow-hidden bg-card flex flex-col" style={{ height: '311px' }}>
-                        <div className={`flex-1 min-h-0 ${showAllEvents ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+                        <div className={`flex-1 min-h-0 ${showAllEvents ? 'overflow-y-auto scrollbar-hide' : 'overflow-hidden'}`}>
                           <Table>
                             <TableBody>
                               {paginatedTransactions.map(tx => (
