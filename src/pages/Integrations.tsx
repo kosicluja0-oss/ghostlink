@@ -140,15 +140,20 @@ const Integrations = () => {
     setSelectedIntegration(null);
   }, []);
 
-  const handleConfirmConnection = useCallback(async (integrationId: string, linkId: string | null, webhookToken: string) => {
+  const handleConfirmConnection = useCallback(async (integrationId: string, linkIds: string[], webhookToken: string) => {
     try {
+      const linkId = linkIds.length === 1 ? linkIds[0] : null;
       await connect({ serviceId: integrationId, linkId, webhookToken });
+      // If multiple links selected, save them via updateLinks
+      if (linkIds.length > 1) {
+        await updateLinks({ serviceId: integrationId, linkIds });
+      }
       toast.success('Integration connected! Waiting for first event...');
     } catch (error) {
       console.error('Error connecting integration:', error);
       toast.error('Failed to connect integration');
     }
-  }, [connect]);
+  }, [connect, updateLinks]);
 
   const handleDisconnect = useCallback(async (serviceId: string) => {
     await disconnect(serviceId);
