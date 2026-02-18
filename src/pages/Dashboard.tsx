@@ -104,6 +104,20 @@ const Dashboard = () => {
   // Activity filters
   const activityLimit = 200;
 
+  // Map timeRange to days for distribution query
+  const distributionDays = useMemo(() => {
+    switch (timeRange) {
+      case '30m': return 1;
+      case '6h': return 1;
+      case '1d': return 1;
+      case '1w': return 7;
+      case '1m': return 30;
+      case '1y': return 365;
+      case '3y': return 1095;
+      default: return null;
+    }
+  }, [timeRange]);
+
   // Use server-side aggregated data (fixes 1000-row limit)
   const {
     links,
@@ -118,7 +132,8 @@ const Dashboard = () => {
     countryDistribution,
     hasClicks
   } = useDashboardData({
-    activityLimit
+    activityLimit,
+    distributionDays,
   });
   
 
@@ -293,9 +308,9 @@ const Dashboard = () => {
     return links.find(l => l.id === selectedLinkId)?.alias;
   }, [selectedLinkId, links]);
 
-  // Placement analytics from server-side distribution
+  // Placement analytics from server-side distribution — aggregate duplicates
   const placementAnalytics = useMemo(() => {
-    return placementDistribution.map(p => {
+    const raw = placementDistribution.map(p => {
       const parsed = parsePlacement(p.source === 'direct' || !p.source ? undefined : p.source);
       return {
         platform: parsed?.platform || 'direct',
@@ -306,6 +321,21 @@ const Dashboard = () => {
         earnings: Number(p.earnings),
       };
     });
+    // Group by platform+placement and sum metrics
+    const grouped = new Map<string, typeof raw[0]>();
+    for (const item of raw) {
+      const key = `${item.platform}::${item.placement}`;
+      const existing = grouped.get(key);
+      if (existing) {
+        existing.clicks += item.clicks;
+        existing.leads += item.leads;
+        existing.sales += item.sales;
+        existing.earnings += item.earnings;
+      } else {
+        grouped.set(key, { ...item });
+      }
+    }
+    return Array.from(grouped.values()).sort((a, b) => b.clicks - a.clicks);
   }, [placementDistribution]);
 
   // Country analytics from server-side distribution

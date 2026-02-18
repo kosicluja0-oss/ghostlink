@@ -84,6 +84,7 @@ export type Database = {
           click_id: string
           created_at: string
           id: string
+          is_test: boolean
           type: string
           value: number
         }
@@ -91,6 +92,7 @@ export type Database = {
           click_id: string
           created_at?: string
           id?: string
+          is_test?: boolean
           type: string
           value?: number
         }
@@ -98,6 +100,7 @@ export type Database = {
           click_id?: string
           created_at?: string
           id?: string
+          is_test?: boolean
           type?: string
           value?: number
         }
@@ -403,7 +406,9 @@ export type Database = {
         }
         Returns: Json
       }
-      get_traffic_distribution: { Args: { p_user_id: string }; Returns: Json }
+      get_traffic_distribution:
+        | { Args: { p_user_id: string }; Returns: Json }
+        | { Args: { p_days?: number; p_user_id: string }; Returns: Json }
       get_user_stats: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {

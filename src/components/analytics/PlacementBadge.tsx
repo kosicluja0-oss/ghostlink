@@ -4,6 +4,7 @@ import { PlatformIcon } from '@/components/ui/platform-icon';
 
 // Mapping from tracking param to platform and placement
 const PLACEMENT_MAP: Record<string, { platform: string; placement: string }> = {
+  // Shortcode placements (from ?s= tracking param)
   'ig-reels': { platform: 'instagram', placement: 'Reels' },
   'ig-post': { platform: 'instagram', placement: 'Post' },
   'ig-story': { platform: 'instagram', placement: 'Story' },
@@ -17,6 +18,16 @@ const PLACEMENT_MAP: Record<string, { platform: string; placement: string }> = {
   'pin': { platform: 'pinterest', placement: 'Pinterest' },
   'x-post': { platform: 'x', placement: 'Post' },
   'x-bio': { platform: 'x', placement: 'Bio' },
+  // Generic source names (from legacy/mock data)
+  'instagram': { platform: 'instagram', placement: 'Instagram' },
+  'facebook': { platform: 'facebook', placement: 'Facebook' },
+  'tiktok': { platform: 'tiktok', placement: 'TikTok' },
+  'youtube': { platform: 'youtube', placement: 'YouTube' },
+  'twitter': { platform: 'x', placement: 'X / Twitter' },
+  'google': { platform: 'google', placement: 'Google' },
+  'email': { platform: 'email', placement: 'Email' },
+  'reddit': { platform: 'reddit', placement: 'Reddit' },
+  'newsletter': { platform: 'email', placement: 'Newsletter' },
 };
 
 interface PlacementBadgeProps {
