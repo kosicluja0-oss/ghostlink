@@ -382,7 +382,7 @@ function ManageContent({
       {/* Assigned Links */}
       <div>
         <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Assigned Links</label>
-        <div className="bg-background rounded-lg border border-border p-3 space-y-2 max-h-48 overflow-y-auto">
+        <div className="bg-background rounded-lg border border-border p-3 space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
           <label className="flex items-center gap-2.5 cursor-pointer py-1 px-1 rounded hover:bg-muted/50 transition-colors">
             <Checkbox checked={isGlobalMode} onCheckedChange={handleToggleGlobal} />
             <span className="text-sm text-foreground font-medium">All Links (Global)</span>
