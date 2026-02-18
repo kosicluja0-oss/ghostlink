@@ -122,7 +122,7 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="h-full overflow-y-auto bg-card p-4"
+          className="h-full overflow-y-auto scrollbar-hide bg-card p-4"
         >
           {/* Header */}
           <div className="pb-4 mb-4">
