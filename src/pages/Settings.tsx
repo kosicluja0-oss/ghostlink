@@ -348,7 +348,7 @@ const Settings = () => {
   };
   return <TooltipProvider>
       <>
-        <div className="min-h-screen bg-background overflow-y-auto scrollbar-hide">
+         <div className="h-screen bg-background overflow-y-auto scrollbar-hide">
           <AppSidebar />
           
           <main className="ml-[15vw] p-4 lg:p-6 max-w-7xl mx-auto">
