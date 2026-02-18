@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Copy, Check, Unplug, RefreshCw, Clock, Zap, Loader2 } from 'lucide-react';
+import { Copy, Check, Unplug, RefreshCw, Clock, Zap, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,7 @@ export function ManageIntegrationModal({
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [isUpdatingLinks, setIsUpdatingLinks] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isDeletingTest, setIsDeletingTest] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
   const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
 
@@ -293,8 +295,40 @@ export function ManageIntegrationModal({
                 : 'Send Test Webhook'}
             </Button>
             <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-              Sends a test lead (value $0) to verify connectivity
+              Sends a test lead (value $0) to verify connectivity. Test data will appear in your dashboard.
             </p>
+            {testResult === 'success' && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={async () => {
+                  setIsDeletingTest(true);
+                  try {
+                    // Delete test conversions for clicks belonging to this user's links
+                    const { error } = await supabase
+                      .from('conversions')
+                      .delete()
+                      .eq('is_test', true);
+                    if (error) throw error;
+                    toast.success('Test data deleted from dashboard');
+                    setTestResult(null);
+                  } catch {
+                    toast.error('Failed to delete test data');
+                  } finally {
+                    setIsDeletingTest(false);
+                  }
+                }}
+                disabled={isDeletingTest}
+              >
+                {isDeletingTest ? (
+                  <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3 h-3 mr-1.5" />
+                )}
+                Delete test data
+              </Button>
+            )}
           </div>
 
           {/* Connected At */}

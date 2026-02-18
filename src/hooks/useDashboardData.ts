@@ -17,6 +17,7 @@ export interface ActivityEvent {
 
 interface UseDashboardDataOptions {
   activityLimit?: number;
+  distributionDays?: number | null;
 }
 
 /**
@@ -25,7 +26,7 @@ interface UseDashboardDataOptions {
  * All aggregation happens via PostgreSQL RPC functions.
  */
 export function useDashboardData(options?: UseDashboardDataOptions) {
-  const { activityLimit = 200 } = options || {};
+  const { activityLimit = 200, distributionDays = null } = options || {};
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -99,11 +100,11 @@ export function useDashboardData(options?: UseDashboardDataOptions) {
 
   // 4. Traffic distribution (placements + countries, aggregated)
   const distributionQuery = useQuery({
-    queryKey: ['dashboard-distribution', user?.id],
+    queryKey: ['dashboard-distribution', user?.id, distributionDays],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_traffic_distribution', {
-        p_user_id: user!.id,
-      });
+      const params: { p_user_id: string; p_days?: number } = { p_user_id: user!.id };
+      if (distributionDays != null) params.p_days = distributionDays;
+      const { data, error } = await supabase.rpc('get_traffic_distribution', params);
       if (error) {
         console.error('Error fetching distribution:', error);
         return {

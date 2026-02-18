@@ -250,6 +250,9 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Detect test events
+      const isTestEvent = (payload['event'] === 'test') || (payload['source'] === 'ghost_link_test');
+
       // Insert conversion
       const { error: insertError } = await supabase
         .from('conversions')
@@ -257,6 +260,7 @@ Deno.serve(async (req) => {
           click_id: attributedClickId,
           type,
           value: isNaN(value) ? 0 : value,
+          is_test: isTestEvent,
         });
 
       if (insertError) {
