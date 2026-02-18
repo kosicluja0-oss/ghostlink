@@ -57,6 +57,7 @@ export function ManageIntegrationModal({
   const [isTesting, setIsTesting] = useState(false);
   const [isDeletingTest, setIsDeletingTest] = useState(false);
   const [testResult, setTestResult] = useState<'success' | 'error' | null>(null);
+  const [testDetails, setTestDetails] = useState<{ type: string; link: string; timestamp: string } | null>(null);
   const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
 
   // Sync selected links when modal opens or assignedLinkIds change
@@ -123,6 +124,7 @@ export function ManageIntegrationModal({
     if (!webhookUrl) return;
     setIsTesting(true);
     setTestResult(null);
+    setTestDetails(null);
     try {
       const res = await fetch(webhookUrl, {
         method: 'POST',
@@ -136,7 +138,16 @@ export function ManageIntegrationModal({
       });
       if (res.ok) {
         setTestResult('success');
-        toast.success('Test webhook sent successfully! Check your dashboard for the test lead.');
+        // Determine which link was attributed
+        const attributedLink = assignedLinkIds.length > 0
+          ? links.find(l => assignedLinkIds.includes(l.id))?.alias || 'Assigned link'
+          : links[0]?.alias || 'First link';
+        setTestDetails({
+          type: 'Lead',
+          link: `/${attributedLink}`,
+          timestamp: new Date().toLocaleString(),
+        });
+        toast.success('Webhook connectivity verified!');
       } else {
         const data = await res.json().catch(() => ({}));
         setTestResult('error');
@@ -147,7 +158,6 @@ export function ManageIntegrationModal({
       toast.error('Failed to reach webhook endpoint');
     } finally {
       setIsTesting(false);
-      setTimeout(() => setTestResult(null), 4000);
     }
   };
 
@@ -295,39 +305,61 @@ export function ManageIntegrationModal({
                 : 'Send Test Webhook'}
             </Button>
             <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-              Sends a test lead (value $0) to verify connectivity. Test data will appear in your dashboard.
+              Sends a test lead ($0) to verify connectivity. Hidden from analytics.
             </p>
-            {testResult === 'success' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-2 text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={async () => {
-                  setIsDeletingTest(true);
-                  try {
-                    // Delete test conversions for clicks belonging to this user's links
-                    const { error } = await supabase
-                      .from('conversions')
-                      .delete()
-                      .eq('is_test', true);
-                    if (error) throw error;
-                    toast.success('Test data deleted from dashboard');
-                    setTestResult(null);
-                  } catch {
-                    toast.error('Failed to delete test data');
-                  } finally {
-                    setIsDeletingTest(false);
-                  }
-                }}
-                disabled={isDeletingTest}
-              >
-                {isDeletingTest ? (
-                  <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-                ) : (
-                  <Trash2 className="w-3 h-3 mr-1.5" />
-                )}
-                Delete test data
-              </Button>
+
+            {/* Test success confirmation card */}
+            {testResult === 'success' && testDetails && (
+              <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-success">
+                  <Check className="w-3.5 h-3.5" />
+                  Webhook received successfully
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-muted-foreground block">Type</span>
+                    <span className="text-foreground font-medium">{testDetails.type}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Link</span>
+                    <span className="text-foreground font-medium truncate block">{testDetails.link}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground block">Time</span>
+                    <span className="text-foreground font-medium">{testDetails.timestamp}</span>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-1 h-7 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={async () => {
+                    setIsDeletingTest(true);
+                    try {
+                      const { error } = await supabase
+                        .from('conversions')
+                        .delete()
+                        .eq('is_test', true);
+                      if (error) throw error;
+                      toast.success('Test data cleaned up');
+                      setTestResult(null);
+                      setTestDetails(null);
+                    } catch {
+                      toast.error('Failed to delete test data');
+                    } finally {
+                      setIsDeletingTest(false);
+                    }
+                  }}
+                  disabled={isDeletingTest}
+                >
+                  {isDeletingTest ? (
+                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3 h-3 mr-1" />
+                  )}
+                  Clean up test data
+                </Button>
+              </div>
             )}
           </div>
 
