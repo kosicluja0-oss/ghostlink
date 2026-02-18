@@ -679,7 +679,7 @@ export const WelcomeWizard = ({ userName = 'Ghost', tier = 'free', onComplete, o
                       </p>
 
                       {/* Platform Grid */}
-                      <div className="grid grid-cols-4 gap-2 mb-6 max-h-[280px] overflow-y-auto pr-1">
+                      <div className="grid grid-cols-4 gap-2 mb-6 max-h-[280px] overflow-y-auto scrollbar-hide pr-1">
                         {platforms.map((platform) => {
                           const isSelected = selectedPlatforms.includes(platform.id);
                           return (

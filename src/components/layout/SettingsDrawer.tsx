@@ -29,7 +29,7 @@ export function SettingsDrawer({ open, onOpenChange, userTier, onChangeTier }: S
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-card border-border w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="bg-card border-border w-full sm:max-w-md overflow-y-auto scrollbar-hide">
         <SheetHeader>
           <SheetTitle className="text-foreground">Settings</SheetTitle>
         </SheetHeader>
