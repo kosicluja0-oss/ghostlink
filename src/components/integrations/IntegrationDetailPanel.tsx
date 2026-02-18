@@ -6,13 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -41,7 +34,7 @@ interface IntegrationDetailPanelProps {
   dbIntegration?: UserIntegration;
   links: Link[];
   assignedLinkIds: string[];
-  onConfirmConnection: (integrationId: string, linkId: string | null, webhookToken: string) => void;
+  onConfirmConnection: (integrationId: string, linkIds: string[], webhookToken: string) => void;
   onDisconnect: (serviceId: string) => Promise<void>;
   onUpdateLinks: (serviceId: string, linkIds: string[]) => Promise<void>;
 }
@@ -94,11 +87,11 @@ function ConnectContent({
 }: {
   integration: Integration;
   links: Link[];
-  onConfirmConnection: (integrationId: string, linkId: string | null, webhookToken: string) => void;
+  onConfirmConnection: (integrationId: string, linkIds: string[], webhookToken: string) => void;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const [selectedLinkId, setSelectedLinkId] = useState<string>('all');
+  const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [previewToken, setPreviewToken] = useState('');
 
@@ -107,7 +100,7 @@ function ConnectContent({
   useEffect(() => {
     setPreviewToken(generatePreviewToken());
     setStep(1);
-    setSelectedLinkId('all');
+    setSelectedLinkIds([]);
     setCopied(false);
   }, [integration?.id]);
 
@@ -125,10 +118,20 @@ function ConnectContent({
     }
   };
 
+  const isGlobalMode = selectedLinkIds.length === 0;
+
+  const handleToggleLink = (linkId: string) => {
+    setSelectedLinkIds((prev) =>
+      prev.includes(linkId) ? prev.filter((id) => id !== linkId) : [...prev, linkId]
+    );
+  };
+
+  const handleToggleGlobal = () => setSelectedLinkIds([]);
+
   const handleConfirm = () => {
     onConfirmConnection(
       integration.id,
-      selectedLinkId === 'all' ? null : selectedLinkId,
+      selectedLinkIds,
       previewToken
     );
     onClose();
@@ -212,18 +215,23 @@ function ConnectContent({
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold shrink-0 mt-0.5">3</div>
               <p className="text-sm font-medium text-foreground">Assign sales to a tracking link</p>
             </div>
-            <Select value={selectedLinkId} onValueChange={setSelectedLinkId}>
-              <SelectTrigger className="w-full bg-background border-border">
-                <SelectValue placeholder="Select a link" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all"><span className="flex items-center gap-2">🌐 All Links (Global)</span></SelectItem>
-                {links.map(link => (
-                  <SelectItem key={link.id} value={link.id}>/{link.alias}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-[11px] text-muted-foreground mt-2">Choose which link should receive credit for {integration.name} sales.</p>
+            <div className="bg-background rounded-lg border border-border p-3 space-y-2 max-h-48 overflow-y-auto scrollbar-hide">
+              <label className="flex items-center gap-2.5 cursor-pointer py-1 px-1 rounded hover:bg-muted/50 transition-colors">
+                <Checkbox checked={isGlobalMode} onCheckedChange={handleToggleGlobal} />
+                <span className="text-sm text-foreground font-medium">All Links (Global)</span>
+              </label>
+              {links.length > 0 && (
+                <div className="border-t border-border pt-2 space-y-1">
+                  {links.map((link) => (
+                    <label key={link.id} className="flex items-center gap-2.5 cursor-pointer py-1 px-1 rounded hover:bg-muted/50 transition-colors">
+                      <Checkbox checked={selectedLinkIds.includes(link.id)} onCheckedChange={() => handleToggleLink(link.id)} />
+                      <span className="text-sm text-foreground">{link.alias}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2">Choose which links should receive credit for {integration.name} sales.</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setStep(2)} variant="outline" className="flex-1">Back</Button>
