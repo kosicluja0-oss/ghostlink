@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Copy, Check, Unplug, RefreshCw, Clock, Zap, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -308,14 +309,39 @@ export function ManageIntegrationModal({
               Sends a test lead ($0) to verify connectivity. Hidden from analytics.
             </p>
 
-            {/* Test success confirmation card */}
+            <AnimatePresence>
             {testResult === 'success' && testDetails && (
-              <div className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-success">
-                  <Check className="w-3.5 h-3.5" />
+              <motion.div
+                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.96 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3 space-y-2 overflow-hidden"
+              >
+                <div className="flex items-center gap-2 text-xs font-medium text-success">
+                  {/* Animated checkmark */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.15 }}
+                    className="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center shrink-0"
+                  >
+                    <motion.div
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
+                    >
+                      <Check className="w-3 h-3" />
+                    </motion.div>
+                  </motion.div>
                   Webhook received successfully
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.25, duration: 0.3 }}
+                  className="grid grid-cols-3 gap-2 text-[11px]"
+                >
                   <div>
                     <span className="text-muted-foreground block">Type</span>
                     <span className="text-foreground font-medium">{testDetails.type}</span>
@@ -328,39 +354,46 @@ export function ManageIntegrationModal({
                     <span className="text-muted-foreground block">Time</span>
                     <span className="text-foreground font-medium">{testDetails.timestamp}</span>
                   </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full mt-1 h-7 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={async () => {
-                    setIsDeletingTest(true);
-                    try {
-                      const { error } = await supabase
-                        .from('conversions')
-                        .delete()
-                        .eq('is_test', true);
-                      if (error) throw error;
-                      toast.success('Test data cleaned up');
-                      setTestResult(null);
-                      setTestDetails(null);
-                    } catch {
-                      toast.error('Failed to delete test data');
-                    } finally {
-                      setIsDeletingTest(false);
-                    }
-                  }}
-                  disabled={isDeletingTest}
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4, duration: 0.25 }}
                 >
-                  {isDeletingTest ? (
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-3 h-3 mr-1" />
-                  )}
-                  Clean up test data
-                </Button>
-              </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full mt-1 h-7 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={async () => {
+                      setIsDeletingTest(true);
+                      try {
+                        const { error } = await supabase
+                          .from('conversions')
+                          .delete()
+                          .eq('is_test', true);
+                        if (error) throw error;
+                        toast.success('Test data cleaned up');
+                        setTestResult(null);
+                        setTestDetails(null);
+                      } catch {
+                        toast.error('Failed to delete test data');
+                      } finally {
+                        setIsDeletingTest(false);
+                      }
+                    }}
+                    disabled={isDeletingTest}
+                  >
+                    {isDeletingTest ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3 h-3 mr-1" />
+                    )}
+                    Clean up test data
+                  </Button>
+                </motion.div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
           {/* Connected At */}
