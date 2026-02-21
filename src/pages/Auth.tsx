@@ -85,7 +85,15 @@ export default function Auth() {
           .single()
           .then(({ data }) => {
             if (!data?.tier || data.tier === 'free') {
-              navigate('/onboarding/plans');
+              // Show upsell modal every other login
+              const key = 'login_count_free';
+              const count = parseInt(localStorage.getItem(key) || '0', 10);
+              localStorage.setItem(key, String(count + 1));
+              if (count % 2 === 0) {
+                navigate('/onboarding/plans');
+              } else {
+                navigate('/dashboard');
+              }
             } else {
               navigate('/dashboard');
             }
@@ -103,7 +111,14 @@ export default function Auth() {
           .single()
           .then(({ data }) => {
             if (!data?.tier || data.tier === 'free') {
-              navigate('/onboarding/plans');
+              const key = 'login_count_free';
+              const count = parseInt(localStorage.getItem(key) || '0', 10);
+              localStorage.setItem(key, String(count + 1));
+              if (count % 2 === 0) {
+                navigate('/onboarding/plans');
+              } else {
+                navigate('/dashboard');
+              }
             } else {
               navigate('/dashboard');
             }

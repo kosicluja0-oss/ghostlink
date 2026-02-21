@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, Loader2, Link2 } from 'lucide-react';
+import { Check, Loader2, Link2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
@@ -237,7 +237,14 @@ export default function OnboardingPlans() {
         )}
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-5 px-6 pb-8 pt-4">
+        <div className="relative grid md:grid-cols-2 gap-5 px-6 pb-8 pt-4">
+          {/* Arrow from Free → Pro (visible on md+) */}
+          <div className="hidden md:flex absolute inset-0 items-center justify-center z-20 pointer-events-none">
+            <div className="flex items-center gap-1 animate-pulse">
+              <div className="w-8 h-0.5 bg-gradient-to-r from-muted-foreground/40 to-primary rounded-full" />
+              <ArrowRight className="h-5 w-5 text-primary" />
+            </div>
+          </div>
           {Object.entries(pricingPlans).map(([planId, plan]) => {
             const isFree = planId === 'free';
             const displayPrice = getDisplayPrice(plan, billingCycle);
