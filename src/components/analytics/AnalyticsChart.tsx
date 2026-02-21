@@ -502,7 +502,7 @@ export function AnalyticsChart({
           </div>
           {activeLinkId && selectedLinkAlias &&
           <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
-              <span className="text-[11px] font-medium text-primary">ghost.link/{selectedLinkAlias}</span>
+              <span className="text-[11px] font-medium text-primary">ghstlink.com/{selectedLinkAlias}</span>
               <button
               onClick={onClearSelection}
               className="text-[11px] text-primary/70 hover:text-primary transition-colors font-medium">

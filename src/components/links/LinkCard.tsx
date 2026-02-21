@@ -22,7 +22,7 @@ export function LinkCard({
   onSelect
 }: LinkCardProps) {
   const isFreeTier = userTier === 'free';
-  const fullUrl = `ghost.link/${link.alias}`;
+  const fullUrl = `ghstlink.com/${link.alias}`;
   const { formatDate } = useTimezone();
 
   const handleCardClick = (e: React.MouseEvent) => {
