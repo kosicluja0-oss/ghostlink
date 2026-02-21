@@ -118,7 +118,7 @@ export function CreateLinkModal({
               </Label>
               <div className="flex items-center">
                 <span className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-l-md border border-r-0 border-border">
-                  ghost.link/
+                  ghstlink.com/
                 </span>
                 <Input
                   id="alias"

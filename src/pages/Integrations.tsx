@@ -217,7 +217,8 @@ const Integrations = () => {
                     <div key={category.id} className="mb-6">
                       <div className="flex items-center gap-2 mb-1">
                         <Icon className="w-4 h-4 text-primary" />
-                        <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
+                      <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
+                      <span className="text-xs text-muted-foreground ml-1">{category.description}</span>
                         {hasComingSoon && (
                           <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">NEW</span>
                         )}

@@ -61,7 +61,7 @@ export function LinksEmptyState({ onCreateLink, className }: LinksEmptyStateProp
           variant="outline" 
           size="lg"
           className="gap-2 min-w-[180px]"
-          onClick={() => window.open('https://docs.ghostlink.dev/getting-started', '_blank')}
+          onClick={() => window.open('https://ghstlink.com', '_blank')}
         >
           <Play className="w-4 h-4" />
           Watch Tutorial

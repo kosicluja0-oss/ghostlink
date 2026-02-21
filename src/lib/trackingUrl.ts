@@ -11,5 +11,5 @@ export function getTrackingUrl(alias: string): string {
 
 // Format for display (shorter version)
 export function getDisplayUrl(alias: string): string {
-  return `ghost.link/${alias}`;
+  return `ghstlink.com/${alias}`;
 }

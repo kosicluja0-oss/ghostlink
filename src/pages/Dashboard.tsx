@@ -135,7 +135,7 @@ const Dashboard = () => {
     activityLimit,
     distributionDays,
   });
-  
+
 
   // Check if wizard should be shown on mount
   useEffect(() => {
@@ -358,7 +358,7 @@ const Dashboard = () => {
         <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
           
-          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden">
+          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-y-auto scrollbar-hide">
               {/* Page Header */}
               <section className="mb-5">
                 <div>
@@ -393,6 +393,25 @@ const Dashboard = () => {
                   </div>
                 </div>
               </section>
+
+              {/* First-time tip banner */}
+              {!hasClicks && !localStorage.getItem('ghostlink_tip_dismissed') && (
+                <div className="mb-5 flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-foreground">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                  <span className="flex-1">
+                    <strong>Get started:</strong> Create your first tracking link, share it with your audience, and watch the data roll in.
+                  </span>
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('ghostlink_tip_dismissed', 'true');
+                      document.querySelector('[data-tip-banner]')?.remove();
+                    }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               {/* Stats Banner - Compact */}
               <section className="mb-5">

@@ -84,6 +84,7 @@ const Links = () => {
                   <div>
                     <h1 className="text-foreground font-semibold text-sm">Links</h1>
                     <p className="text-sm text-muted-foreground">
+                      Create tracking links and monitor clicks, leads, and sales in real-time.
                   </p>
                   </div>
                 </div>
