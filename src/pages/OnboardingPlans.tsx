@@ -199,48 +199,41 @@ export default function OnboardingPlans() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-center">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-              <Ghost className="h-5 w-5 text-primary" />
-            </div>
-            <span className="text-lg font-bold text-foreground tracking-tight">Ghost Link</span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background/80 backdrop-blur-sm flex items-center justify-center px-4">
+      {/* Dark overlay */}
+      <div className="fixed inset-0 bg-black/60 pointer-events-none" />
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center px-4 pt-[8vh] pb-[5vh]">
-        {/* Personalized Hook */}
-        <div className="flex items-center gap-2.5 mb-6">
-          <span className="text-sm text-muted-foreground">Unlock revenue tracking for</span>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">
-            <Link2 className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-medium text-primary">
-              {pendingLink ? extractDisplayUrl(pendingLink) : 'your business'}
-            </span>
-          </div>
-        </div>
-
-        {/* Hero Section */}
-        <div className="text-center mb-8">
+      {/* Modal Card */}
+      <div className="relative z-10 w-full max-w-3xl bg-card border border-border rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
+        {/* Header */}
+        <div className="text-center px-6 pt-8 pb-4">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">Step 2 of 2</span>
+            <span className="text-sm font-medium text-primary">One more step</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1.5">
             Choose your power
           </h1>
-          <p className="text-lg text-muted-foreground max-w-md mx-auto">
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
             Select the plan that fits your tracking needs. You can always upgrade later.
           </p>
         </div>
 
+        {/* Personalized Hook */}
+        {pendingLink && (
+          <div className="flex items-center justify-center gap-2 px-6 pb-2">
+            <span className="text-xs text-muted-foreground">Tracking</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/10">
+              <Link2 className="h-3 w-3 text-primary" />
+              <span className="text-xs font-medium text-primary">
+                {extractDisplayUrl(pendingLink)}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl w-full items-stretch">
+        <div className="grid md:grid-cols-2 gap-5 px-6 pb-8 pt-4">
           {Object.entries(pricingPlans).map(([planId, plan]) => {
             const isFree = planId === 'free';
             const displayPrice = getDisplayPrice(plan, billingCycle);
@@ -249,93 +242,87 @@ export default function OnboardingPlans() {
             return (
               <div
                 key={planId}
-                className={`relative bg-card border rounded-xl p-6 flex flex-col ${
+                className={`relative bg-background border rounded-xl p-5 flex flex-col ${
                   plan.highlighted
-                    ? 'border-primary shadow-lg shadow-primary/20 md:scale-105 z-10'
+                    ? 'border-primary shadow-lg shadow-primary/20 scale-[1.02]'
                     : 'border-border'
                 }`}
               >
                 {/* Badge */}
                 {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                    <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-0.5 rounded-full">
                       {plan.badge}
                     </span>
                   </div>
                 )}
 
-                {/* Header Container - Fixed height for alignment */}
-                <div className="min-h-[180px] flex flex-col">
-                  {/* Plan Name */}
-                  <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
-
-                  {/* Price Area */}
-                  <div className="flex items-baseline justify-center mt-4">
-                    <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
+                {/* Plan Name & Price */}
+                <div className="text-center mb-4">
+                  <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                  <div className="flex items-baseline justify-center mt-2">
+                    <span className="text-3xl font-bold text-foreground tabular-nums">
                       <AnimatedPrice value={displayPrice} />
                     </span>
-                    <span className="text-muted-foreground text-sm ml-1.5">
-                      {isFree ? '' : 'per month'}
+                    <span className="text-muted-foreground text-xs ml-1">
+                      {isFree ? '' : '/mo'}
                     </span>
                   </div>
                   {isFree && (
-                    <p className="text-xs text-muted-foreground text-center mt-1">
-                      Free forever
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Free forever</p>
                   )}
 
-                  {/* Toggle for Paid Plans - Matching Landing Page */}
+                  {/* Billing toggle */}
                   {!isFree ? (
-                    <div className="flex items-center justify-center gap-2 mt-4 h-8">
+                    <div className="flex items-center justify-center gap-2 mt-3">
                       <Switch
                         checked={billingCycle === 'yearly'}
                         onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
-                        className="data-[state=checked]:bg-primary"
+                        className="data-[state=checked]:bg-primary scale-90"
                       />
-                      <span className="text-sm text-muted-foreground">Billed yearly</span>
-                      <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                      <span className="text-xs text-muted-foreground">Yearly</span>
+                      <span className="text-[10px] font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
                         3 months free
                       </span>
                     </div>
                   ) : (
-                    <div className="h-8 mt-4" />
+                    <div className="h-7 mt-3" />
                   )}
                 </div>
 
-                {/* CTA Button - Matching Landing Page Style */}
-                <div className="mt-6">
-                  <Button
-                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
-                    onClick={() => handleSelectPlan(planId)}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Loading...
-                      </>
-                    ) : isFree ? (
-                      'Continue with free version'
-                    ) : (
-                      'Continue with Pro features'
-                    )}
-                  </Button>
-                </div>
-
-                {/* Features List */}
-                <ul className="space-y-3 mt-6 flex-1">
+                {/* Features */}
+                <ul className="space-y-2 flex-1 mb-4">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                    <li key={feature} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
+
+                {/* CTA */}
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
+                  size="sm"
+                  onClick={() => handleSelectPlan(planId)}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : isFree ? (
+                    'Continue with free version'
+                  ) : (
+                    'Continue with Pro features'
+                  )}
+                </Button>
               </div>
             );
           })}
         </div>
-      </main>
+      </div>
     </div>
   );
 }
