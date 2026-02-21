@@ -137,10 +137,11 @@ const Dashboard = () => {
   });
 
 
-  // Check if wizard should be shown on mount
+  // Check if wizard should be shown on mount — only after signup or plan upgrade
   useEffect(() => {
-    const hasSeenWizard = localStorage.getItem('has_seen_welcome_wizard');
-    if (!hasSeenWizard) {
+    const shouldShowWizard = sessionStorage.getItem('show_welcome_wizard');
+    if (shouldShowWizard) {
+      sessionStorage.removeItem('show_welcome_wizard');
       setShowWizard(true);
     } else {
       const wizardCompletedAt = localStorage.getItem('wizard_completed_at');

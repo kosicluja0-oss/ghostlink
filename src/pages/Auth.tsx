@@ -225,8 +225,8 @@ export default function Auth() {
           return;
         }
 
-        // Reset wizard flag so new accounts always see the welcome wizard
-        localStorage.removeItem('has_seen_welcome_wizard');
+        // Signal that wizard should show after signup completes
+        sessionStorage.setItem('show_welcome_wizard', 'true');
         
         navigate(`/verify-email?email=${encodeURIComponent(email)}`);
       }
