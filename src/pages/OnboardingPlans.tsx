@@ -54,19 +54,8 @@ const pricingPlans: Record<string, PricingPlan> = {
       monthly: STRIPE_PRICES.pro.monthly,
       yearly: STRIPE_PRICES.pro.yearly
     },
+    badge: 'Recommended',
     features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Bridge pages', 'Priority support'],
-    highlighted: false
-  },
-  business: {
-    name: 'Business',
-    description: 'For teams and agencies at scale.',
-    monthlyPrice: 15,
-    priceIds: {
-      monthly: STRIPE_PRICES.business.monthly,
-      yearly: STRIPE_PRICES.business.yearly
-    },
-    badge: 'Most Popular',
-    features: ['175 active links', 'All Pro features', 'Team collaboration', 'API access', 'Dedicated support'],
     highlighted: true
   }
 };
@@ -250,8 +239,8 @@ export default function OnboardingPlans() {
           </p>
         </div>
 
-        {/* Pricing Cards - Matching Landing Page Style */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl w-full items-stretch">
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-3xl w-full items-stretch">
           {Object.entries(pricingPlans).map(([planId, plan]) => {
             const isFree = planId === 'free';
             const displayPrice = getDisplayPrice(plan, billingCycle);
@@ -326,9 +315,9 @@ export default function OnboardingPlans() {
                         Loading...
                       </>
                     ) : isFree ? (
-                      'Start free trial'
+                      'Continue with free version'
                     ) : (
-                      'Get started'
+                      'Continue with Pro features'
                     )}
                   </Button>
                 </div>
