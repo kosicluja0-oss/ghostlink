@@ -432,7 +432,7 @@ const Dashboard = () => {
                     <AnalyticsChart data={chartData} showConversions={!isFreeTier} timeRange={timeRange} activeLinkId={selectedLinkId} selectedLinkAlias={selectedLinkAlias} onClearSelection={() => setSelectedLinkId(null)} links={links} activeMetric={activeMetric} onMetricChange={handleMetricChange} />
                   </div>
                   <div className="lg:col-span-2">
-                    {showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
+                    {false && showLiveSignal && <div className="mb-3"><LiveSignalIndicator /></div>}
                     {filteredTransactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-12 px-4 border border-dashed border-border rounded-xl bg-card/50 h-full">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
