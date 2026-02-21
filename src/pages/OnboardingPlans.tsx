@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Ghost, Check, Loader2, Sparkles, Link2, ExternalLink } from 'lucide-react';
+import { Check, Loader2, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { AnimatePresence, motion } from 'framer-motion';
 
 const MOTIVATIONAL_HEADLINES = [
   'Ready to unlock your full tracking power? 🚀',
@@ -114,14 +113,13 @@ export default function OnboardingPlans() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [pendingLink, setPendingLink] = useState<string | null>(null);
   const [checkoutPending, setCheckoutPending] = useState(false);
-  const [headlineIndex, setHeadlineIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHeadlineIndex((i) => (i + 1) % MOTIVATIONAL_HEADLINES.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, []);
+  const [headlineIndex] = useState(() => {
+    const key = 'onboarding_headline_index';
+    const stored = parseInt(localStorage.getItem(key) || '0', 10);
+    const next = (stored + 1) % MOTIVATIONAL_HEADLINES.length;
+    localStorage.setItem(key, String(next));
+    return stored;
+  });
 
   useEffect(() => {
     const storedLink = localStorage.getItem('pending_initial_link');
@@ -223,19 +221,10 @@ export default function OnboardingPlans() {
       {/* Modal Card */}
       <div className="relative z-10 w-full max-w-3xl bg-card border border-border rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
         {/* Header */}
-        <div className="text-center px-6 pt-8 pb-4 min-h-[80px] flex items-center justify-center">
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={headlineIndex}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4 }}
-              className="text-xl md:text-2xl font-bold text-foreground"
-            >
-              {MOTIVATIONAL_HEADLINES[headlineIndex]}
-            </motion.h1>
-          </AnimatePresence>
+        <div className="text-center px-6 pt-8 pb-4">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">
+            {MOTIVATIONAL_HEADLINES[headlineIndex]}
+          </h1>
         </div>
 
         {/* Personalized Hook */}
