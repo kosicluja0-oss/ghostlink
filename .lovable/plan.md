@@ -1,118 +1,70 @@
 
+# Ghost Link — Application Fixes & User Experience Improvements
 
-# Oprava Overview dashboardu -- 3 problémy
+## Summary of Changes
 
-## Problem 1: Top Placements ukazuje "Direct" víckrát
-
-### Příčina
-Databáze obsahuje zdroje ve dvou formátech:
-- **Shortcode placements** (z tracking URL parametru `?s=`): `ig-reels`, `tt-video`, `yt-shorts` -- ty `parsePlacement()` správně rozpozná
-- **Generic sources** (z mockovaných/starých dat): `instagram`, `email`, `tiktok`, `google`, `facebook` -- ty `parsePlacement()` NEZNÁ, vrátí `null`, a UI je zobrazí jako "Direct"
-- Navíc `source = NULL` a `source = 'direct'` jsou v DB dva různé řádky
-
-Výsledek: 3+ řádků "Direct" s různými hodnotami.
-
-### Oprava
-
-**`get_traffic_distribution` RPC funkce** -- sjednotit zdroje na úrovni SQL:
-- Sloučit `NULL` a `'direct'` do jedné skupiny
-- Namapovat generické názvy (`instagram`, `facebook` atd.) na odpovídající platformy přímo v SQL, aby se nesloučily pod "direct"
-
-**`parsePlacement()` v `PlacementBadge.tsx`** -- rozšířit mapu o generické názvy:
-- Přidat `instagram` -> `{ platform: 'instagram', placement: 'Instagram' }`
-- Přidat `facebook`, `tiktok`, `youtube`, `twitter`, `google`, `email`, `reddit`, `newsletter`
-- Zachovat existující shortcodes beze změny
-
-**Dashboard.tsx `placementAnalytics`** -- po rozpoznání agregovat duplicity:
-- Seskupit řádky se stejným `platform + placement` a sečíst metriky
+Based on the full application review, here are the concrete changes to implement:
 
 ---
 
-## Problem 2: CR graf zkreslený test webhooky
+## 1. Fix domain branding everywhere: "ghost.link/" → "ghstlink.com/"
 
-### Příčina
-Test webhooky vytvářejí reálné konverze (leads/sales) v databázi. Na dnech s málo kliky to způsobuje extrémní CR skoky (1400%+).
+The tracking domain prefix `ghost.link/` appears in the Create Link modal but the real tracking domain is `ghstlink.com`. The `getTrackingBaseUrl()` helper in `src/lib/trackingUrl.ts` already returns the correct domain. We need to update:
 
-### Oprava -- mazání testovacích dat
-
-**Postback Edge Function**: Označit testovací konverze přidáním pole do tabulky conversions:
-- Přidat sloupec `is_test` (boolean, default false) do tabulky `conversions`
-- Když postback přijme `event: 'test'` nebo `source: 'ghost_link_test'`, nastavit `is_test = true`
-
-**ManageIntegrationModal.tsx**: Po úspěšném test webhooku zobrazit tlačítko "Delete test data":
-- Nová funkce pro smazání testovacích konverzí (a příslušných clicků)
-- Informační text pod Test Webhook tlačítkem: "Test data will appear in your dashboard. You can delete it after testing."
-
-**RPC funkce**: Vyfiltrovat `is_test = true` konverze ze všech analytických dotazů:
-- `get_user_stats`, `get_daily_analytics`, `get_traffic_distribution`, `get_link_analytics`, `get_recent_activity`
+- **`src/components/links/CreateLinkModal.tsx`** (line 120-121): Replace the hardcoded `ghost.link/` with the actual tracking base URL from `getTrackingBaseUrl()` or `getDisplayUrl()`.
+- **Search the entire codebase** for any other hardcoded `ghost.link` references and replace them.
 
 ---
 
-## Problem 3: Placements a Countries nereagují na time range
+## 2. Fix broken "Watch Tutorial" link
 
-### Příčina
-`get_traffic_distribution` je ALL-TIME agregace bez parametru pro časový filtr. Widgety Top Countries a Top Placements na Overview vždy ukazují celkovou historii, i když je vybrán "1 day" nebo "1 week".
-
-### Oprava
-Přidat parametr `p_days` do `get_traffic_distribution` RPC a předat ho z frontendu na základě zvoleného time range.
+In `src/components/links/LinksEmptyState.tsx` (line 64), the button opens `https://docs.ghostlink.dev/getting-started` which does not exist. Per your preference, we will keep the button but point it to a temporary placeholder URL (e.g., `https://ghstlink.com` or a YouTube link you provide later). For now we will just change it to open the landing page as a fallback.
 
 ---
 
-## Technické detaily
+## 3. Add subtitle to Links page header
 
-### DB migrace
-```text
-1. ALTER TABLE conversions ADD COLUMN is_test boolean DEFAULT false;
-2. UPDATE conversions SET is_test = true 
-   WHERE click_id IN (SELECT id FROM clicks WHERE source = 'ghost_link_test');
-3. Přepsat get_traffic_distribution s p_days parametrem + COALESCE pro source sjednocení
-4. Přidat WHERE is_test = false do všech analytických RPC funkcí
-5. Přidat RLS policy pro DELETE na conversions (vlastník linku)
-```
-
-### PlacementBadge.tsx
-Rozšířit PLACEMENT_MAP o:
-```text
-'instagram' -> { platform: 'instagram', placement: 'Instagram' }
-'facebook'  -> { platform: 'facebook', placement: 'Facebook' }
-'tiktok'    -> { platform: 'tiktok', placement: 'TikTok' }
-'youtube'   -> { platform: 'youtube', placement: 'YouTube' }
-'twitter'   -> { platform: 'x', placement: 'X / Twitter' }
-'google'    -> { platform: 'google', placement: 'Google' }
-'email'     -> { platform: 'email', placement: 'Email' }
-'reddit'    -> { platform: 'reddit', placement: 'Reddit' }
-'newsletter'-> { platform: 'email', placement: 'Newsletter' }
-```
-
-### Dashboard.tsx
-- V `placementAnalytics` useMemo přidat agregaci duplicit (GROUP BY platform+placement, SUM metrik)
-- Předat `timeRange` do `useDashboardData` a použít v `get_traffic_distribution`
-
-### ManageIntegrationModal.tsx
-- Pod Test Webhook tlačítko přidat varování: "Test events create real data. Delete after testing."
-- Po úspěšném testu zobrazit "Delete test data" tlačítko
-- Delete funkce: smaže conversions WHERE is_test = true pro danou integraci
-
-### Postback Edge Function
-- Detekovat test event (`event === 'test'` nebo `source === 'ghost_link_test'`)
-- Při insertu konverze nastavit `is_test = true`
+In `src/pages/Links.tsx` (lines 85-88), the header section has an empty `<p>` tag. We will add a helpful subtitle like: "Create tracking links and monitor clicks, leads, and sales in real-time."
 
 ---
 
-## Soubory k úpravě
+## 4. Fix Dashboard content clipping
 
-1. **DB migrace** -- nový sloupec, opravené RPC funkce, RLS pro delete
-2. `supabase/functions/postback/index.ts` -- označení testovacích konverzí
-3. `src/components/analytics/PlacementBadge.tsx` -- rozšíření PLACEMENT_MAP
-4. `src/pages/Dashboard.tsx` -- agregace duplicit, time range pro distribuce
-5. `src/hooks/useDashboardData.ts` -- p_days parametr pro distribuce
-6. `src/components/integrations/ManageIntegrationModal.tsx` -- delete test data UI
+In `src/pages/Dashboard.tsx` (line 361), the `<main>` element uses `h-screen overflow-hidden` which clips content on smaller screens. We will change it to `overflow-y-auto scrollbar-hide` so that all content remains accessible.
 
-## Pořadí implementace
+---
 
-1. DB migrace (sloupec + RPC opravy)
-2. Postback (is_test flag)
-3. PlacementBadge (rozšířená mapa)
-4. Dashboard + hooks (agregace, time range)
-5. ManageIntegrationModal (delete test data)
+## 5. Add first-time contextual tip banner
 
+After the wizard completes and the user is on the Dashboard or Links page with no data, show a small dismissible tip card:
+- "Get started: Create your first tracking link, share it with your audience, and watch the data roll in."
+- Stored in `localStorage` so it only appears once.
+- Clean, minimal design matching the existing card style.
+- Shows on the Dashboard when `hasClicks === false` and wizard is completed.
+
+---
+
+## 6. Add inline category descriptions on Integrations page
+
+Each integration category heading (Payment Platforms, Affiliate Networks, etc.) currently has no subtitle. Add a one-line explanation below each, e.g.:
+- Payment Platforms: "Connect payment processors to automatically track sales."
+- Creator Economy: "Track revenue from memberships, tips, and subscriptions."
+- Affiliate Networks: "Monitor commissions and affiliate sales."
+- Automation: "Connect with workflow automation tools."
+- Marketing/CRM: "Sync leads and subscribers automatically."
+
+This text already exists in the `CATEGORIES` array as the `description` field (lines 61-67 of Integrations.tsx) — it just needs to be rendered.
+
+---
+
+## Technical Details
+
+### Files to modify:
+1. `src/components/links/CreateLinkModal.tsx` — import `getTrackingBaseUrl()`, replace hardcoded domain
+2. `src/components/links/LinksEmptyState.tsx` — update tutorial URL
+3. `src/pages/Links.tsx` — add subtitle text
+4. `src/pages/Dashboard.tsx` — fix overflow on main, add first-time tip component
+5. `src/pages/Integrations.tsx` — render existing category descriptions
+
+### No database or backend changes needed
+All changes are purely frontend/UI.
