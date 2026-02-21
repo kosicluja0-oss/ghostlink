@@ -159,11 +159,7 @@ export default function OnboardingPlans() {
   }, [checkoutPending, navigate]);
 
   const handleSelectPlan = async (planId: string) => {
-    // Signal that wizard should show on first dashboard visit after plan selection
-    sessionStorage.setItem('show_welcome_wizard', 'true');
-    
     if (planId === 'free') {
-      toast.success('Welcome to Ghost Link!');
       navigate('/dashboard');
       return;
     }
