@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ExternalLink, TrendingUp, MousePointerClick, Users, DollarSign, Percent, CalendarDays, ChevronDown } from 'lucide-react';
+import { ExternalLink, TrendingUp, MousePointerClick, Users, DollarSign, Percent, CalendarDays, ChevronDown, Lock } from 'lucide-react';
 import { AnimatedValue } from '@/components/analytics/AnimatedValue';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -11,6 +11,7 @@ import { LinkRecentActivity } from '@/components/links/LinkRecentActivity';
 import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { ConversionFunnel } from '@/components/analytics/ConversionFunnel';
 import { useLinkAnalytics } from '@/hooks/useLinkAnalytics';
+import { useSubscription } from '@/hooks/useSubscription';
 import { getDisplayUrl } from '@/lib/trackingUrl';
 import type { GhostLink } from '@/types';
 
@@ -58,22 +59,35 @@ interface KpiItemProps {
   active?: boolean;
   onClick?: () => void;
   accentColor?: string;
+  isLocked?: boolean;
 }
 
-function KpiItem({ icon, label, value, dimmed, active, onClick, accentColor }: KpiItemProps) {
+function KpiItem({ icon, label, value, dimmed, active, onClick, accentColor, isLocked }: KpiItemProps) {
   return (
     <button
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-200 cursor-pointer ${
+      onClick={isLocked ? undefined : onClick}
+      className={`relative flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-200 ${
+        isLocked ? 'cursor-default' : 'cursor-pointer'
+      } ${
         active
           ? 'ring-1 ring-primary/30'
           : 'bg-muted/20 hover:bg-muted/40 hover:-translate-y-0.5 hover:shadow-sm'
       } ${dimmed ? 'opacity-50' : ''}`}
-      style={active && accentColor ? { backgroundColor: `${accentColor}15`, boxShadow: `0 0 12px -3px ${accentColor}66` } : undefined}
+      style={active && accentColor && !isLocked ? { backgroundColor: `${accentColor}15`, boxShadow: `0 0 12px -3px ${accentColor}66` } : undefined}
     >
-      <div style={accentColor ? { color: accentColor } : undefined} className={accentColor ? '' : 'text-muted-foreground'}>{icon}</div>
-      <AnimatedValue value={value} className="text-sm font-bold text-foreground tabular-nums" />
-      <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
+      <div className={isLocked ? 'blur-[2px]' : ''}>
+        <div style={accentColor ? { color: accentColor } : undefined} className={accentColor ? '' : 'text-muted-foreground'}>{icon}</div>
+        <AnimatedValue value={value} className="text-sm font-bold text-foreground tabular-nums" />
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
+      </div>
+      {isLocked && (
+        <div className="absolute inset-0 flex items-center justify-center bg-card/50 rounded-xl backdrop-blur-[1px]">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Lock className="h-3 w-3" />
+            <span className="text-[9px] font-medium">PRO</span>
+          </div>
+        </div>
+      )}
     </button>
   );
 }
@@ -97,6 +111,8 @@ function LoadingSkeleton() {
 }
 
 export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelProps) {
+  const { tier } = useSubscription();
+  const isFreeTier = tier === 'free';
   const [timeRange, setTimeRange] = useState<DetailTimeRange>('30d');
   const [chartMetric, setChartMetric] = useState<ChartMetric>('clicks');
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -153,10 +169,10 @@ export function LinkDetailPanel({ link, open, onOpenChange }: LinkDetailPanelPro
             <div className="space-y-5">
               <div className="grid grid-cols-5 gap-1.5">
                 <KpiItem icon={<MousePointerClick className="w-3.5 h-3.5" />} label="Clicks" value={funnel.totalClicks.toLocaleString()} active={chartMetric === 'clicks'} onClick={() => setChartMetric('clicks')} accentColor="hsl(var(--chart-clicks))" />
-                <KpiItem icon={<Users className="w-3.5 h-3.5" />} label="Leads" value={funnel.totalLeads.toLocaleString()} active={chartMetric === 'leads'} onClick={() => setChartMetric('leads')} accentColor="hsl(var(--chart-leads))" />
-                <KpiItem icon={<DollarSign className="w-3.5 h-3.5" />} label="Sales" value={funnel.totalSales.toLocaleString()} active={chartMetric === 'sales'} onClick={() => setChartMetric('sales')} accentColor="hsl(var(--chart-sales))" />
-                <KpiItem icon={<TrendingUp className="w-3.5 h-3.5" />} label="EPC" value={`$${funnel.epc.toFixed(2)}`} active={chartMetric === 'epc'} onClick={() => setChartMetric('epc')} accentColor="hsl(var(--chart-conversions))" />
-                <KpiItem icon={<Percent className="w-3.5 h-3.5" />} label="CR" value={`${funnel.conversionRate.toFixed(1)}%`} active={chartMetric === 'cr'} onClick={() => setChartMetric('cr')} accentColor="hsl(var(--foreground))" />
+                <KpiItem icon={<Users className="w-3.5 h-3.5" />} label="Leads" value={funnel.totalLeads.toLocaleString()} active={chartMetric === 'leads'} onClick={isFreeTier ? undefined : () => setChartMetric('leads')} accentColor="hsl(var(--chart-leads))" isLocked={isFreeTier} />
+                <KpiItem icon={<DollarSign className="w-3.5 h-3.5" />} label="Sales" value={funnel.totalSales.toLocaleString()} active={chartMetric === 'sales'} onClick={isFreeTier ? undefined : () => setChartMetric('sales')} accentColor="hsl(var(--chart-sales))" isLocked={isFreeTier} />
+                <KpiItem icon={<TrendingUp className="w-3.5 h-3.5" />} label="EPC" value={`$${funnel.epc.toFixed(2)}`} active={chartMetric === 'epc'} onClick={isFreeTier ? undefined : () => setChartMetric('epc')} accentColor="hsl(var(--chart-conversions))" isLocked={isFreeTier} />
+                <KpiItem icon={<Percent className="w-3.5 h-3.5" />} label="CR" value={`${funnel.conversionRate.toFixed(1)}%`} active={chartMetric === 'cr'} onClick={isFreeTier ? undefined : () => setChartMetric('cr')} accentColor="hsl(var(--foreground))" isLocked={isFreeTier} />
               </div>
 
               <div>
