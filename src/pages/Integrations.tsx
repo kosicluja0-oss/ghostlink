@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { CreditCard, Users, ShoppingBag, TrendingUp, Zap, Mail, ChevronDown } from 'lucide-react';
+import { CreditCard, Users, ShoppingBag, TrendingUp, Zap, Mail, ChevronDown, Lock, ArrowRight, BarChart3, Link2, Webhook } from 'lucide-react';
 
 // Brand logos
 import whopLogo from '@/assets/logos/whop.png';
@@ -12,6 +12,7 @@ import gohighlevelLogo from '@/assets/logos/gohighlevel.png';
 import beehiivLogo from '@/assets/logos/beehiiv.png';
 import convertkitLogo from '@/assets/logos/convertkit.png';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { useNavigate } from 'react-router-dom';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { IntegrationCard, type Integration } from '@/components/integrations/IntegrationCard';
@@ -168,6 +169,97 @@ const Integrations = () => {
   const pendingCount = integrationsWithStatus.filter((i) => i.status === 'pending').length;
 
   const selectedDbIntegration = selectedIntegration ? getIntegration(selectedIntegration.id) : undefined;
+
+  const isFreeTier = userTier === 'free';
+  const navigate = useNavigate();
+
+  if (isFreeTier) {
+    return (
+      <TooltipProvider>
+        <div className="h-screen overflow-hidden bg-background">
+          <AppSidebar />
+          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden flex flex-col relative">
+            {/* Blurred background content */}
+            <div className="absolute inset-0 p-4 lg:p-6 blur-[6px] opacity-40 pointer-events-none select-none" aria-hidden>
+              <section className="mb-6">
+                <h1 className="text-foreground text-sm font-semibold">Data Integrations</h1>
+              </section>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {INTEGRATIONS.slice(0, 9).map((integration) => (
+                  <div key={integration.id} className="p-4 rounded-lg bg-card border border-border h-20" />
+                ))}
+              </div>
+            </div>
+
+            {/* Lock overlay */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+              <div className="max-w-lg w-full bg-card border border-border rounded-2xl p-8 shadow-xl">
+                {/* Lock icon */}
+                <div className="flex justify-center mb-5">
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Lock className="w-7 h-7 text-primary" />
+                  </div>
+                </div>
+
+                <h2 className="text-xl font-bold text-foreground text-center mb-2">
+                  Unlock Data Integrations
+                </h2>
+                <p className="text-sm text-muted-foreground text-center mb-6">
+                  Connect your favorite platforms and track every conversion automatically.
+                </p>
+
+                {/* Feature list */}
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-ghost-surface border border-ghost-border-subtle">
+                    <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Webhook className="w-4 h-4 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Real-time Webhooks</p>
+                      <p className="text-xs text-muted-foreground">Receive instant sale &amp; lead notifications from 20+ platforms like Stripe, Gumroad, Shopify and more.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-ghost-surface border border-ghost-border-subtle">
+                    <div className="w-8 h-8 rounded-lg bg-chart-leads/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <BarChart3 className="w-4 h-4 text-chart-leads" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Conversion Attribution</p>
+                      <p className="text-xs text-muted-foreground">See exactly which links drive sales and leads — attribute every dollar to the right traffic source.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-ghost-surface border border-ghost-border-subtle">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Link2 className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Multi-link Mapping</p>
+                      <p className="text-xs text-muted-foreground">Assign multiple tracking links to a single integration and monitor performance across campaigns.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={() => navigate('/onboarding-plans')}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+                >
+                  Upgrade to Pro
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <p className="text-xs text-muted-foreground text-center mt-3">
+                  Available on Pro &amp; Business plans
+                </p>
+              </div>
+            </div>
+          </main>
+        </div>
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider>
