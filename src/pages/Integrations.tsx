@@ -244,7 +244,7 @@ const Integrations = () => {
                 {/* CTA */}
                 <button
                   onClick={() => navigate('/onboarding/plans')}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300"
                 >
                   Upgrade to Pro
                   <ArrowRight className="w-4 h-4" />
