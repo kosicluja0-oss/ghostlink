@@ -1,70 +1,92 @@
 
-# Ghost Link — Application Fixes & User Experience Improvements
 
-## Summary of Changes
+# Jak přejít ze Stripe Sandbox na Live (krok za krokem)
 
-Based on the full application review, here are the concrete changes to implement:
-
----
-
-## 1. Fix domain branding everywhere: "ghost.link/" → "ghstlink.com/"
-
-The tracking domain prefix `ghost.link/` appears in the Create Link modal but the real tracking domain is `ghstlink.com`. The `getTrackingBaseUrl()` helper in `src/lib/trackingUrl.ts` already returns the correct domain. We need to update:
-
-- **`src/components/links/CreateLinkModal.tsx`** (line 120-121): Replace the hardcoded `ghost.link/` with the actual tracking base URL from `getTrackingBaseUrl()` or `getDisplayUrl()`.
-- **Search the entire codebase** for any other hardcoded `ghost.link` references and replace them.
+Tvoje integrace je kompletně funkční v sandbox režimu. Jediné co je potřeba, je provést 4 kroky ve Stripe Dashboardu a pak aktualizovat 3 hodnoty v projektu. Žádný kód se měnit nemusí.
 
 ---
 
-## 2. Fix broken "Watch Tutorial" link
+## Krok 1: Přepni Stripe Dashboard do Live režimu
 
-In `src/components/links/LinksEmptyState.tsx` (line 64), the button opens `https://docs.ghostlink.dev/getting-started` which does not exist. Per your preference, we will keep the button but point it to a temporary placeholder URL (e.g., `https://ghstlink.com` or a YouTube link you provide later). For now we will just change it to open the landing page as a fallback.
-
----
-
-## 3. Add subtitle to Links page header
-
-In `src/pages/Links.tsx` (lines 85-88), the header section has an empty `<p>` tag. We will add a helpful subtitle like: "Create tracking links and monitor clicks, leads, and sales in real-time."
+1. Jdi na [dashboard.stripe.com](https://dashboard.stripe.com)
+2. V levém horním rohu uvidíš přepínač **"Test mode"** -- vypni ho (klikni na něj)
+3. Tím se přepneš do Live režimu
 
 ---
 
-## 4. Fix Dashboard content clipping
+## Krok 2: Vytvoř Live produkty a ceny
 
-In `src/pages/Dashboard.tsx` (line 361), the `<main>` element uses `h-screen overflow-hidden` which clips content on smaller screens. We will change it to `overflow-y-auto scrollbar-hide` so that all content remains accessible.
+V Live režimu Stripe Dashboardu:
 
----
+1. Jdi do **Products** (v levém menu)
+2. Vytvoř **Pro** produkt:
+   - Název: `Pro`
+   - Přidej 2 ceny:
+     - **Monthly**: $10/měsíc (recurring, monthly)
+     - **Yearly**: $90/rok (recurring, yearly) -- to odpovídá $7.50/měsíc se slevou 25%
+3. Vytvoř **Business** produkt (pokud ho chceš nabízet):
+   - Název: `Business`
+   - Přidej 2 ceny:
+     - **Monthly**: $15/měsíc
+     - **Yearly**: $135/rok
 
-## 5. Add first-time contextual tip banner
-
-After the wizard completes and the user is on the Dashboard or Links page with no data, show a small dismissible tip card:
-- "Get started: Create your first tracking link, share it with your audience, and watch the data roll in."
-- Stored in `localStorage` so it only appears once.
-- Clean, minimal design matching the existing card style.
-- Shows on the Dashboard when `hasClicks === false` and wizard is completed.
-
----
-
-## 6. Add inline category descriptions on Integrations page
-
-Each integration category heading (Payment Platforms, Affiliate Networks, etc.) currently has no subtitle. Add a one-line explanation below each, e.g.:
-- Payment Platforms: "Connect payment processors to automatically track sales."
-- Creator Economy: "Track revenue from memberships, tips, and subscriptions."
-- Affiliate Networks: "Monitor commissions and affiliate sales."
-- Automation: "Connect with workflow automation tools."
-- Marketing/CRM: "Sync leads and subscribers automatically."
-
-This text already exists in the `CATEGORIES` array as the `description` field (lines 61-67 of Integrations.tsx) — it just needs to be rendered.
+4. **Zapiš si Price ID** každé ceny (vypadají jako `price_xxxxx`). Budeš je potřebovat v kroku 4.
 
 ---
 
-## Technical Details
+## Krok 3: Nastav Live Webhook
 
-### Files to modify:
-1. `src/components/links/CreateLinkModal.tsx` — import `getTrackingBaseUrl()`, replace hardcoded domain
-2. `src/components/links/LinksEmptyState.tsx` — update tutorial URL
-3. `src/pages/Links.tsx` — add subtitle text
-4. `src/pages/Dashboard.tsx` — fix overflow on main, add first-time tip component
-5. `src/pages/Integrations.tsx` — render existing category descriptions
+Stále v Live režimu Stripe Dashboardu:
 
-### No database or backend changes needed
-All changes are purely frontend/UI.
+1. Jdi do **Developers -> Webhooks**
+2. Klikni **Add endpoint**
+3. Zadej URL:
+   ```
+   https://mlgrbwkddyrazysxrlvo.supabase.co/functions/v1/stripe-webhook
+   ```
+4. Vyber tyto eventy:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.payment_failed`
+5. Klikni **Add endpoint**
+6. Na stránce endpointu klikni na **Reveal signing secret** -- zapiš si ho (začíná `whsec_...`)
+
+---
+
+## Krok 4: Aktualizuj secrets a kód v projektu
+
+Tady budu potřebovat tvoji pomoc -- pošli mi:
+
+### A) Live API klíč
+- V Stripe Dashboard (Live režim) jdi do **Developers -> API keys**
+- Zkopíruj **Secret key** (začíná `sk_live_...`)
+- Já ti ho pak bezpečně nastavím jako secret v projektu (nahradí stávající `sk_test_...`)
+
+### B) Webhook signing secret
+- Ten z kroku 3 (`whsec_...`)
+- Také ho nastavím jako secret
+
+### C) Nové Live Price ID
+- Pošli mi 4 Price ID z kroku 2, já je aktualizuji v kódu (`src/lib/stripe.ts` a `supabase/functions/stripe-webhook/index.ts`)
+
+---
+
+## Shrnutí co se změní
+
+| Co | Odkud | Kam |
+|---|---|---|
+| `STRIPE_SECRET_KEY` | `sk_test_...` | `sk_live_...` |
+| `STRIPE_WEBHOOK_SECRET` | stávající test | nový live `whsec_...` |
+| 4x Price ID v kódu | `price_1Sqv...` (test) | nové live `price_...` |
+
+Kód edge funkcí, frontend, databáze -- nic z toho se měnit nemusí. Jen tyto 3 hodnoty.
+
+---
+
+## Po dokončení
+
+- Reální zákazníci budou moci platit kartou
+- Webhook bude automaticky aktualizovat jejich tier (free -> pro/business)
+- Customer Portal bude fungovat pro správu předplatného
+
