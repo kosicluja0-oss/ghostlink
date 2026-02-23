@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -807,6 +808,26 @@ const Settings = () => {
                               </Badge>
                               {tier !== 'free' && <Check className="w-4 h-4 text-success" />}
                             </div>
+                          </div>
+
+                          <Separator className="my-4" />
+
+                          <div className="space-y-2">
+                            <Label>Stripe Customer Portal</Label>
+                            <p className="text-xs text-muted-foreground">Open Stripe portal without active subscription requirement</p>
+                            <Button onClick={handleManageSubscription} disabled={portalLoading} variant="outline">
+                              {portalLoading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Opening...
+                                </>
+                              ) : (
+                                <>
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Manage Subscription
+                                </>
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </AccordionContent>
