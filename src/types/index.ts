@@ -18,13 +18,13 @@ export const TIERS: Record<TierType, UserTier> = {
     type: 'pro',
     maxLinks: 100,
     hasFullAnalytics: true,
-    price: 9.99,
+    price: 10,
   },
   business: {
     type: 'business',
     maxLinks: 175,
     hasFullAnalytics: true,
-    price: 14.99,
+    price: 15,
   },
 };
 

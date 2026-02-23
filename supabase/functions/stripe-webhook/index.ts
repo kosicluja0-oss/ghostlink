@@ -14,10 +14,10 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 // Price ID to tier mapping
 const PRICE_TO_TIER: Record<string, { tier: string; cycle: string }> = {
-  "price_1SqvwMR7WITbhBZj8cbrc0Zz": { tier: "pro", cycle: "monthly" },
-  "price_1SqvxyR7WITbhBZjcM73F1lN": { tier: "pro", cycle: "yearly" },
-  "price_1Sqw2AR7WITbhBZjvQDRReY6": { tier: "business", cycle: "monthly" },
-  "price_1Sqw2aR7WITbhBZjzBBcN8H3": { tier: "business", cycle: "yearly" },
+  "price_1T40RUJEtCuiUlkpbRCOpK5X": { tier: "pro", cycle: "monthly" },
+  "price_1T40RqJEtCuiUlkpqlHF3ndZ": { tier: "pro", cycle: "yearly" },
+  "price_1T40SKJEtCuiUlkpoyShtOnU": { tier: "business", cycle: "monthly" },
+  "price_1T40SlJEtCuiUlkph6VPCrU7": { tier: "business", cycle: "yearly" },
 };
 
 // Helper to upsert billing_data
