@@ -1,21 +1,19 @@
 
+# Admin "Manage Subscription" Button
 
-# Krok 3: Vytvoreni Live produktu a cen ve Stripe
+## What changes
+Add a "Manage Subscription" button into the existing **Developer Tools** admin section (visible only to admin users). This button will call the same `openCustomerPortal()` function, but will be available regardless of `subscription_status` -- allowing the admin to open the Stripe Customer Portal even without an active subscription.
 
-## Co udelam za tebe
-Vse vytvorim automaticky - nemusis nic delat rucne ve Stripe Dashboardu.
+## Technical Details
 
-## Postup
+### File: `src/pages/Settings.tsx`
 
-1. Vytvorim produkt **GhostLink Pro** s cenou $10/mesic
-2. Pridam rocni cenu **$90/rok** k produktu Pro
-3. Vytvorim produkt **GhostLink Business** s cenou $15/mesic
-4. Pridam rocni cenu **$135/rok** k produktu Business
-5. Aktualizuji kod projektu s novymi Price ID:
-   - `src/lib/stripe.ts` - konstanty STRIPE_PRICES
-   - `supabase/functions/stripe-webhook/index.ts` - mapovani PRICE_TO_TIER
-   - `src/types/index.ts` - ceny z $9.99/$14.99 na $10/$15
+Inside the existing admin `AccordionItem` (lines 766-812), after the "Test Tier Switching" block, add a new subsection:
 
-## Vysledek
-Po schvaleni budu mit vsechny 4 ceny vytvorene ve Stripe a kod projektu bude pouzivat spravne live Price ID.
+- A separator line
+- Label: "Stripe Customer Portal"
+- A short description: "Open Stripe portal without active subscription requirement"
+- A "Manage Subscription" button with `ExternalLink` icon, using the existing `handleManageSubscription` handler and `portalLoading` state
+- This button is always enabled (no `isSubscribed` check)
 
+No new state, hooks, or files needed -- everything reuses existing logic.
