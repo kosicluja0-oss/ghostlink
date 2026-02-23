@@ -48,10 +48,26 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single();
 
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     let customerId = billing?.stripe_customer_id;
 
+    // Always verify the customer exists in Stripe, fall back to email lookup
+    if (customerId) {
+      try {
+        await stripe.customers.retrieve(customerId);
+        logStep("Verified existing Stripe customer", { customerId });
+      } catch {
+        logStep("Stored customer ID invalid, clearing and looking up by email", { customerId });
+        customerId = null;
+        // Clear the invalid ID
+        await supabaseClient
+          .from("billing_data")
+          .update({ stripe_customer_id: null })
+          .eq("user_id", user.id);
+      }
+    }
+
     if (!customerId) {
-      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       if (customers.data.length === 0) {
         throw new Error("No Stripe customer found for this user. Please subscribe to a plan first.");
@@ -63,7 +79,7 @@ serve(async (req) => {
         .from("billing_data")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (existingBilling) {
         await supabaseClient
@@ -78,8 +94,6 @@ serve(async (req) => {
     }
 
     logStep("Found Stripe customer", { customerId });
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const origin = req.headers.get("origin") || "https://ghostlink.lovable.app";
     
     const portalSession = await stripe.billingPortal.sessions.create({
