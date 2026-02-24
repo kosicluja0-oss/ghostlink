@@ -204,8 +204,10 @@ async function handleSubscription(planId: string, cycle: BillingCycle, isAuthent
 
   // Require authentication for paid plans
   if (!isAuthenticated) {
-    toast.info('Please sign in to subscribe');
-    navigate('/auth?mode=signup&redirect=pricing');
+    // Store selected plan so checkout triggers automatically after signup + email verification
+    localStorage.setItem('pending_plan', JSON.stringify({ planId, cycle }));
+    toast.info('Create an account to continue with your plan');
+    navigate('/auth?mode=signup');
     return;
   }
   const stripePlanId = planId as PlanId;

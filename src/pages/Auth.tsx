@@ -77,6 +77,12 @@ export default function Auth() {
         return;
       }
       if (session) {
+        // If there's a pending plan from landing page pricing, always go to onboarding
+        const hasPendingPlan = !!localStorage.getItem('pending_plan');
+        if (hasPendingPlan) {
+          navigate('/onboarding/plans');
+          return;
+        }
         // Check if user has completed plan selection
         supabase
           .from('profiles')
@@ -104,6 +110,11 @@ export default function Auth() {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
+        const hasPendingPlan = !!localStorage.getItem('pending_plan');
+        if (hasPendingPlan) {
+          navigate('/onboarding/plans');
+          return;
+        }
         supabase
           .from('profiles')
           .select('tier')

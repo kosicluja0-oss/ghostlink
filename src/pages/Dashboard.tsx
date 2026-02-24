@@ -81,7 +81,7 @@ const Dashboard = () => {
     refetch: refetchSubscription
   } = useSubscription();
 
-  // Handle checkout success redirect - force subscription sync
+  // Handle checkout success redirect - force subscription sync and show wizard
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') === 'success') {
@@ -89,12 +89,12 @@ const Dashboard = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete('checkout');
       window.history.replaceState({}, '', url.pathname);
+      // Show welcome wizard for new subscribers
+      setShowWizard(true);
       // Force refetch subscription from Stripe
       const syncSubscription = async () => {
-        // Small delay to let Stripe process
         await new Promise(r => setTimeout(r, 2000));
         refetchSubscription();
-        // Refetch again after 5s for safety
         setTimeout(() => refetchSubscription(), 5000);
       };
       syncSubscription();
