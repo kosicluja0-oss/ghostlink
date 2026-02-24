@@ -134,8 +134,6 @@ export default function OnboardingPlans() {
   }, [searchParams]);
 
   // Listen for subscription changes while checkout is pending
-  // When the Stripe tab completes, the webhook updates the profile.
-  // We poll the profile to detect when tier changes from 'free'.
   useEffect(() => {
     if (!checkoutPending) return;
     
@@ -151,14 +149,14 @@ export default function OnboardingPlans() {
       
       if (profile?.tier && profile.tier !== 'free') {
         clearInterval(interval);
-        navigate('/dashboard');
+        navigate('/dashboard?checkout=success');
       }
     }, 3000);
 
     return () => clearInterval(interval);
   }, [checkoutPending, navigate]);
 
-  const handleSelectPlan = async (planId: string) => {
+  const handleSelectPlan = useCallback(async (planId: string, overrideCycle?: BillingCycle) => {
     if (planId === 'free') {
       navigate('/dashboard');
       return;
@@ -170,18 +168,39 @@ export default function OnboardingPlans() {
       return;
     }
 
+    const cycle = overrideCycle || billingCycle;
     setLoadingPlan(planId);
     try {
-      const url = await createCheckoutSession(stripePlanId, billingCycle);
+      const url = await createCheckoutSession(stripePlanId, cycle);
       if (url) {
         window.open(url, '_blank');
-        // Don't navigate blindly — show a waiting state and poll for subscription activation
         setCheckoutPending(true);
       }
     } finally {
       setLoadingPlan(null);
     }
-  };
+  }, [billingCycle, navigate]);
+
+  // Auto-trigger Stripe checkout if user selected a plan before signup
+  const [autoCheckoutTriggered, setAutoCheckoutTriggered] = useState(false);
+  useEffect(() => {
+    if (autoCheckoutTriggered) return;
+    const pendingPlanRaw = localStorage.getItem('pending_plan');
+    if (!pendingPlanRaw) return;
+    
+    try {
+      const { planId, cycle } = JSON.parse(pendingPlanRaw) as { planId: string; cycle: BillingCycle };
+      if (planId && planId !== 'free' && STRIPE_PRICES[planId as PlanId]) {
+        setAutoCheckoutTriggered(true);
+        localStorage.removeItem('pending_plan');
+        setTimeout(() => {
+          handleSelectPlan(planId, cycle);
+        }, 500);
+      }
+    } catch {
+      localStorage.removeItem('pending_plan');
+    }
+  }, [autoCheckoutTriggered, handleSelectPlan]);
 
   // Checkout pending screen — user opened Stripe in another tab
   if (checkoutPending) {
