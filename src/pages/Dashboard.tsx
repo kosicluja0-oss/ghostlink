@@ -77,8 +77,29 @@ const Dashboard = () => {
     profile
   } = useProfile();
   const {
-    tier: subscriptionTier
+    tier: subscriptionTier,
+    refetch: refetchSubscription
   } = useSubscription();
+
+  // Handle checkout success redirect - force subscription sync
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'success') {
+      // Remove query param
+      const url = new URL(window.location.href);
+      url.searchParams.delete('checkout');
+      window.history.replaceState({}, '', url.pathname);
+      // Force refetch subscription from Stripe
+      const syncSubscription = async () => {
+        // Small delay to let Stripe process
+        await new Promise(r => setTimeout(r, 2000));
+        refetchSubscription();
+        // Refetch again after 5s for safety
+        setTimeout(() => refetchSubscription(), 5000);
+      };
+      syncSubscription();
+    }
+  }, [refetchSubscription]);
   const {
     formatInTimezone
   } = useTimezone();

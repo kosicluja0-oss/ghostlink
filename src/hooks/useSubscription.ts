@@ -7,8 +7,6 @@ export interface SubscriptionData {
   tier: TierType;
   subscriptionStatus: string | null;
   billingCycle: string | null;
-  stripeCustomerId: string | null;
-  subscriptionId: string | null;
 }
 
 export function useSubscription() {
@@ -22,41 +20,36 @@ export function useSubscription() {
           tier: 'free',
           subscriptionStatus: null,
           billingCycle: null,
-          stripeCustomerId: null,
-          subscriptionId: null,
         };
       }
 
-      // Fetch tier from profiles
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('tier')
-        .eq('id', user.id)
-        .single();
+      try {
+        // Call check-subscription edge function that queries Stripe directly
+        const { data: result, error: fnError } = await supabase.functions.invoke('check-subscription');
 
-      // Fetch billing data from separate table
-      const { data: billing } = await supabase
-        .from('billing_data')
-        .select('subscription_status, billing_cycle, stripe_customer_id, subscription_id')
-        .eq('user_id', user.id)
-        .single();
+        if (fnError) {
+          console.error('[useSubscription] Edge function error:', fnError);
+          // Fallback to DB query
+          return await fallbackDbQuery(user.id);
+        }
 
-      return {
-        tier: (profile?.tier as TierType) || 'free',
-        subscriptionStatus: billing?.subscription_status || null,
-        billingCycle: billing?.billing_cycle || null,
-        stripeCustomerId: billing?.stripe_customer_id || null,
-        subscriptionId: billing?.subscription_id || null,
-      };
+        return {
+          tier: (result?.tier as TierType) || 'free',
+          subscriptionStatus: result?.subscription_status || null,
+          billingCycle: result?.billing_cycle || null,
+        };
+      } catch (err) {
+        console.error('[useSubscription] Error calling check-subscription:', err);
+        return await fallbackDbQuery(user.id);
+      }
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60,
-    refetchInterval: 1000 * 60,
+    staleTime: 1000 * 30, // 30 seconds
+    refetchInterval: 1000 * 60, // every minute
   });
 
   const isSubscribed = data?.subscriptionStatus === 'active';
   const isPastDue = data?.subscriptionStatus === 'past_due';
-  const hasStripeCustomer = !!data?.stripeCustomerId;
 
   return {
     tier: data?.tier || 'free',
@@ -64,9 +57,29 @@ export function useSubscription() {
     billingCycle: data?.billingCycle,
     isSubscribed,
     isPastDue,
-    hasStripeCustomer,
     isLoading,
     error,
     refetch,
+  };
+}
+
+// Fallback: query DB directly if edge function fails
+async function fallbackDbQuery(userId: string): Promise<SubscriptionData> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('tier')
+    .eq('id', userId)
+    .single();
+
+  const { data: billing } = await supabase
+    .from('billing_data')
+    .select('subscription_status, billing_cycle')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  return {
+    tier: (profile?.tier as TierType) || 'free',
+    subscriptionStatus: billing?.subscription_status || null,
+    billingCycle: billing?.billing_cycle || null,
   };
 }
