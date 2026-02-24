@@ -29,7 +29,7 @@ export function HeroLinkInput() {
         if (entries[0].isIntersecting) {
           setHasAnimated(true);
           const startTime = Date.now();
-          
+
           const animate = () => {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / COUNT_DURATION, 1);
@@ -37,12 +37,12 @@ export function HeroLinkInput() {
             const easeOut = 1 - Math.pow(1 - progress, 3);
             const current = Math.floor(easeOut * TARGET_COUNT);
             setUserCount(current);
-            
+
             if (progress < 1) {
               requestAnimationFrame(animate);
             }
           };
-          
+
           requestAnimationFrame(animate);
         }
       },
@@ -80,10 +80,10 @@ export function HeroLinkInput() {
     if (hasValue) {
       // Save URL to localStorage
       localStorage.setItem('pending_initial_link', inputValue.trim());
-      
+
       // Show loading state
       setIsProcessing(true);
-      
+
       // Redirect after 1.5s delay
       setTimeout(() => {
         navigate('/auth?mode=signup');
@@ -99,16 +99,16 @@ export function HeroLinkInput() {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div 
+      <div
         className={cn(
           "relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 rounded-2xl border transition-all duration-300",
           "bg-[#0a0a0a]",
           "hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)]",
-          isFocused || hasValue
-            ? "border-white/20 shadow-[0_0_20px_hsl(var(--primary)/0.15)]" 
-            : "border-white/[0.08] hover:border-white/[0.12]"
-        )}
-      >
+          isFocused || hasValue ?
+          "border-white/20 shadow-[0_0_20px_hsl(var(--primary)/0.15)]" :
+          "border-white/[0.08] hover:border-white/[0.12]"
+        )}>
+
         {/* Input field */}
         <input
           ref={inputRef}
@@ -122,8 +122,8 @@ export function HeroLinkInput() {
             "flex-1 h-11 px-4 bg-transparent text-foreground text-sm outline-none",
             "placeholder:text-muted-foreground/50 placeholder:transition-all",
             isTyping && "placeholder:text-muted-foreground/70"
-          )}
-        />
+          )} />
+
 
         {/* Analyze & Track button */}
         <button
@@ -131,33 +131,33 @@ export function HeroLinkInput() {
           disabled={isProcessing}
           className={cn(
             "flex items-center justify-center gap-2 px-5 h-11 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap",
-            isProcessing
-              ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] cursor-wait"
-              : hasValue
-                ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)]"
-                : "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground"
-          )}
-        >
-          {isProcessing ? (
-            <>
+            isProcessing ?
+            "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] cursor-wait" :
+            hasValue ?
+            "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_25px_hsl(var(--primary)/0.5)]" :
+            "bg-white/[0.06] text-muted-foreground hover:bg-white/[0.1] hover:text-foreground"
+          )}>
+
+          {isProcessing ?
+          <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Processing link...
-            </>
-          ) : (
-            <>
+            </> :
+
+          <>
               Analyze & Track
               <ArrowRight className={cn(
-                "h-4 w-4 transition-transform duration-200",
-                hasValue && "translate-x-0.5"
-              )} />
+              "h-4 w-4 transition-transform duration-200",
+              hasValue && "translate-x-0.5"
+            )} />
             </>
-          )}
+          }
         </button>
       </div>
 
       {/* Helper text */}
-      <p className="mt-3 text-xs text-muted-foreground/60 text-center">
-        No credit card required • Free forever tier available
+      <p className="mt-3 text-xs text-muted-foreground/60 text-center">Free forever tier available no credit card required 
+
       </p>
       
       {/* Early adopter CTA */}
@@ -166,6 +166,6 @@ export function HeroLinkInput() {
           ✦ Become one of our first users ✦
         </span>
       </div>
-    </div>
-  );
+    </div>);
+
 }
