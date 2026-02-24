@@ -77,10 +77,10 @@ export default function Auth() {
         return;
       }
       if (session) {
-        // If there's a pending plan from landing page pricing, always go to onboarding
+        // If there's a pending plan from landing page pricing, go to payment redirect
         const hasPendingPlan = !!localStorage.getItem('pending_plan');
         if (hasPendingPlan) {
-          navigate('/onboarding/plans');
+          navigate('/payment-redirect');
           return;
         }
         // Check if user has completed plan selection
@@ -112,7 +112,7 @@ export default function Auth() {
       if (session) {
         const hasPendingPlan = !!localStorage.getItem('pending_plan');
         if (hasPendingPlan) {
-          navigate('/onboarding/plans');
+          navigate('/payment-redirect');
           return;
         }
         supabase
@@ -228,7 +228,10 @@ export default function Auth() {
         navigate('/dashboard');
       } else {
         setIsSigningUp(true);
-        const redirectUrl = `${window.location.origin}/onboarding/plans`;
+        const hasPending = !!localStorage.getItem('pending_plan');
+        const redirectUrl = hasPending
+          ? `${window.location.origin}/payment-redirect`
+          : `${window.location.origin}/onboarding/plans`;
         
         const { error } = await supabase.auth.signUp({
           email,
