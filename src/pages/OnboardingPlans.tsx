@@ -173,34 +173,21 @@ export default function OnboardingPlans() {
     try {
       const url = await createCheckoutSession(stripePlanId, cycle);
       if (url) {
-        window.open(url, '_blank');
-        setCheckoutPending(true);
+        // Direct redirect — avoids popup blockers
+        window.location.href = url;
       }
     } finally {
       setLoadingPlan(null);
     }
   }, [billingCycle, navigate]);
 
-  // Auto-trigger Stripe checkout if user selected a plan before signup
-  const [autoCheckoutTriggered, setAutoCheckoutTriggered] = useState(false);
+  // If user has a pending plan, redirect to payment-redirect page instead
   useEffect(() => {
-    if (autoCheckoutTriggered) return;
-    const pendingPlanRaw = localStorage.getItem('pending_plan');
-    if (!pendingPlanRaw) return;
-    
-    try {
-      const { planId, cycle } = JSON.parse(pendingPlanRaw) as { planId: string; cycle: BillingCycle };
-      if (planId && planId !== 'free' && STRIPE_PRICES[planId as PlanId]) {
-        setAutoCheckoutTriggered(true);
-        localStorage.removeItem('pending_plan');
-        setTimeout(() => {
-          handleSelectPlan(planId, cycle);
-        }, 500);
-      }
-    } catch {
-      localStorage.removeItem('pending_plan');
+    const pendingPlan = localStorage.getItem('pending_plan');
+    if (pendingPlan) {
+      navigate('/payment-redirect');
     }
-  }, [autoCheckoutTriggered, handleSelectPlan]);
+  }, [navigate]);
 
   // Checkout pending screen — user opened Stripe in another tab
   if (checkoutPending) {

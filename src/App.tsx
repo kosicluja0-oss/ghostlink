@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import OnboardingPlans from "./pages/OnboardingPlans";
+import PaymentRedirect from "./pages/PaymentRedirect";
 import Dashboard from "./pages/Dashboard";
 import Integrations from "./pages/Integrations";
 import Links from "./pages/Links";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/onboarding/plans" element={<ProtectedRoute><OnboardingPlans /></ProtectedRoute>} />
+          <Route path="/payment-redirect" element={<ProtectedRoute><PaymentRedirect /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
           <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
