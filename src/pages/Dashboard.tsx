@@ -380,7 +380,7 @@ const Dashboard = () => {
         <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
           
-          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-y-auto scrollbar-hide">
+          <main className="ml-0 md:ml-16 p-4 lg:p-6 h-screen overflow-y-auto scrollbar-hide pb-20 md:pb-6">
               {/* Page Header */}
               <section className="mb-5">
                 <div>

@@ -178,7 +178,7 @@ const Integrations = () => {
       <TooltipProvider>
         <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
-          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden flex flex-col relative">
+          <main className="ml-0 md:ml-16 p-4 lg:p-6 h-screen overflow-hidden flex flex-col relative pb-20 md:pb-6">
             {/* Blurred background content */}
             <div className="absolute inset-0 p-4 lg:p-6 blur-[6px] opacity-40 pointer-events-none select-none" aria-hidden>
               <section className="mb-6">
@@ -267,7 +267,7 @@ const Integrations = () => {
         <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
 
-          <main className="ml-[15vw] p-4 lg:p-6 h-screen overflow-hidden flex flex-col">
+          <main className="ml-0 md:ml-16 p-4 lg:p-6 h-screen overflow-hidden flex flex-col pb-20 md:pb-6">
             {/* Header */}
             <section className="mb-6 shrink-0">
               <div className="flex items-center gap-3 mb-2">
@@ -290,9 +290,9 @@ const Integrations = () => {
             </section>
 
             {/* Content + Detail Panel side by side */}
-            <div className="flex-1 min-h-0 overflow-hidden flex gap-0">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-0">
               {/* Left: Integration cards */}
-              <section className="w-[60%] flex flex-col shrink-0 overflow-y-auto pr-2 scrollbar-hide">
+              <section className="w-full md:w-[60%] flex flex-col shrink-0 overflow-y-auto pr-0 md:pr-2 scrollbar-hide">
                 <ConnectedEcosystemBar integrations={integrationsWithStatus} />
 
                 {CATEGORIES.map((category) => {
@@ -350,7 +350,7 @@ const Integrations = () => {
               </section>
 
               {/* Right: Inline Detail Panel */}
-              <div className={`${panelOpen ? 'w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+              <div className={`${panelOpen ? 'hidden md:block md:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
                 <IntegrationDetailPanel
                   open={panelOpen}
                   onClose={handleClosePanel}
