@@ -352,7 +352,7 @@ const Settings = () => {
          <div className="h-screen bg-background overflow-y-auto scrollbar-hide">
           <AppSidebar />
           
-          <main className="ml-[15vw] p-4 lg:p-6 max-w-7xl mx-auto">
+          <main className="ml-0 md:ml-16 p-4 lg:p-6 max-w-7xl mx-auto pb-20 md:pb-6">
               {/* Header */}
               <section className="mb-5">
                 <div className="flex items-center gap-3">
