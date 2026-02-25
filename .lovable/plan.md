@@ -1,19 +1,27 @@
 
-# Admin "Manage Subscription" Button
 
-## What changes
-Add a "Manage Subscription" button into the existing **Developer Tools** admin section (visible only to admin users). This button will call the same `openCustomerPortal()` function, but will be available regardless of `subscription_status` -- allowing the admin to open the Stripe Customer Portal even without an active subscription.
+## Mobilní preview v Lovable
 
-## Technical Details
+Ano, přepnutí preview na mobilní rozměry je velmi snadné. Přímo **nad preview oknem** (napravo od chatu) najdeš **ikonky telefonu, tabletu a počítače**. Kliknutím na ikonku telefonu se preview přepne na mobilní rozměry (390px šířka).
 
-### File: `src/pages/Settings.tsx`
+Takže postup bude:
 
-Inside the existing admin `AccordionItem` (lines 766-812), after the "Test Tier Switching" block, add a new subsection:
+1. Klikni na **ikonku telefonu** nad preview oknem
+2. Preview se přepne na mobilní rozlišení
+3. Budeme společně procházet jednotlivé stránky a opravovat problémy
 
-- A separator line
-- Label: "Stripe Customer Portal"
-- A short description: "Open Stripe portal without active subscription requirement"
-- A "Manage Subscription" button with `ExternalLink` icon, using the existing `handleManageSubscription` handler and `portalLoading` state
-- This button is always enabled (no `isSubscribed` check)
+---
 
-No new state, hooks, or files needed -- everything reuses existing logic.
+## Plán práce na mobilním rozhraní
+
+Než začneme opravovat, potřebuju projít aktuální stav všech stránek v mobilním zobrazení. Navrhuji postup **stránku po stránce**:
+
+1. **Landing page** — hero, pricing karty, comparison, testimonials
+2. **Auth / Signup / Verify Email** — formuláře, spacing
+3. **Dashboard (Overview)** — sidebar, stat karty, chart, tabulka
+4. **Links page** — sidebar, tabulka, detail panel, create modal
+5. **Integrations** — karty, modaly
+6. **Settings** — layout, formuláře
+
+Přepni si preview na mobilní rozměry a řekni mi, na které stránce chceš začít — nebo projdeme vše postupně od Landing page.
+
