@@ -155,7 +155,7 @@ export function PricingSection() {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pt-4 pb-2"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {mobileOrder.map((planId) => {
