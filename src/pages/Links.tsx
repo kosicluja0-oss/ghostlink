@@ -11,6 +11,8 @@ import { LinkTable } from '@/components/links/LinkTable';
 import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { EditLinkModal } from '@/components/links/EditLinkModal';
 import { LinkDetailPanel } from '@/components/links/LinkDetailPanel';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -19,6 +21,7 @@ import type { GhostLink } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
 const Links = () => {
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   useSwipeNavigation();
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
@@ -105,13 +108,33 @@ const Links = () => {
                   <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} isLoading={linksLoading} />
                 </section>
 
-                {/* Inline Detail Panel */}
-                <div className={`${detailOpen ? 'hidden md:block md:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
-                  <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
-                </div>
+                {/* Inline Detail Panel — desktop only */}
+                {!isMobile && (
+                  <div className={`${detailOpen ? 'hidden md:block md:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+                    <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
+                  </div>
+                )}
               </div>
             </main>
         </div>
+
+        {/* Mobile Detail Drawer */}
+        {isMobile && (
+          <Drawer open={detailOpen} onOpenChange={(open) => {
+            setDetailOpen(open);
+            if (!open) {
+              setDetailLink(null);
+              setActiveLinkId(null);
+            }
+          }}>
+            <DrawerContent className="max-h-[85vh]">
+              <div className="overflow-y-auto flex-1 px-1">
+                <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
+              </div>
+            </DrawerContent>
+          </Drawer>
+        )}
+
 
         {/* Modals & Drawers */}
         <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier={userTier} onChangeTier={() => {}} />
