@@ -1,46 +1,32 @@
 
 
-## Návrh: Detail panel na mobilu jako spodní drawer (Bottom Sheet)
+## Optimalizace stránky Integrations pro mobilní rozhraní
 
 ### Současný stav
-Na desktopu se detail panel zobrazuje inline vedle tabulky (60/50 split). Na mobilu je úplně skrytý (`hidden md:block`), takže uživatel nemá přístup k detailům linku.
+- Detail panel (`IntegrationDetailPanel`) je na mobilu kompletně skrytý (`hidden md:block`) — po kliknutí na integraci se nic nestane
+- Kategorie popisky (`category.description`) zabírají zbytečně místo na malé obrazovce
+- Grid karet je `grid-cols-1 sm:grid-cols-2` — na mobilu jen jeden sloupec, ale karty mohou být zbytečně velké
+- Free-tier lock overlay není optimalizovaný pro malé obrazovky
 
-### Navrhované řešení: Bottom Sheet (Drawer)
+### Plán
 
-Projekt již obsahuje knihovnu **vaul** a komponentu `Drawer`, která je přesně pro tento účel navržená. Na mobilu se po kliknutí na link detail panel vysune zespoda jako sheet, který:
+**1. Detail panel jako Bottom Sheet (Drawer) na mobilu**
+Stejný vzor jako na stránce Links — na mobilu obalit `IntegrationDetailPanel` do `<Drawer>` komponenty (vaul), na desktopu ponechat inline panel.
 
-- Zabere přibližně **75–85 % výšky obrazovky**
-- Má nahoře **handle bar** (táhlo) pro intuitivní zavírání gestem dolů
-- Obsahuje **stejný obsah** jako desktopový detail panel (KPI karty, graf, placements, activity)
-- Je **scrollovatelný** uvnitř pro delší obsah
+- `useIsMobile()` hook pro detekci
+- Drawer se otevře při kliknutí na integrační kartu, zavře swipem dolů
+- Sdílí stejný `panelOpen` / `selectedIntegration` state
+- Drawer výška cca 85vh, scrollovatelný obsah uvnitř
 
-### Proč tento přístup
+**2. Responzivní úpravy layoutu**
+- Skrýt `category.description` na mobilu (`hidden md:inline`) — zůstane jen název kategorie s ikonou
+- Grid karet: ponechat `grid-cols-1` na mobilu, ale zajistit kompaktnější zobrazení
 
-- **Nativní pocit** — bottom sheet je standardní iOS/Android vzor, uživatelé ho znají
-- **Žádná ztráta kontextu** — uživatel vidí, že je stále na stránce Links
-- **Gesture-friendly** — zavření swipem dolů, což doplňuje existující swipe navigaci mezi sekcemi
-- **Nulové nové závislosti** — vaul/Drawer je již v projektu
+**3. Free-tier overlay**
+- Zmenšit padding a velikosti na mobilu pro lock overlay, aby se celý vešel bez scrollu
 
 ### Implementační kroky
-
-1. **Links.tsx** — přidat podmíněné renderování: na mobilu (`useIsMobile`) obalit `LinkDetailPanel` do `<Drawer>` komponenty, na desktopu ponechat inline panel beze změny
-2. **LinkDetailPanel** — žádné změny obsahu, pouze wrapper se mění podle breakpointu
-3. Drawer se otevře/zavře přes stejný `detailOpen` state, který již existuje
-
-```text
-┌─────────────────────┐
-│   Links (tabulka)   │
-│                     │
-│  ┌───────────────┐  │
-│  │ ═══ handle ══ │  │  ← drawer handle
-│  │               │  │
-│  │  KPI karty    │  │
-│  │  Graf         │  │
-│  │  Placements   │  │
-│  │  Activity     │  │
-│  │               │  │
-│  └───────────────┘  │
-│ ▓▓▓ bottom nav ▓▓▓  │
-└─────────────────────┘
-```
+1. V `Integrations.tsx` importovat `useIsMobile`, `Drawer` a podmíněně renderovat detail panel v draweru (mobilní) vs inline (desktop)
+2. Přidat `hidden md:inline` na `category.description` span
+3. Upravit free-tier overlay padding pro mobilní rozlišení
 
