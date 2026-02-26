@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ghost, Zap, Target, Layers, Check, Menu, X, BarChart, Loader2, Share2 } from 'lucide-react';
+import { Ghost, Zap, Target, Menu, X, BarChart, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
-import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
 import { FloatingParticles } from '@/components/landing/FloatingParticles';
 import { ComparisonSection } from '@/components/landing/ComparisonSection';
-import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
+import { PricingSection } from '@/components/landing/PricingSection';
 
 // Mock chart component for hero
 function MockDashboardChart() {
@@ -87,71 +85,6 @@ const features = [{
   description: 'Geographic insights, device breakdown, and traffic source analysis. Make data-driven decisions.'
 }];
 
-// Pricing data with Stripe-ready structure
-// Base monthly prices - yearly = monthly * 12 * 0.75 (25% discount = 3 months free)
-const YEARLY_DISCOUNT = 0.75;
-type PricingPlan = {
-  name: string;
-  description: string;
-  monthlyPrice: number; // Base monthly price
-  priceIds: {
-    monthly: string | null;
-    yearly: string | null;
-  };
-  features: string[];
-  highlighted: boolean;
-  badge?: string;
-};
-const pricingPlans: Record<string, PricingPlan> = {
-  free: {
-    name: 'Free',
-    description: 'For hobbyists exploring the platform.',
-    monthlyPrice: 0,
-    priceIds: {
-      monthly: null,
-      yearly: null
-    },
-    features: ['25 active links', 'Click tracking', 'Basic dashboard', 'Community support'],
-    highlighted: false
-  },
-  pro: {
-    name: 'Pro',
-    description: 'For serious marketers scaling up.',
-    monthlyPrice: 10,
-    priceIds: {
-      monthly: 'price_1SqvwMR7WITbhBZj8cbrc0Zz',
-      yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN'
-    },
-    features: ['100 active links', 'Leads & Sales tracking', 'Full analytics', 'Geographic insights', 'Priority support'],
-    highlighted: false
-  },
-  business: {
-    name: 'Business',
-    description: 'For teams and agencies at scale.',
-    monthlyPrice: 15,
-    priceIds: {
-      monthly: 'price_1Sqw2AR7WITbhBZjvQDRReY6',
-      yearly: 'price_1Sqw2aR7WITbhBZjzBBcN8H3'
-    },
-    badge: 'Most Popular',
-    features: ['175 active links', 'All Pro features', 'Team collaboration', 'API access', 'Dedicated support'],
-    highlighted: true
-  }
-};
-
-// Helper to calculate prices
-function getDisplayPrice(plan: PricingPlan, cycle: 'monthly' | 'yearly'): number {
-  if (plan.monthlyPrice === 0) return 0;
-  if (cycle === 'monthly') return plan.monthlyPrice;
-  // For yearly, show the monthly equivalent (discounted)
-  return plan.monthlyPrice * YEARLY_DISCOUNT;
-}
-
-// Helper to format price (no decimals if whole number, otherwise 2 decimals)
-function formatPrice(value: number): string {
-  if (value === 0) return '0';
-  return value % 1 === 0 ? value.toString() : value.toFixed(2);
-}
 const faqs = [{
   question: 'How accurate is the tracking?',
   answer: 'Our tracking engine operates with millisecond precision. Every click is logged in real-time with accurate timestamps and metadata. We use edge servers globally to ensure minimal latency.'
@@ -166,74 +99,10 @@ const faqs = [{
   answer: 'Yes! We support CSV imports for your existing links. Your historical data can be imported, and we\'ll help you set up redirects from your old tracking domains.'
 }];
 
-// Animated price component with count-up effect
-function AnimatedPrice({
-  value,
-  cycle
-}: {
-  value: number;
-  cycle: 'monthly' | 'yearly';
-}) {
-  const [displayValue, setDisplayValue] = useState(value);
-  useEffect(() => {
-    const duration = 400;
-    const startTime = Date.now();
-    const startValue = displayValue;
-    const endValue = value;
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const current = startValue + (endValue - startValue) * easeOut;
-      setDisplayValue(current);
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-    requestAnimationFrame(animate);
-  }, [value]);
-  return <span className="tabular-nums">
-      ${formatPrice(displayValue)}
-    </span>;
-}
-
-// Stripe checkout handler
-async function handleSubscription(planId: string, cycle: BillingCycle, isAuthenticated: boolean, navigate: ReturnType<typeof useNavigate>, setLoading: (loading: string | null) => void) {
-  if (planId === 'free') return;
-
-  // Require authentication for paid plans
-  if (!isAuthenticated) {
-    // Store selected plan so checkout triggers automatically after signup + email verification
-    localStorage.setItem('pending_plan', JSON.stringify({ planId, cycle }));
-    toast.info('Create an account to continue with your plan');
-    navigate('/auth?mode=signup');
-    return;
-  }
-  const stripePlanId = planId as PlanId;
-  if (!STRIPE_PRICES[stripePlanId]) {
-    toast.error('Invalid plan selected');
-    return;
-  }
-  setLoading(`${planId}-${cycle}`);
-  try {
-    const url = await createCheckoutSession(stripePlanId, cycle);
-    if (url) {
-      window.open(url, '_blank');
-    }
-  } finally {
-    setLoading(null);
-  }
-}
 export default function Landing() {
   const navigate = useNavigate();
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const isAuthenticated = !!user;
   return <div className="min-h-screen bg-background">
       {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -369,83 +238,7 @@ export default function Landing() {
       {/* Comparison Section */}
       <ComparisonSection />
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Start free, upgrade when you're ready. No hidden fees.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
-            {Object.entries(pricingPlans).map(([planId, plan]) => {
-            const isFree = planId === 'free';
-            const displayPrice = getDisplayPrice(plan, billingCycle);
-            return <div key={planId} className={`relative bg-card border rounded-xl p-6 flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)] transition-all duration-300 ${plan.highlighted ? 'border-primary shadow-lg shadow-primary/20 md:scale-105 z-10' : 'border-border'}`}>
-                  {plan.badge && <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                        {plan.badge}
-                      </span>
-                    </div>}
-                  
-                  {/* Header Container - Fixed height for alignment */}
-                  <div className="min-h-[180px] flex flex-col">
-                    {/* Plan Name */}
-                    <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
-                    
-                    {/* Price Area */}
-                    <div className="flex items-baseline justify-center mt-4">
-                      <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
-                        <AnimatedPrice value={displayPrice} cycle={billingCycle} />
-                      </span>
-                      <span className="text-muted-foreground text-sm ml-1.5">
-                        {isFree ? '' : 'per month'}
-                      </span>
-                    </div>
-                    {isFree && <p className="text-xs text-muted-foreground text-center mt-1">
-                        Free forever
-                      </p>}
-                    
-                    {/* Toggle for Paid Plans */}
-                    {!isFree ? <div className="flex items-center justify-center gap-2 mt-4 h-8">
-                        <Switch checked={billingCycle === 'yearly'} onCheckedChange={checked => setBillingCycle(checked ? 'yearly' : 'monthly')} className="data-[state=checked]:bg-primary" />
-                        <span className="text-sm text-muted-foreground">Billed yearly</span>
-                        <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-                          3 months free
-                        </span>
-                      </div> : <div className="h-8 mt-4" />}
-                  </div>
-                  
-                  {/* CTA Button */}
-                  <div className="mt-6">
-                    {isFree ? <Link to="/auth?mode=signup">
-                        <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300">
-                          Start free trial
-                        </Button>
-                      </Link> : <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300" onClick={() => handleSubscription(planId, billingCycle, isAuthenticated, navigate, setCheckoutLoading)} disabled={checkoutLoading === `${planId}-${billingCycle}`}>
-                        {checkoutLoading === `${planId}-${billingCycle}` ? <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Loading...
-                          </> : 'Get started'}
-                      </Button>}
-                  </div>
-                  
-                  {/* Features List */}
-                  <ul className="space-y-3 mt-6 flex-1">
-                    {plan.features.map(feature => <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Check className="h-4 w-4 text-primary flex-shrink-0" />
-                        {feature}
-                      </li>)}
-                  </ul>
-                </div>;
-          })}
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* Testimonials Section — hidden until real testimonials are collected */}
       {/* <TestimonialsSection /> */}
