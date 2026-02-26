@@ -306,35 +306,49 @@ const Integrations = () => {
                   const Icon = category.icon;
                   const hasComingSoon = categoryIntegrations.some((i) => i.comingSoon);
                   const isExpanded = expandedCategories[category.id];
-                  const hasMoreThanThree = categoryIntegrations.length > 3;
-                  const visibleIntegrations = hasMoreThanThree && !isExpanded ? categoryIntegrations.slice(0, 3) : categoryIntegrations;
-                  const hiddenCount = categoryIntegrations.length - 3;
+
+                  // Always-visible: connected integrations
+                  const connectedOnes = categoryIntegrations.filter((i) => i.status === 'connected');
+                  const restOnes = categoryIntegrations.filter((i) => i.status !== 'connected');
+                  const totalHidden = restOnes.length;
 
                   return (
-                    <div key={category.id} className="mb-6">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Icon className="w-4 h-4 text-primary" />
-                      <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
-                      <span className="text-xs text-muted-foreground ml-1 hidden md:inline">{category.description}</span>
+                    <div key={category.id} className="mb-3">
+                      <button
+                        onClick={() => toggleCategory(category.id)}
+                        className="w-full flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <Icon className="w-4 h-4 text-primary shrink-0" />
+                        <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
+                        <span className="text-xs text-muted-foreground ml-1 hidden md:inline">{category.description}</span>
                         {hasComingSoon && (
                           <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">NEW</span>
                         )}
-                      </div>
+                        {connectedOnes.length > 0 && (
+                          <span className="ml-auto mr-2 flex items-center gap-1 text-xs text-success">
+                            <span className="w-1.5 h-1.5 rounded-full bg-success" />
+                            {connectedOnes.length}
+                          </span>
+                        )}
+                        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 shrink-0 ${connectedOnes.length === 0 ? 'ml-auto' : ''} ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {visibleIntegrations.map((integration) => (
-                          <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />
-                        ))}
-                      </div>
+                      {/* Always show connected integrations */}
+                      {connectedOnes.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2 px-1">
+                          {connectedOnes.map((integration) => (
+                            <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />
+                          ))}
+                        </div>
+                      )}
 
-                      {hasMoreThanThree && (
-                        <button
-                          onClick={() => toggleCategory(category.id)}
-                          className="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50 group"
-                        >
-                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                          <span>{isExpanded ? 'Show less' : `Show ${hiddenCount} more`}</span>
-                        </button>
+                      {/* Expandable: rest of integrations */}
+                      {isExpanded && restOnes.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2 px-1 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                          {restOnes.map((integration) => (
+                            <IntegrationCard key={integration.id} integration={integration} onConnect={handleConnect} />
+                          ))}
+                        </div>
                       )}
                     </div>
                   );
