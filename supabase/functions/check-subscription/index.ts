@@ -61,6 +61,33 @@ serve(async (req) => {
     
     if (!userId || !userEmail) throw new Error("Could not determine user identity");
 
+    // Check if user is admin — admins can override tier manually, skip Stripe sync
+    const { data: adminRole } = await supabaseClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (adminRole) {
+      logStep("Admin user detected, returning profile tier without Stripe override");
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("tier")
+        .eq("id", userId)
+        .single();
+      const adminTier = profile?.tier || "free";
+      return new Response(JSON.stringify({
+        subscribed: adminTier !== "free",
+        tier: adminTier,
+        subscription_status: adminTier !== "free" ? "active" : null,
+        billing_cycle: null,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Find customer by email in Stripe
