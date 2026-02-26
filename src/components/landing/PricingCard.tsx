@@ -96,7 +96,7 @@ export function PricingCard({
       )}
 
       {/* Header Container */}
-      <div className="min-h-[180px] flex flex-col">
+      <div className="min-h-[160px] flex flex-col">
         <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
 
         <div className="flex items-baseline justify-center mt-4">
@@ -129,7 +129,7 @@ export function PricingCard({
       </div>
 
       {/* CTA Button */}
-      <div className="mt-6">
+      <div className="mt-4">
         {isFree ? (
           <Link to="/auth?mode=signup">
             <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-[0_0_20px_hsl(var(--primary)/0.5)] transition-all duration-300">
