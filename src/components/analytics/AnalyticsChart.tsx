@@ -474,49 +474,19 @@ export function AnalyticsChart({
 
   return (
     <div className="bg-card rounded-lg border border-border p-3 md:p-4">
-      <div className="flex items-center justify-between gap-3 mb-3 md:mb-4">
-        <div className="flex items-center gap-2">
-          <div ref={dropdownRef} className="relative hidden md:block">
+      {/* Link filter indicator */}
+      {activeLinkId && selectedLinkAlias && (
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
+            <span className="text-[11px] font-medium text-primary">ghstlink.com/{selectedLinkAlias}</span>
             <button
-              onClick={() => setMetricDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-1.5 font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/30 text-xs">
-
-              {METRIC_LABELS[activeMetric]}
-              <ChevronLeft
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${metricDropdownOpen ? '-rotate-90' : ''}`} />
-
-            </button>
-            {metricDropdownOpen && otherMetrics.length > 0 &&
-            <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-md shadow-lg z-20 min-w-[100px] overflow-hidden animate-fade-in">
-                {otherMetrics.map((metric) =>
-              <button
-                key={metric}
-                onClick={() => selectMetric(metric)}
-                className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
-
-                    {METRIC_LABELS[metric]}
-                  </button>
-              )}
-              </div>
-            }
-          </div>
-          {/* Mobile: just show label, no dropdown */}
-          <span className="text-xs font-medium text-muted-foreground/70 md:hidden">
-            {METRIC_LABELS[activeMetric]}
-          </span>
-          {activeLinkId && selectedLinkAlias &&
-          <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
-              <span className="text-[11px] font-medium text-primary">ghstlink.com/{selectedLinkAlias}</span>
-              <button
               onClick={onClearSelection}
               className="text-[11px] text-primary/70 hover:text-primary transition-colors font-medium">
-
-                ✕
-              </button>
-            </div>
-          }
+              ✕
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Chart */}
       <div
