@@ -1,5 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { CreditCard, Users, ShoppingBag, TrendingUp, Zap, Mail, ChevronDown, Lock, ArrowRight, BarChart3, Link2, Webhook } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 
 // Brand logos
 import whopLogo from '@/assets/logos/whop.png';
@@ -69,6 +71,7 @@ const CATEGORIES = [
 ];
 
 const Integrations = () => {
+  const isMobile = useIsMobile();
   useSwipeNavigation();
   const { user, signOut } = useAuth();
   const { links } = useLinks();
@@ -194,8 +197,8 @@ const Integrations = () => {
             </div>
 
             {/* Lock overlay */}
-            <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
-              <div className="max-w-lg w-full bg-card border border-border rounded-2xl p-8 shadow-xl animate-enter">
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-4 md:p-6">
+              <div className="max-w-lg w-full bg-card border border-border rounded-2xl p-5 md:p-8 shadow-xl animate-enter">
                 {/* Lock icon */}
                 <div className="flex justify-center mb-5">
                   <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -312,7 +315,7 @@ const Integrations = () => {
                       <div className="flex items-center gap-2 mb-1">
                         <Icon className="w-4 h-4 text-primary" />
                       <h2 className="text-sm font-semibold text-foreground">{category.label}</h2>
-                      <span className="text-xs text-muted-foreground ml-1">{category.description}</span>
+                      <span className="text-xs text-muted-foreground ml-1 hidden md:inline">{category.description}</span>
                         {hasComingSoon && (
                           <span className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground">NEW</span>
                         )}
@@ -351,8 +354,35 @@ const Integrations = () => {
                 </footer>
               </section>
 
-              {/* Right: Inline Detail Panel */}
-              <div className={`${panelOpen ? 'hidden md:block md:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+              {/* Right: Inline Detail Panel — desktop only */}
+              {!isMobile && (
+                <div className={`${panelOpen ? 'hidden md:block md:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+                  <IntegrationDetailPanel
+                    open={panelOpen}
+                    onClose={handleClosePanel}
+                    mode={panelMode}
+                    integration={selectedIntegration}
+                    dbIntegration={selectedDbIntegration}
+                    links={linkOptions}
+                    assignedLinkIds={selectedDbIntegration ? getAssignedLinkIds(selectedDbIntegration.id) : []}
+                    onConfirmConnection={handleConfirmConnection}
+                    onDisconnect={handleDisconnect}
+                    onUpdateLinks={handleUpdateLinks}
+                  />
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+
+        {/* Mobile Detail Drawer */}
+        {isMobile && (
+          <Drawer open={panelOpen} onOpenChange={(open) => {
+            setPanelOpen(open);
+            if (!open) setSelectedIntegration(null);
+          }}>
+            <DrawerContent className="max-h-[85vh]">
+              <div className="overflow-y-auto flex-1 px-1">
                 <IntegrationDetailPanel
                   open={panelOpen}
                   onClose={handleClosePanel}
@@ -366,9 +396,9 @@ const Integrations = () => {
                   onUpdateLinks={handleUpdateLinks}
                 />
               </div>
-            </div>
-          </main>
-        </div>
+            </DrawerContent>
+          </Drawer>
+        )}
 
         <SettingsDrawer open={settingsOpen} onOpenChange={setSettingsOpen} userTier={userTier} onChangeTier={() => {}} />
       </>
