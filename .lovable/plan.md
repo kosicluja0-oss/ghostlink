@@ -1,32 +1,25 @@
 
 
-## Optimalizace stránky Integrations pro mobilní rozhraní
+## Tablet Pricing Cards — Issues & Fixes
 
-### Současný stav
-- Detail panel (`IntegrationDetailPanel`) je na mobilu kompletně skrytý (`hidden md:block`) — po kliknutí na integraci se nic nestane
-- Kategorie popisky (`category.description`) zabírají zbytečně místo na malé obrazovce
-- Grid karet je `grid-cols-1 sm:grid-cols-2` — na mobilu jen jeden sloupec, ale karty mohou být zbytečně velké
-- Free-tier lock overlay není optimalizovaný pro malé obrazovky
+### Identified Problems (834px iPad)
 
-### Plán
+1. **Business card "per month" text wraps** — price `$11.25` + "per month" breaks onto two lines because `md:scale-105` on the highlighted card shrinks available space
+2. **Billing toggle area is cramped** — "Billed yearly" + "3 months free" badge wrap awkwardly on narrower cards
+3. **Cards are too narrow** — `max-w-5xl` with 3-column grid + `gap-8` leaves each card quite tight at 834px
+4. **Free card has wasted vertical space** — the billing toggle placeholder takes up room unnecessarily
 
-**1. Detail panel jako Bottom Sheet (Drawer) na mobilu**
-Stejný vzor jako na stránce Links — na mobilu obalit `IntegrationDetailPanel` do `<Drawer>` komponenty (vaul), na desktopu ponechat inline panel.
+### Plan
 
-- `useIsMobile()` hook pro detekci
-- Drawer se otevře při kliknutí na integrační kartu, zavře swipem dolů
-- Sdílí stejný `panelOpen` / `selectedIntegration` state
-- Drawer výška cca 85vh, scrollovatelný obsah uvnitř
+**File: `src/components/landing/PricingCard.tsx`**
 
-**2. Responzivní úpravy layoutu**
-- Skrýt `category.description` na mobilu (`hidden md:inline`) — zůstane jen název kategorie s ikonou
-- Grid karet: ponechat `grid-cols-1` na mobilu, ale zajistit kompaktnější zobrazení
+1. Shorten "per month" to "/mo" on tablet breakpoint (always use "/mo" — cleaner)
+2. Shorten "Billed yearly" to "Yearly" and reduce gap in the toggle row
+3. Reduce font sizes slightly in the header area: price from `text-4xl` to `text-3xl md:text-4xl`
 
-**3. Free-tier overlay**
-- Zmenšit padding a velikosti na mobilu pro lock overlay, aby se celý vešel bez scrollu
+**File: `src/components/landing/PricingSection.tsx`**
 
-### Implementační kroky
-1. V `Integrations.tsx` importovat `useIsMobile`, `Drawer` a podmíněně renderovat detail panel v draweru (mobilní) vs inline (desktop)
-2. Přidat `hidden md:inline` na `category.description` span
-3. Upravit free-tier overlay padding pro mobilní rozlišení
+4. Reduce gap from `gap-8` to `gap-4 lg:gap-8` for medium screens
+5. Change `max-w-5xl` to `max-w-6xl` to give cards more breathing room on tablet
+6. Remove `md:scale-105` on highlighted card (causes overflow/cramping) — replace with a more subtle visual distinction (thicker border + stronger shadow only)
 
