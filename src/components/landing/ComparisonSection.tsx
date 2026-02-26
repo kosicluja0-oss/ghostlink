@@ -1,7 +1,5 @@
 import { Check, X, Clock, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 interface ComparisonItem {
@@ -192,20 +190,6 @@ export function ComparisonSection() {
           </motion.div>
         </motion.div>
 
-        {/* CTA */}
-        <motion.div
-          className="text-center mt-12"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <Link to="/auth?mode=signup">
-            <Button variant="glow" size="lg">
-              Start Free →
-            </Button>
-          </Link>
-        </motion.div>
       </div>
     </section>
   );
