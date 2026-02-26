@@ -35,11 +35,27 @@ serve(async (req) => {
     logStep("Authorization header found");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    
+    // Try getClaims first (works even if session was invalidated), fall back to getUser
+    let userId: string;
+    let userEmail: string;
+    
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    if (!claimsError && claimsData?.claims) {
+      userId = claimsData.claims.sub as string;
+      userEmail = claimsData.claims.email as string;
+      logStep("User authenticated via claims", { userId, email: userEmail });
+    } else {
+      // Fallback to getUser
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (userError) throw new Error(`Authentication error: ${userError.message}`);
+      if (!userData.user?.email) throw new Error("User not authenticated or email not available");
+      userId = userData.user.id;
+      userEmail = userData.user.email;
+      logStep("User authenticated via getUser", { userId, email: userEmail });
+    }
+    
+    if (!userId || !userEmail) throw new Error("Could not determine user identity");
 
     const { priceId, billingCycle } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
@@ -51,21 +67,21 @@ serve(async (req) => {
     const { data: billing } = await supabaseClient
       .from("billing_data")
       .select("stripe_customer_id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .single();
 
     let customerId = billing?.stripe_customer_id;
     logStep("Billing data fetched", { existingCustomerId: customerId });
 
     if (!customerId) {
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
       if (customers.data.length > 0) {
         customerId = customers.data[0].id;
         logStep("Found existing Stripe customer", { customerId });
       } else {
         const customer = await stripe.customers.create({
-          email: user.email,
-          metadata: { supabase_user_id: user.id }
+          email: userEmail,
+          metadata: { supabase_user_id: userId }
         });
         customerId = customer.id;
         logStep("Created new Stripe customer", { customerId });
@@ -75,18 +91,18 @@ serve(async (req) => {
       const { data: existingBilling } = await supabaseClient
         .from("billing_data")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
       if (existingBilling) {
         await supabaseClient
           .from("billing_data")
           .update({ stripe_customer_id: customerId })
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
       } else {
         await supabaseClient
           .from("billing_data")
-          .insert({ user_id: user.id, stripe_customer_id: customerId });
+          .insert({ user_id: userId, stripe_customer_id: customerId });
       }
       logStep("Stored customer ID in billing_data");
     }
@@ -99,7 +115,7 @@ serve(async (req) => {
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/onboarding/plans?checkout=canceled`,
       metadata: {
-        supabase_user_id: user.id,
+        supabase_user_id: userId,
         billing_cycle: billingCycle || "monthly"
       }
     });
