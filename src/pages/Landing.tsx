@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ghost, Zap, Target, Layers, Check, ChevronDown, ChevronUp, BarChart, Loader2, Share2 } from 'lucide-react';
+import { Ghost, Zap, Target, Layers, Check, Menu, X, BarChart, Loader2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -245,42 +245,35 @@ export default function Landing() {
               <span className="text-[15px] md:text-lg font-bold text-foreground tracking-tight">Ghost Link</span>
             </Link>
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Features
-              </a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Pricing
-              </a>
-              <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Login
+            {/* Nav Actions */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link to="/auth">
+                <Button variant="ghost" size="sm" className="text-sm font-medium">
+                  Log in
+                </Button>
               </Link>
               <Link to="/auth?mode=signup">
-                <Button variant="glow" size="sm">Get Started</Button>
+                <Button size="sm" className="text-sm font-medium bg-foreground text-background hover:bg-foreground/90 rounded-lg">
+                  Sign Up
+                </Button>
               </Link>
-            </nav>
-
-            {/* Mobile menu button */}
-            <button className="md:hidden p-2 text-muted-foreground" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-            </button>
+              <button
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
 
-          {/* Mobile Nav */}
-          {mobileMenuOpen && <nav className="md:hidden py-4 border-t border-border/50 space-y-4">
+          {/* Dropdown Nav */}
+          {mobileMenuOpen && <nav className="py-4 border-t border-border/50 space-y-4">
               <a href="#features" className="block text-sm text-muted-foreground hover:text-foreground">
                 Features
               </a>
               <a href="#pricing" className="block text-sm text-muted-foreground hover:text-foreground">
                 Pricing
               </a>
-              <Link to="/auth" className="block text-sm text-muted-foreground hover:text-foreground">
-                Login
-              </Link>
-              <Link to="/auth?mode=signup">
-                <Button variant="glow" size="sm" className="w-full">Get Started</Button>
-              </Link>
             </nav>}
         </div>
       </header>
