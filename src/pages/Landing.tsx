@@ -253,8 +253,8 @@ export default function Landing() {
       <footer className="py-12 px-4 border-t border-border">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
-            <div className="flex items-center gap-2">
-              <Ghost className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Ghost className="h-5 w-5 text-primary flex-shrink-0" />
               <span className="font-semibold text-foreground">Ghost Link</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
