@@ -1,18 +1,49 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { type BillingCycle } from '@/lib/stripe';
 
-// Animated price component with count-up effect
 function formatPrice(value: number): string {
   if (value === 0) return '0';
   return value % 1 === 0 ? value.toString() : value.toFixed(2);
 }
 
 export function AnimatedPrice({ value }: { value: number }) {
-  // Simplified — the parent already handles the cycle logic
-  return <span className="tabular-nums">${formatPrice(value)}</span>;
+  const [display, setDisplay] = useState(value);
+  const rafRef = useRef<number>();
+  const startRef = useRef<number | undefined>();
+  const fromRef = useRef(value);
+
+  useEffect(() => {
+    const from = fromRef.current;
+    const to = value;
+    if (from === to) return;
+
+    const duration = 400;
+    const step = (timestamp: number) => {
+      if (startRef.current === undefined) startRef.current = timestamp;
+      const elapsed = timestamp - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(from + (to - from) * eased);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(step);
+      } else {
+        fromRef.current = to;
+      }
+    };
+
+    startRef.current = undefined;
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      fromRef.current = to;
+    };
+  }, [value]);
+
+  return <span className="tabular-nums">${formatPrice(display)}</span>;
 }
 
 export interface PricingPlanData {
