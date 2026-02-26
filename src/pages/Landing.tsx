@@ -7,10 +7,72 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useAuth } from '@/hooks/useAuth';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
-import { HeroLinkInput } from '@/components/landing/HeroLinkInput';
 import { FloatingParticles } from '@/components/landing/FloatingParticles';
 import { ComparisonSection } from '@/components/landing/ComparisonSection';
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
+
+// Mock chart component for hero
+function MockDashboardChart() {
+  return <div className="relative w-full max-w-4xl mx-auto">
+      <div className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-3 md:p-6 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3 md:mb-6">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="h-6 w-6 md:h-8 md:w-8 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Ghost className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+            </div>
+            <span className="text-xs md:text-sm font-medium text-foreground">Traffic Overview</span>
+          </div>
+          <div className="flex gap-1.5 md:gap-2">
+            {['24h', '7d', '30d'].map(period => <span key={period} className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
+                {period}
+              </span>)}
+          </div>
+        </div>
+        
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-6">
+          <div className="text-center">
+            <div className="text-lg md:text-2xl font-bold text-foreground">24,847</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">Total Clicks</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg md:text-2xl font-bold text-warning">1,293</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">Leads</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg md:text-2xl font-bold text-success">847</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">Sales</div>
+          </div>
+        </div>
+        
+        {/* Chart Mock */}
+        <div className="h-16 md:h-32 relative">
+          <svg className="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30 L400,100 L0,100 Z" fill="url(#chartGradient)" />
+            <path d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
+          </svg>
+          {/* Live indicator */}
+          <div className="absolute top-0 right-0 flex items-center gap-1.5 text-[10px] md:text-xs text-primary">
+            <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-primary"></span>
+            </span>
+            Live
+          </div>
+        </div>
+      </div>
+      
+      {/* Glow effect */}
+      <div className="absolute inset-0 -z-10 bg-primary/10 blur-3xl rounded-full scale-75" />
+    </div>;
+}
 const features = [{
   icon: Zap,
   title: 'Real-time analytics',
@@ -271,11 +333,6 @@ export default function Landing() {
             Track every click, lead, and sale from bio to bank account.
           </p>
           
-          {/* Interactive Link Input */}
-          <div className="mt-10 w-full">
-            <HeroLinkInput />
-          </div>
-          
           {/* CTA Button */}
           <div className="mt-10">
             <Link to="/auth?mode=signup">
@@ -283,6 +340,11 @@ export default function Landing() {
                 Start Free →
               </Button>
             </Link>
+          </div>
+          
+          {/* Dashboard Preview */}
+          <div className="mt-8 w-full">
+            <MockDashboardChart />
           </div>
         </div>
       </section>
