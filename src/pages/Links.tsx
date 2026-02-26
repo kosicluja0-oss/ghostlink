@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { Link2, Plus } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useSidebarState } from '@/hooks/useSidebarState';
@@ -19,6 +20,7 @@ import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
 const Links = () => {
   const navigate = useNavigate();
+  useSwipeNavigation();
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const {
     user,

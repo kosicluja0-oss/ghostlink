@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { MousePointer, Users, DollarSign, TrendingUp, Percent, User, MousePointerClick, Sparkles, Link2, Globe, LayoutDashboard, CalendarDays, ChevronDown, ChevronUp, X } from 'lucide-react';
 import type { MetricKey } from '@/components/analytics/AnalyticsChart';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // kept for potential future use
@@ -68,6 +69,7 @@ interface Transaction {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  useSwipeNavigation();
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const {
     user,
