@@ -1,20 +1,46 @@
 
 
-## Problém
+## Návrh: Detail panel na mobilu jako spodní drawer (Bottom Sheet)
 
-Tlačítko "Share" v patičce landing page aktuálně pouze kopíruje URL do schránky (`navigator.clipboard.writeText`). Na iPhone Safari je k dispozici nativní Web Share API (`navigator.share()`), které otevře systémový share sheet (sdílení přes iMessage, WhatsApp, AirDrop atd.) — ale aplikace ho nevyužívá.
+### Současný stav
+Na desktopu se detail panel zobrazuje inline vedle tabulky (60/50 split). Na mobilu je úplně skrytý (`hidden md:block`), takže uživatel nemá přístup k detailům linku.
 
-Navíc je URL hardcoded na `https://ghostlink.app` místo skutečné produkční domény `https://ghstlink.com`.
+### Navrhované řešení: Bottom Sheet (Drawer)
 
-## Plán
+Projekt již obsahuje knihovnu **vaul** a komponentu `Drawer`, která je přesně pro tento účel navržená. Na mobilu se po kliknutí na link detail panel vysune zespoda jako sheet, který:
 
-### 1. Upravit Share tlačítko v `src/pages/Landing.tsx` (řádky 279-285)
+- Zabere přibližně **75–85 % výšky obrazovky**
+- Má nahoře **handle bar** (táhlo) pro intuitivní zavírání gestem dolů
+- Obsahuje **stejný obsah** jako desktopový detail panel (KPI karty, graf, placements, activity)
+- Je **scrollovatelný** uvnitř pro delší obsah
 
-Nahradit současný `onClick` handler logikou:
+### Proč tento přístup
 
-1. **Detekce Web Share API** — `if (navigator.share)` → zavolat `navigator.share({ title: 'Ghost Link', url: 'https://ghstlink.com' })`
-2. **Fallback** — pokud `navigator.share` není dostupné (desktop), použít `navigator.clipboard.writeText` + toast jako dosud
-3. **Opravit URL** z `ghostlink.app` na `ghstlink.com`
+- **Nativní pocit** — bottom sheet je standardní iOS/Android vzor, uživatelé ho znají
+- **Žádná ztráta kontextu** — uživatel vidí, že je stále na stránce Links
+- **Gesture-friendly** — zavření swipem dolů, což doplňuje existující swipe navigaci mezi sekcemi
+- **Nulové nové závislosti** — vaul/Drawer je již v projektu
 
-Jedná se o změnu cca 10 řádků v jednom souboru.
+### Implementační kroky
+
+1. **Links.tsx** — přidat podmíněné renderování: na mobilu (`useIsMobile`) obalit `LinkDetailPanel` do `<Drawer>` komponenty, na desktopu ponechat inline panel beze změny
+2. **LinkDetailPanel** — žádné změny obsahu, pouze wrapper se mění podle breakpointu
+3. Drawer se otevře/zavře přes stejný `detailOpen` state, který již existuje
+
+```text
+┌─────────────────────┐
+│   Links (tabulka)   │
+│                     │
+│  ┌───────────────┐  │
+│  │ ═══ handle ══ │  │  ← drawer handle
+│  │               │  │
+│  │  KPI karty    │  │
+│  │  Graf         │  │
+│  │  Placements   │  │
+│  │  Activity     │  │
+│  │               │  │
+│  └───────────────┘  │
+│ ▓▓▓ bottom nav ▓▓▓  │
+└─────────────────────┘
+```
 
