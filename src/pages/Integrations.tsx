@@ -295,7 +295,7 @@ const Integrations = () => {
             </section>
 
             {/* Content + Detail Panel side by side */}
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-0">
+            <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col md:flex-row gap-0">
               {/* Left: Integration cards */}
               <section className="w-full md:w-[60%] flex flex-col shrink-0 overflow-y-auto pr-0 md:pr-2 scrollbar-hide">
                 <ConnectedEcosystemBar integrations={integrationsWithStatus} />
