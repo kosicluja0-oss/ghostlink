@@ -277,9 +277,18 @@ export default function Landing() {
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText('https://ghostlink.app');
-                  toast.success('Link copied to clipboard!');
+                onClick={async () => {
+                  const shareUrl = 'https://ghstlink.com';
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: 'Ghost Link', url: shareUrl });
+                    } catch (e) {
+                      // User cancelled share
+                    }
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success('Link copied to clipboard!');
+                  }
                 }}
                 className="flex items-center gap-1.5 hover:text-foreground transition-colors"
               >
