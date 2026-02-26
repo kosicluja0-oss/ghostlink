@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { Link2, Plus } from 'lucide-react';
@@ -12,7 +12,6 @@ import { CreateLinkModal } from '@/components/links/CreateLinkModal';
 import { EditLinkModal } from '@/components/links/EditLinkModal';
 import { LinkDetailPanel } from '@/components/links/LinkDetailPanel';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useLinks } from '@/hooks/useLinks';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -20,8 +19,20 @@ import { useSubscription } from '@/hooks/useSubscription';
 import type { GhostLink } from '@/types';
 import { TIERS } from '@/types';
 import { Button } from '@/components/ui/button';
+
+function useIsCompact() {
+  const [isCompact, setIsCompact] = useState(window.innerWidth < 1024);
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 1023px)');
+    const onChange = () => setIsCompact(window.innerWidth < 1024);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  return isCompact;
+}
+
 const Links = () => {
-  const isMobile = useIsMobile();
+  const isCompact = useIsCompact();
   const navigate = useNavigate();
   useSwipeNavigation();
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
@@ -96,8 +107,8 @@ const Links = () => {
               </section>
 
               {/* Link Management + Detail Panel side by side */}
-              <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-0">
-                <section className="w-full md:w-[60%] flex flex-col min-h-0">
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col lg:flex-row gap-0">
+                <section className="w-full lg:w-[60%] flex flex-col min-h-0">
                   <div className="flex items-center justify-start mb-4 shrink-0">
                     <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
                       <Plus className="h-4 w-4 mr-1" />
@@ -108,9 +119,9 @@ const Links = () => {
                   <LinkTable links={links} userTier={userTier} onDeleteLink={deleteLink} onEditLink={handleEditLink} activeLinkId={activeLinkId} onLinkSelect={handleLinkSelect} onOpenDetail={handleOpenDetail} onCreateLink={() => setCreateModalOpen(true)} maxLinks={tier.maxLinks} isLoading={linksLoading} />
                 </section>
 
-                {/* Inline Detail Panel — desktop only */}
-                {!isMobile && (
-                  <div className={`${detailOpen ? 'hidden md:block md:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
+                {/* Inline Detail Panel — desktop only (lg+) */}
+                {!isCompact && (
+                  <div className={`${detailOpen ? 'hidden lg:block lg:w-[50%]' : 'w-0'} transition-all duration-200 overflow-hidden`}>
                     <LinkDetailPanel link={detailLink} open={detailOpen} onOpenChange={setDetailOpen} />
                   </div>
                 )}
@@ -118,8 +129,8 @@ const Links = () => {
             </main>
         </div>
 
-        {/* Mobile Detail Drawer */}
-        {isMobile && (
+        {/* Mobile & Tablet Detail Drawer */}
+        {isCompact && (
           <Drawer open={detailOpen} onOpenChange={(open) => {
             setDetailOpen(open);
             if (!open) {
