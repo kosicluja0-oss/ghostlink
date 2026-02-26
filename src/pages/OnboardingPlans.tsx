@@ -173,8 +173,14 @@ export default function OnboardingPlans() {
     try {
       const url = await createCheckoutSession(stripePlanId, cycle);
       if (url) {
-        // Direct redirect — avoids popup blockers
-        window.location.href = url;
+        // Try direct redirect; if in iframe, open in new tab
+        const inIframe = window.self !== window.top;
+        if (inIframe) {
+          window.open(url, '_blank');
+          setCheckoutPending(true);
+        } else {
+          window.location.href = url;
+        }
       }
     } finally {
       setLoadingPlan(null);
