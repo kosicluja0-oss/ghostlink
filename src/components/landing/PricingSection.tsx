@@ -180,10 +180,10 @@ export function PricingSection() {
             {activeSlide === 0 && (
               <button
                 onClick={() => scrollToSlide(1)}
-                className="absolute right-1 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30 flex items-center justify-center text-primary transition-all hover:bg-primary/30"
+                className="absolute -right-1 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-muted-foreground/70 transition-all hover:text-foreground hover:bg-muted"
                 aria-label="Next plan"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             )}
           </div>
