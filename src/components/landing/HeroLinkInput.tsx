@@ -119,7 +119,7 @@ export function HeroLinkInput() {
           onBlur={() => setIsFocused(false)}
           placeholder={typedPlaceholder}
           className={cn(
-            "flex-1 h-11 px-4 bg-transparent text-foreground text-sm outline-none",
+            "flex-1 h-11 px-4 bg-transparent text-foreground text-xs md:text-sm outline-none",
             "placeholder:text-muted-foreground/50 placeholder:transition-all",
             isTyping && "placeholder:text-muted-foreground/70"
           )} />
