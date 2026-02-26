@@ -274,9 +274,7 @@ export default function Auth() {
       <div className="w-full max-w-md relative">
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-            <Ghost className="h-6 w-6 text-primary" />
-          </div>
+          <Ghost className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold text-foreground tracking-tight">Ghost Link</span>
         </Link>
 
