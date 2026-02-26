@@ -76,7 +76,7 @@ const Links = () => {
         <div className="h-screen overflow-hidden bg-background">
           <AppSidebar />
           
-          <main className="ml-0 md:ml-16 p-4 lg:p-6 h-screen overflow-y-auto flex flex-col pb-20 md:pb-6">
+          <main className="ml-0 md:ml-16 p-4 lg:p-6 h-screen overflow-hidden flex flex-col pb-20 md:pb-6">
               {/* Header */}
               <section className="mb-6 shrink-0">
                 <div className="flex items-center gap-3 mb-2">
@@ -92,7 +92,7 @@ const Links = () => {
 
               {/* Link Management + Detail Panel side by side */}
               <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:flex-row gap-0">
-                <section className="w-full md:w-[60%] flex flex-col shrink-0">
+                <section className="w-full md:w-[60%] flex flex-col min-h-0">
                   <div className="flex items-center justify-start mb-4 shrink-0">
                     <Button variant="glow" size="sm" onClick={() => setCreateModalOpen(true)}>
                       <Plus className="h-4 w-4 mr-1" />
