@@ -240,9 +240,9 @@ export default function Landing() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
-              <Ghost className="h-6 w-6 text-white" />
-              <span className="text-lg font-bold text-foreground tracking-tight">Ghost Link</span>
+              <Link to="/" className="flex items-center gap-1.5 md:gap-2">
+              <Ghost className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              <span className="text-[15px] md:text-lg font-bold text-foreground tracking-tight">Ghost Link</span>
             </Link>
 
             {/* Desktop Nav */}
