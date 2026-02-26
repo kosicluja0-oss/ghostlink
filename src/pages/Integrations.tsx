@@ -13,6 +13,7 @@ import beehiivLogo from '@/assets/logos/beehiiv.png';
 import convertkitLogo from '@/assets/logos/convertkit.png';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { SettingsDrawer } from '@/components/layout/SettingsDrawer';
 import { IntegrationCard, type Integration } from '@/components/integrations/IntegrationCard';
@@ -68,6 +69,7 @@ const CATEGORIES = [
 ];
 
 const Integrations = () => {
+  useSwipeNavigation();
   const { user, signOut } = useAuth();
   const { links } = useLinks();
   const { tier: userTier } = useSubscription();

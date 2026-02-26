@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { Settings as SettingsIcon, User, CreditCard, Globe, Camera, Check, Crown, Mail, Shield, Loader2, ExternalLink, Lock, Eye, EyeOff, Upload, X, Wrench, Bell, Clock, AlertCircle, Download, LogOut } from 'lucide-react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { useSidebarState } from '@/hooks/useSidebarState';
@@ -31,6 +32,7 @@ import { TIMEZONES, TIMEZONE_GROUPS } from '@/lib/timezone';
 import { useDataExport } from '@/hooks/useDataExport';
 const Settings = () => {
   const navigate = useNavigate();
+  useSwipeNavigation();
   const { sidebarOpen, setSidebarOpen } = useSidebarState();
   const [searchParams] = useSearchParams();
   const {
