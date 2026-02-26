@@ -370,7 +370,7 @@ const Settings = () => {
               <div className="w-full max-w-2xl mx-auto space-y-3">
                 {/* 1. Profile Section - Always visible */}
                 <Card className="bg-card border-border">
-                  <CardHeader className="py-4 px-5">
+                  <CardHeader className="py-4 px-3 md:px-5">
                     <CardTitle className="flex items-center gap-2 text-foreground text-base">
                       <User className="w-5 h-5 text-primary" />
                       Profile
@@ -379,27 +379,27 @@ const Settings = () => {
                       Your personal information and avatar
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4 px-5 pb-5 pt-0">
+                  <CardContent className="space-y-4 px-3 md:px-5 pb-5 pt-0">
                     {profileLoading ? <div className="flex items-center justify-center py-6">
                         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                       </div> : <>
                         {/* Avatar */}
-                        <div className="flex items-center gap-5">
+                        <div className="flex items-center gap-3 md:gap-5">
                           <div className="relative group">
-                            <Avatar className="h-20 w-20 border-2 border-border shadow-md">
-                              {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="Profile" /> : <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-2xl font-bold`}>
+                            <Avatar className="h-14 w-14 md:h-20 md:w-20 border-2 border-border shadow-md">
+                              {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt="Profile" /> : <AvatarFallback className={`bg-gradient-to-br ${getInitialGradient(displayName || user?.email || 'U')} text-white text-xl md:text-2xl font-bold`}>
                                   {userInitial}
                                 </AvatarFallback>}
                             </Avatar>
-                            <button className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}>
+                            <button className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 md:transition-opacity cursor-pointer" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}>
                               {avatarUploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
                             </button>
                             <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                           </div>
-                          <div className="space-y-1.5 flex-1">
-                            <p className="text-lg font-semibold text-foreground">{displayName || 'Set your name'}</p>
-                            <p className="text-sm text-muted-foreground">{user?.email}</p>
-                            <Button variant="outline" size="sm" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}>
+                          <div className="space-y-1 md:space-y-1.5 flex-1 min-w-0">
+                            <p className="text-base md:text-lg font-semibold text-foreground truncate">{displayName || 'Set your name'}</p>
+                            <p className="text-xs md:text-sm text-muted-foreground truncate">{user?.email}</p>
+                            <Button variant="outline" size="sm" onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading} className="hidden md:inline-flex">
                               {avatarUploading ? <>
                                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                   Uploading...
@@ -445,7 +445,7 @@ const Settings = () => {
                 {/* Collapsible Sections */}
                 <Accordion type="multiple" className="space-y-2">
                   {/* 2. Preferences */}
-                  <AccordionItem value="preferences" className="bg-card border border-border rounded-lg px-5">
+                  <AccordionItem value="preferences" className="bg-card border border-border rounded-lg px-3 md:px-5">
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center gap-3">
                         <Globe className="w-5 h-5 text-primary" />
@@ -494,7 +494,7 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* 3. Notifications */}
-                  <AccordionItem value="notifications" className="bg-card border border-border rounded-lg px-5">
+                  <AccordionItem value="notifications" className="bg-card border border-border rounded-lg px-3 md:px-5">
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center gap-3">
                         <Bell className="w-5 h-5 text-primary" />
@@ -533,7 +533,7 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* 4. Security */}
-                  <AccordionItem value="security" className="bg-card border border-border rounded-lg px-5">
+                  <AccordionItem value="security" className="bg-card border border-border rounded-lg px-3 md:px-5">
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center gap-3">
                         <Lock className="w-5 h-5 text-primary" />
@@ -579,24 +579,24 @@ const Settings = () => {
                                 })}
                                   </div>
                                   
-                                  {/* Requirements checklist */}
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-xs">
-                                      {passwordStrength.hasLength ? <Check className="w-3.5 h-3.5 text-success" /> : <X className="w-3.5 h-3.5 text-muted-foreground" />}
+                                  {/* Requirements checklist - inline on mobile */}
+                                  <div className="flex flex-wrap gap-x-3 gap-y-1 md:flex-col md:gap-y-1 md:gap-x-0">
+                                    <div className="flex items-center gap-1.5 text-xs">
+                                      {passwordStrength.hasLength ? <Check className="w-3 h-3 text-success" /> : <X className="w-3 h-3 text-muted-foreground" />}
                                       <span className={passwordStrength.hasLength ? 'text-success' : 'text-muted-foreground'}>
-                                        At least 8 characters
+                                        8+ chars
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs">
-                                      {passwordStrength.hasNumber ? <Check className="w-3.5 h-3.5 text-success" /> : <X className="w-3.5 h-3.5 text-muted-foreground" />}
+                                    <div className="flex items-center gap-1.5 text-xs">
+                                      {passwordStrength.hasNumber ? <Check className="w-3 h-3 text-success" /> : <X className="w-3 h-3 text-muted-foreground" />}
                                       <span className={passwordStrength.hasNumber ? 'text-success' : 'text-muted-foreground'}>
-                                        Include a number
+                                        Number
                                       </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-xs">
-                                      {passwordStrength.hasSymbol ? <Check className="w-3.5 h-3.5 text-success" /> : <X className="w-3.5 h-3.5 text-muted-foreground" />}
+                                    <div className="flex items-center gap-1.5 text-xs">
+                                      {passwordStrength.hasSymbol ? <Check className="w-3 h-3 text-success" /> : <X className="w-3 h-3 text-muted-foreground" />}
                                       <span className={passwordStrength.hasSymbol ? 'text-success' : 'text-muted-foreground'}>
-                                        Include a symbol
+                                        Symbol
                                       </span>
                                     </div>
                                   </div>
@@ -637,7 +637,7 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* 5. Billing */}
-                  <AccordionItem value="billing" className="bg-card border border-border rounded-lg px-5">
+                  <AccordionItem value="billing" className="bg-card border border-border rounded-lg px-3 md:px-5">
                     <AccordionTrigger className="hover:no-underline py-3">
                       <div className="flex items-center gap-3">
                         <CreditCard className="w-5 h-5 text-primary" />
@@ -653,29 +653,29 @@ const Settings = () => {
                             <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                           </div> : <>
                             {/* Current Plan */}
-                            <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-ghost-surface">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between p-3 md:p-4 rounded-lg border border-border bg-ghost-surface gap-3">
                               <div className="flex items-center gap-3">
-                                <div className={cn("flex items-center justify-center w-10 h-10 rounded-lg", tier === 'free' ? "bg-muted" : "bg-primary/10")}>
-                                  {tier !== 'free' ? <Crown className="w-5 h-5 text-primary" /> : <Shield className="w-5 h-5 text-muted-foreground" />}
+                                <div className={cn("flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-lg flex-shrink-0", tier === 'free' ? "bg-muted" : "bg-primary/10")}>
+                                  {tier !== 'free' ? <Crown className="w-4 h-4 md:w-5 md:h-5 text-primary" /> : <Shield className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />}
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-medium text-foreground capitalize">
+                                    <span className="font-medium text-foreground capitalize text-sm md:text-base">
                                       {tier} Plan
                                     </span>
                                     {getStatusBadge()}
                                   </div>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className="text-xs md:text-sm text-muted-foreground">
                                     {currentTierData.price ? `$${currentTierData.price}/mo${billingCycle === 'yearly' ? ' (yearly)' : ''}` : 'No charge'}
                                   </p>
                                 </div>
                               </div>
-                              {isSubscribed || isPastDue ? <Button variant="outline" onClick={handleManageSubscription} disabled={portalLoading}>
+                              {isSubscribed || isPastDue ? <Button variant="outline" size="sm" className="w-full md:w-auto" onClick={handleManageSubscription} disabled={portalLoading}>
                                   {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>
                                       Manage
                                       <ExternalLink className="w-4 h-4 ml-2" />
                                     </>}
-                                </Button> : <Button variant="default" onClick={() => handleUpgrade('pro')} disabled={!!upgradeLoading}>
+                                </Button> : <Button variant="default" size="sm" className="w-full md:w-auto" onClick={() => handleUpgrade('pro')} disabled={!!upgradeLoading}>
                                   {upgradeLoading === 'pro' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upgrade'}
                                 </Button>}
                             </div>
@@ -751,7 +751,7 @@ const Settings = () => {
                   </AccordionItem>
 
                   {/* Admin Developer Tools - Only visible to admins */}
-                  {isAdmin && <AccordionItem value="admin" className="bg-card border border-dashed border-warning/50 rounded-lg px-5">
+                  {isAdmin && <AccordionItem value="admin" className="bg-card border border-dashed border-warning/50 rounded-lg px-3 md:px-5">
                       <AccordionTrigger className="hover:no-underline py-3">
                         <div className="flex items-center gap-3">
                           <Wrench className="w-5 h-5 text-warning" />
@@ -837,27 +837,29 @@ const Settings = () => {
                 </Accordion>
 
                 {/* 6. Footer Actions - GDPR Export & Delete Account */}
-                <div className="pt-3 flex justify-center gap-3 flex-wrap">
-                  <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted/50" onClick={() => window.location.href = 'mailto:support@ghostlink.app'}>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Contact Support
-                  </Button>
-                  <Button variant="ghost" className="text-muted-foreground hover:text-destructive hover:bg-muted/50" onClick={signOut}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </Button>
-                  <Button variant="ghost" onClick={exportData} disabled={isExporting} className="text-muted-foreground hover:text-foreground hover:bg-muted/50">
-                    {isExporting ? <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Exporting...
-                      </> : <>
-                        <Download className="w-4 h-4 mr-2" />
-                        Download My Data
-                      </>}
-                  </Button>
+                <div className="pt-3 space-y-2 md:space-y-0 md:flex md:justify-center md:gap-3 md:flex-wrap">
+                  <div className="flex gap-2 md:contents">
+                    <Button variant="ghost" size="sm" className="flex-1 md:flex-none text-muted-foreground hover:text-foreground hover:bg-muted/50 text-xs md:text-sm" onClick={() => window.location.href = 'mailto:support@ghostlink.app'}>
+                      <Mail className="w-4 h-4 mr-1.5 md:mr-2" />
+                      Support
+                    </Button>
+                    <Button variant="ghost" size="sm" className="flex-1 md:flex-none text-muted-foreground hover:text-foreground hover:bg-muted/50 text-xs md:text-sm" onClick={exportData} disabled={isExporting}>
+                      {isExporting ? <>
+                          <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                          Exporting...
+                        </> : <>
+                          <Download className="w-4 h-4 mr-1.5 md:mr-2" />
+                          Export Data
+                        </>}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="flex-1 md:flex-none text-muted-foreground hover:text-destructive hover:bg-muted/50 text-xs md:text-sm" onClick={signOut}>
+                      <LogOut className="w-4 h-4 mr-1.5 md:mr-2" />
+                      Sign Out
+                    </Button>
+                  </div>
                   <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-muted/50">
+                      <Button variant="ghost" size="sm" className="w-full md:w-auto text-muted-foreground hover:text-destructive hover:bg-muted/50 text-xs md:text-sm">
                         Delete Account
                       </Button>
                     </AlertDialogTrigger>
