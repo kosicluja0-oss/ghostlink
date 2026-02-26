@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ghost, Zap, Target, Menu, X, BarChart, Share2 } from 'lucide-react';
+import { Ghost, Zap, Target, BarChart, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
@@ -102,7 +102,6 @@ const faqs = [{
 export default function Landing() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return <div className="min-h-screen bg-background">
       {/* Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -115,35 +114,20 @@ export default function Landing() {
             </Link>
 
             {/* Nav Actions */}
-            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
               <Link to="/auth">
-                <Button variant="ghost" size="sm" className="text-sm font-medium">
+                <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5">
                   Log in
                 </Button>
               </Link>
               <Link to="/auth?mode=signup">
-                <Button size="sm" className="text-sm font-medium bg-foreground text-background hover:bg-foreground/90 rounded-lg">
+                <Button size="sm" className="text-xs font-medium h-7 px-2.5 bg-foreground text-background hover:bg-foreground/90 rounded-lg">
                   Sign Up
                 </Button>
               </Link>
-              <button
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
             </div>
           </div>
 
-          {/* Dropdown Nav */}
-          {mobileMenuOpen && <nav className="py-4 border-t border-border/50 space-y-4">
-              <a href="#features" className="block text-sm text-muted-foreground hover:text-foreground">
-                Features
-              </a>
-              <a href="#pricing" className="block text-sm text-muted-foreground hover:text-foreground">
-                Pricing
-              </a>
-            </nav>}
         </div>
       </header>
 
