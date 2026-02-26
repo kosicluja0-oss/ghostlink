@@ -14,40 +14,40 @@ import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
 // Mock chart component for hero
 function MockDashboardChart() {
   return <div className="relative w-full max-w-4xl mx-auto">
-      <div className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-6 shadow-2xl">
+      <div className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-3 md:p-6 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Ghost className="h-4 w-4 text-primary" />
+        <div className="flex items-center justify-between mb-3 md:mb-6">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="h-6 w-6 md:h-8 md:w-8 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Ghost className="h-3 w-3 md:h-4 md:w-4 text-primary" />
             </div>
-            <span className="text-sm font-medium text-foreground">Traffic Overview</span>
+            <span className="text-xs md:text-sm font-medium text-foreground">Traffic Overview</span>
           </div>
-          <div className="flex gap-2">
-            {['24h', '7d', '30d'].map(period => <span key={period} className={`text-xs px-2 py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
+          <div className="flex gap-1.5 md:gap-2">
+            {['24h', '7d', '30d'].map(period => <span key={period} className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
                 {period}
               </span>)}
           </div>
         </div>
         
         {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-foreground">24,847</div>
-            <div className="text-xs text-muted-foreground">Total Clicks</div>
+            <div className="text-lg md:text-2xl font-bold text-foreground">24,847</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">Total Clicks</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-warning">1,293</div>
-            <div className="text-xs text-muted-foreground">Leads</div>
+            <div className="text-lg md:text-2xl font-bold text-warning">1,293</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">Leads</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-success">847</div>
-            <div className="text-xs text-muted-foreground">Sales</div>
+            <div className="text-lg md:text-2xl font-bold text-success">847</div>
+            <div className="text-[10px] md:text-xs text-muted-foreground">Sales</div>
           </div>
         </div>
         
         {/* Chart Mock */}
-        <div className="h-32 relative">
+        <div className="h-16 md:h-32 relative">
           <svg className="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
             <defs>
               <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -59,10 +59,10 @@ function MockDashboardChart() {
             <path d="M0,80 Q50,60 100,70 T200,40 T300,55 T400,30" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
           </svg>
           {/* Live indicator */}
-          <div className="absolute top-0 right-0 flex items-center gap-1.5 text-xs text-primary">
-            <span className="relative flex h-2 w-2">
+          <div className="absolute top-0 right-0 flex items-center gap-1.5 text-[10px] md:text-xs text-primary">
+            <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-primary"></span>
             </span>
             Live
           </div>
