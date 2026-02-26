@@ -1,31 +1,20 @@
 
 
-## Analýza problému
+## Problém
 
-Z logů je vidět dva problémy:
+Tlačítko "Share" v patičce landing page aktuálně pouze kopíruje URL do schránky (`navigator.clipboard.writeText`). Na iPhone Safari je k dispozici nativní Web Share API (`navigator.share()`), které otevře systémový share sheet (sdílení přes iMessage, WhatsApp, AirDrop atd.) — ale aplikace ho nevyužívá.
 
-1. **`create-checkout-session`** -- první volání selhalo s chybou "Failed to fetch" (síťová chyba, pravděpodobně edge funkce ještě nebyla plně nasazena po poslední úpravě). Druhý pokus už proběhl úspěšně (status 200) a vrátil Stripe URL. Takže checkout by nyní měl fungovat.
+Navíc je URL hardcoded na `https://ghostlink.app` místo skutečné produkční domény `https://ghstlink.com`.
 
-2. **`check-subscription`** -- stále používá starý vzor `getUser(token)` (řádek 44), který selhává s chybou "Auth session missing!". Toto je stejný problém, který jsme opravili v `create-checkout-session` pomocí `getClaims`. I když to přímo neblokuje přesměrování na Stripe, způsobuje to 500 chybu a může narušovat celkový stav aplikace.
+## Plán
 
-## Plán opravy
+### 1. Upravit Share tlačítko v `src/pages/Landing.tsx` (řádky 279-285)
 
-### 1. Opravit `check-subscription` edge funkci
-- Nahradit `getUser(token)` vzorem s `getClaims(token)` a fallbackem na `getUser`, stejně jako v `create-checkout-session`
-- Soubor: `supabase/functions/check-subscription/index.ts`, řádky 43-48
-- Změna: extrakce `userId` a `userEmail` přes claims, fallback na getUser
+Nahradit současný `onClick` handler logikou:
 
-### 2. Nasadit opravenou funkci
-- Deploy `check-subscription`
+1. **Detekce Web Share API** — `if (navigator.share)` → zavolat `navigator.share({ title: 'Ghost Link', url: 'https://ghstlink.com' })`
+2. **Fallback** — pokud `navigator.share` není dostupné (desktop), použít `navigator.clipboard.writeText` + toast jako dosud
+3. **Opravit URL** z `ghostlink.app` na `ghstlink.com`
 
-### Technický detail
-Řádky 43-48 v `check-subscription/index.ts` se změní z:
-```typescript
-const token = authHeader.replace("Bearer ", "");
-const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-if (userError) throw new Error(`Authentication error: ${userError.message}`);
-const user = userData.user;
-if (!user?.email) throw new Error("...");
-```
-Na vzor s `getClaims` + fallback (identický s `create-checkout-session`), a všechny reference na `user.id` a `user.email` se nahradí za `userId` a `userEmail`.
+Jedná se o změnu cca 10 řádků v jednom souboru.
 
