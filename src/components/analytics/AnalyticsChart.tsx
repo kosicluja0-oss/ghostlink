@@ -473,10 +473,10 @@ export function AnalyticsChart({
 
 
   return (
-    <div className="bg-card rounded-lg border border-border p-4">
-      <div className="flex items-center justify-between gap-3 mb-4">
+    <div className="bg-card rounded-lg border border-border p-3 md:p-4">
+      <div className="flex items-center justify-between gap-3 mb-3 md:mb-4">
         <div className="flex items-center gap-2">
-          <div ref={dropdownRef} className="relative">
+          <div ref={dropdownRef} className="relative hidden md:block">
             <button
               onClick={() => setMetricDropdownOpen((prev) => !prev)}
               className="flex items-center gap-1.5 font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/30 text-xs">
@@ -500,6 +500,10 @@ export function AnalyticsChart({
               </div>
             }
           </div>
+          {/* Mobile: just show label, no dropdown */}
+          <span className="text-xs font-medium text-muted-foreground/70 md:hidden">
+            {METRIC_LABELS[activeMetric]}
+          </span>
           {activeLinkId && selectedLinkAlias &&
           <div className="flex items-center gap-2 ml-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20">
               <span className="text-[11px] font-medium text-primary">ghstlink.com/{selectedLinkAlias}</span>
@@ -517,7 +521,7 @@ export function AnalyticsChart({
       {/* Main Chart */}
       <div
         ref={chartContainerRef}
-        className="h-[240px] w-full relative">
+        className="h-[180px] md:h-[240px] w-full relative">
 
         <div
           key={`${activeMetric}-${activeLinkId ?? 'all'}`}
