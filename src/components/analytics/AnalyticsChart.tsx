@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import {
   XAxis,
   YAxis,
@@ -228,8 +227,7 @@ const MainChart = memo(({
   displayData,
   activeMetric,
   animationKey,
-  isMobile = false,
-}: {displayData: any[];activeMetric: MetricKey;animationKey: string;isMobile?: boolean;}) => {
+}: {displayData: any[];activeMetric: MetricKey;animationKey: string;}) => {
   const metricFormat = METRIC_FORMAT[activeMetric];
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -262,7 +260,7 @@ const MainChart = memo(({
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={displayData} margin={{ top: 5, right: isMobile ? 4 : 20, left: isMobile ? -25 : 10, bottom: 5 }}>
+      <AreaChart data={displayData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
         <defs>
           <linearGradient id="metricGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={METRIC_COLORS[activeMetric]} stopOpacity={0.25} />
@@ -317,8 +315,7 @@ const MainChart = memo(({
             return Math.max(minRange, paddedMax);
           }]}
           allowDecimals={metricFormat !== 'number'}
-          tickCount={5}
-          hide={isMobile} />
+          tickCount={5} />
 
         <Tooltip content={<CustomTooltip />} />
 
@@ -352,7 +349,6 @@ export function AnalyticsChart({
   activeMetric: controlledMetric,
   onMetricChange
 }: AnalyticsChartProps) {
-  const isMobile = useIsMobile();
   const { formatInTimezone, timezone } = useTimezone();
 
   // Create timezone-aware formatting functions
@@ -477,7 +473,7 @@ export function AnalyticsChart({
 
 
   return (
-    <div className="bg-card rounded-lg border border-border p-1.5 md:p-4">
+    <div className="bg-card rounded-lg border border-border p-3 md:p-4">
       {/* Link filter indicator */}
       {activeLinkId && selectedLinkAlias && (
         <div className="flex items-center gap-2 mb-3">
@@ -504,8 +500,7 @@ export function AnalyticsChart({
           <MainChart
             displayData={chartData}
             activeMetric={activeMetric}
-            animationKey={`${activeMetric}-${activeLinkId ?? 'all'}`}
-            isMobile={isMobile} />
+            animationKey={`${activeMetric}-${activeLinkId ?? 'all'}`} />
         </div>
 
         <Watermark />
