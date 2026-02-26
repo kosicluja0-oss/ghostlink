@@ -41,21 +41,35 @@ serve(async (req) => {
     if (!authHeader) throw new Error("No authorization header provided");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    
+    let userId: string;
+    let userEmail: string;
+    
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    if (!claimsError && claimsData?.claims) {
+      userId = claimsData.claims.sub as string;
+      userEmail = claimsData.claims.email as string;
+      logStep("User authenticated via claims", { userId, email: userEmail });
+    } else {
+      const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+      if (userError) throw new Error(`Authentication error: ${userError.message}`);
+      if (!userData.user?.email) throw new Error("User not authenticated or email not available");
+      userId = userData.user.id;
+      userEmail = userData.user.email;
+      logStep("User authenticated via getUser", { userId, email: userEmail });
+    }
+    
+    if (!userId || !userEmail) throw new Error("Could not determine user identity");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Find customer by email in Stripe
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found, user is free tier");
       // Ensure profile is set to free
-      await supabaseClient.from("profiles").update({ tier: "free" }).eq("id", user.id);
+      await supabaseClient.from("profiles").update({ tier: "free" }).eq("id", userId);
       return new Response(JSON.stringify({
         subscribed: false,
         tier: "free",
@@ -118,13 +132,13 @@ serve(async (req) => {
     }
 
     // Sync to database - update profiles tier
-    await supabaseClient.from("profiles").update({ tier }).eq("id", user.id);
+    await supabaseClient.from("profiles").update({ tier }).eq("id", userId);
 
     // Upsert billing_data
     const { data: existingBilling } = await supabaseClient
       .from("billing_data")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     const billingPayload = {
@@ -135,9 +149,9 @@ serve(async (req) => {
     };
 
     if (existingBilling) {
-      await supabaseClient.from("billing_data").update(billingPayload).eq("user_id", user.id);
+      await supabaseClient.from("billing_data").update(billingPayload).eq("user_id", userId);
     } else {
-      await supabaseClient.from("billing_data").insert({ user_id: user.id, ...billingPayload });
+      await supabaseClient.from("billing_data").insert({ user_id: userId, ...billingPayload });
     }
 
     logStep("Database synced", { tier, subscriptionStatus, billingCycle });
