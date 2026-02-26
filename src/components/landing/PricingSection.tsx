@@ -131,7 +131,7 @@ export function PricingSection() {
         </div>
 
         {/* Desktop: 3-column grid (original order) */}
-        <div className="hidden md:grid md:grid-cols-3 gap-8 max-w-5xl mx-auto items-stretch">
+        <div className="hidden md:grid md:grid-cols-3 gap-4 lg:gap-8 max-w-6xl mx-auto items-stretch">
           {desktopOrder.map((planId) => {
             const plan = pricingPlans[planId];
             return (

@@ -52,7 +52,7 @@ export function PricingCard({
     <div
       className={`relative bg-card border rounded-xl p-6 flex flex-col hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.15)] transition-all duration-300 ${
         plan.highlighted
-          ? 'border-primary shadow-lg shadow-primary/20 md:scale-105 z-10'
+          ? 'border-primary border-2 shadow-xl shadow-primary/25 z-10'
           : 'border-border'
       } ${className}`}
     >
@@ -69,11 +69,11 @@ export function PricingCard({
         <h3 className="text-3xl font-bold text-foreground text-center">{plan.name}</h3>
 
         <div className="flex items-baseline justify-center mt-4">
-          <span className="text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
+          <span className="text-3xl md:text-4xl font-bold text-foreground tabular-nums transition-all duration-300">
             <AnimatedPrice value={displayPrice} />
           </span>
-          <span className="text-muted-foreground text-sm ml-1.5">
-            {isFree ? '' : 'per month'}
+          <span className="text-muted-foreground text-sm ml-1">
+            {isFree ? '' : '/mo'}
           </span>
         </div>
         {isFree && (
@@ -81,15 +81,15 @@ export function PricingCard({
         )}
 
         {!isFree ? (
-          <div className="flex items-center justify-center gap-2 mt-4 h-8">
+          <div className="flex items-center justify-center gap-1.5 mt-4 h-8">
             <Switch
               checked={billingCycle === 'yearly'}
               onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
               className="data-[state=checked]:bg-primary"
             />
-            <span className="text-sm text-muted-foreground">Billed yearly</span>
-            <span className="text-xs font-semibold bg-primary/20 text-primary px-2 py-0.5 rounded-full">
-              3 months free
+            <span className="text-sm text-muted-foreground">Yearly</span>
+            <span className="text-xs font-semibold bg-primary/20 text-primary px-1.5 py-0.5 rounded-full whitespace-nowrap">
+              3 mo free
             </span>
           </div>
         ) : (
