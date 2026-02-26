@@ -309,25 +309,25 @@ export default function Landing() {
         
         <div className="container mx-auto flex flex-col items-center text-center relative z-10">
           {/* Beta Badge */}
-          <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 shadow-[0_0_15px_hsl(var(--primary)/0.1)] animate-pulse-glow">
+          <div className="mb-4 inline-flex items-center gap-1.5 px-2.5 py-1 md:gap-2 md:px-3 md:py-1.5 rounded-full border border-primary/30 bg-primary/10 shadow-[0_0_15px_hsl(var(--primary)/0.1)] animate-pulse-glow">
             <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
             </span>
-            <span className="text-[10px] font-semibold tracking-widest text-primary uppercase">
+            <span className="text-[9px] md:text-[10px] font-semibold tracking-widest text-primary uppercase">
               Now in Beta V2.0
             </span>
           </div>
           
           {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.1]">
+          <h1 className="text-[2.4rem] md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.1]">
             Stop guessing.
             <br />
             <span className="text-primary">Start scaling.</span>
           </h1>
           
           {/* Sub-headline */}
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">
+          <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">
             Ghost Link is the missing piece of your sales funnel.
             <br className="hidden sm:block" />
             Track every click, lead, and sale from bio to bank account.
