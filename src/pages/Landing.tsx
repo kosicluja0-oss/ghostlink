@@ -210,7 +210,7 @@ export default function Landing() {
               Bring all your data under one roof.
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Everything you need to track, analyze, and optimize your affiliate campaigns.
+              No more messy spreadsheets or delayed analytics. Get a single source of truth for your entire funnel.
             </p>
           </div>
           
