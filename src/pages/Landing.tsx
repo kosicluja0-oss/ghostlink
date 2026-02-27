@@ -36,56 +36,31 @@ function MockDashboardChart() {
           </div>
         </div>
         
-        {/* Animated Chart */}
-        <div className="h-16 md:h-32 relative">
-          <svg className="w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path fill="url(#chartGradient)">
-              <animate
-                attributeName="d"
-                dur="30s"
-                repeatCount="indefinite"
-                values="
-                  M0,80 C40,70 80,55 120,60 C160,65 200,40 240,35 C280,30 320,50 360,45 C380,42 400,30 400,30 L400,100 L0,100 Z;
-                  M0,60 C40,50 80,65 120,70 C160,75 200,55 240,45 C280,35 320,30 360,40 C380,45 400,50 400,50 L400,100 L0,100 Z;
-                  M0,45 C40,40 80,30 120,35 C160,40 200,60 240,70 C280,80 320,65 360,55 C380,50 400,45 400,45 L400,100 L0,100 Z;
-                  M0,70 C40,65 80,50 120,40 C160,30 200,35 240,50 C280,65 320,75 360,60 C380,55 400,40 400,40 L400,100 L0,100 Z;
-                  M0,50 C40,55 80,70 120,75 C160,80 200,65 240,50 C280,40 320,35 360,30 C380,28 400,35 400,35 L400,100 L0,100 Z;
-                  M0,35 C40,30 80,40 120,55 C160,70 200,75 240,65 C280,55 320,45 360,50 C380,52 400,60 400,60 L400,100 L0,100 Z;
-                  M0,65 C40,75 80,80 120,70 C160,60 200,45 240,40 C280,35 320,40 360,55 C380,60 400,70 400,70 L400,100 L0,100 Z;
-                  M0,80 C40,70 80,55 120,60 C160,65 200,40 240,35 C280,30 320,50 360,45 C380,42 400,30 400,30 L400,100 L0,100 Z
-                "
-                calcMode="spline"
-                keySplines="0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1"
+        {/* Animated Chart - scrolls right to left like a real-time chart */}
+        <div className="h-16 md:h-32 relative overflow-hidden">
+          <div className="absolute inset-0" style={{ width: '200%', animation: 'chartScroll 30s linear infinite' }}>
+            <svg className="h-full w-full" viewBox="0 0 800 100" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              {/* The path is doubled (0-400 then 400-800 repeats) so the loop is seamless */}
+              <path
+                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50 L800,100 L0,100 Z"
+                fill="url(#chartGradient)"
               />
-            </path>
-            <path fill="none" stroke="hsl(var(--primary))" strokeWidth="2">
-              <animate
-                attributeName="d"
-                dur="30s"
-                repeatCount="indefinite"
-                values="
-                  M0,80 C40,70 80,55 120,60 C160,65 200,40 240,35 C280,30 320,50 360,45 C380,42 400,30 400,30;
-                  M0,60 C40,50 80,65 120,70 C160,75 200,55 240,45 C280,35 320,30 360,40 C380,45 400,50 400,50;
-                  M0,45 C40,40 80,30 120,35 C160,40 200,60 240,70 C280,80 320,65 360,55 C380,50 400,45 400,45;
-                  M0,70 C40,65 80,50 120,40 C160,30 200,35 240,50 C280,65 320,75 360,60 C380,55 400,40 400,40;
-                  M0,50 C40,55 80,70 120,75 C160,80 200,65 240,50 C280,40 320,35 360,30 C380,28 400,35 400,35;
-                  M0,35 C40,30 80,40 120,55 C160,70 200,75 240,65 C280,55 320,45 360,50 C380,52 400,60 400,60;
-                  M0,65 C40,75 80,80 120,70 C160,60 200,45 240,40 C280,35 320,40 360,55 C380,60 400,70 400,70;
-                  M0,80 C40,70 80,55 120,60 C160,65 200,40 240,35 C280,30 320,50 360,45 C380,42 400,30 400,30
-                "
-                calcMode="spline"
-                keySplines="0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1; 0.4 0 0.6 1"
+              <path
+                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50"
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2"
               />
-            </path>
-          </svg>
+            </svg>
+          </div>
           {/* Live indicator */}
-          <div className="absolute top-0 right-0 flex items-center gap-1.5 text-[10px] md:text-xs text-primary">
+          <div className="absolute top-0 right-0 z-10 flex items-center gap-1.5 text-[10px] md:text-xs text-primary">
             <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-primary"></span>
