@@ -15,7 +15,7 @@ const pricingPlans: Record<string, PricingPlanData> = {
     monthlyPrice: 0,
     priceIds: { monthly: null, yearly: null },
     features: ['25 active links', 'Click tracking', 'Basic dashboard', 'Community support'],
-    highlighted: false,
+    highlighted: false
   },
   pro: {
     name: 'Pro',
@@ -23,16 +23,16 @@ const pricingPlans: Record<string, PricingPlanData> = {
     monthlyPrice: 10,
     priceIds: {
       monthly: 'price_1SqvwMR7WITbhBZj8cbrc0Zz',
-      yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN',
+      yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN'
     },
     features: [
-      '100 active links',
-      'Leads & Sales tracking',
-      'Full analytics',
-      'Geographic insights',
-      'Priority support',
-    ],
-    highlighted: false,
+    '100 active links',
+    'Leads & Sales tracking',
+    'Full analytics',
+    'Geographic insights',
+    'Priority support'],
+
+    highlighted: false
   },
   business: {
     name: 'Business',
@@ -40,18 +40,18 @@ const pricingPlans: Record<string, PricingPlanData> = {
     monthlyPrice: 15,
     priceIds: {
       monthly: 'price_1Sqw2AR7WITbhBZjvQDRReY6',
-      yearly: 'price_1Sqw2aR7WITbhBZjzBBcN8H3',
+      yearly: 'price_1Sqw2aR7WITbhBZjzBBcN8H3'
     },
     badge: 'Most Popular',
     features: [
-      '175 active links',
-      'All Pro features',
-      'Team collaboration',
-      'API access',
-      'Dedicated support',
-    ],
-    highlighted: true,
-  },
+    '175 active links',
+    'All Pro features',
+    'Team collaboration',
+    'API access',
+    'Dedicated support'],
+
+    highlighted: true
+  }
 };
 
 function getDisplayPrice(plan: PricingPlanData, cycle: BillingCycle): number {
@@ -101,7 +101,7 @@ export function PricingSection() {
       (cards[index] as HTMLElement).scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
-        inline: 'center',
+        inline: 'center'
       });
       setActiveSlide(index);
     }
@@ -125,7 +125,7 @@ export function PricingSection() {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+          <p className="text-muted-foreground max-w-xl mx-auto text-xl">
             Start free, upgrade when you're ready. No hidden fees.
           </p>
         </div>
@@ -143,9 +143,9 @@ export function PricingSection() {
                 setBillingCycle={setBillingCycle}
                 displayPrice={getDisplayPrice(plan, billingCycle)}
                 checkoutLoading={checkoutLoading}
-                onSubscribe={handleSubscribe}
-              />
-            );
+                onSubscribe={handleSubscribe} />);
+
+
           })}
         </div>
 
@@ -156,8 +156,8 @@ export function PricingSection() {
               ref={scrollRef}
               onScroll={handleScroll}
               className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pt-4 pb-2"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+
               {mobileOrder.map((planId) => {
                 const plan = pricingPlans[planId];
                 return (
@@ -170,35 +170,35 @@ export function PricingSection() {
                     displayPrice={getDisplayPrice(plan, billingCycle)}
                     checkoutLoading={checkoutLoading}
                     onSubscribe={handleSubscribe}
-                    className="min-w-[85%] snap-center flex-shrink-0"
-                  />
-                );
+                    className="min-w-[85%] snap-center flex-shrink-0" />);
+
+
               })}
             </div>
 
             {/* Arrow indicator */}
-            {activeSlide === 0 && (
-              <button
-                onClick={() => scrollToSlide(1)}
-                className="absolute -right-1 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-muted-foreground/70 transition-all hover:text-foreground hover:bg-muted"
-                aria-label="Next plan"
-              >
+            {activeSlide === 0 &&
+            <button
+              onClick={() => scrollToSlide(1)}
+              className="absolute -right-1 top-1/2 -translate-y-1/2 z-20 h-8 w-8 rounded-full bg-muted/60 backdrop-blur-sm flex items-center justify-center text-muted-foreground/70 transition-all hover:text-foreground hover:bg-muted"
+              aria-label="Next plan">
+
                 <ChevronRight className="h-4 w-4" />
               </button>
-            )}
+            }
           </div>
 
           {/* Dots */}
           <div className="flex justify-center gap-2 mt-4">
-            {mobileOrder.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => scrollToSlide(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  activeSlide === i ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'
-                }`}
-              />
-            ))}
+            {mobileOrder.map((_, i) =>
+            <button
+              key={i}
+              onClick={() => scrollToSlide(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+              activeSlide === i ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'}`
+              } />
+
+            )}
           </div>
 
           {/* Free plan below */}
@@ -210,11 +210,11 @@ export function PricingSection() {
               setBillingCycle={setBillingCycle}
               displayPrice={0}
               checkoutLoading={checkoutLoading}
-              onSubscribe={handleSubscribe}
-            />
+              onSubscribe={handleSubscribe} />
+
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }

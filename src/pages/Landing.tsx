@@ -48,15 +48,15 @@ function MockDashboardChart() {
               </defs>
               {/* The path is doubled (0-400 then 400-800 repeats) so the loop is seamless */}
               <path
-                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50 L800,100 L0,100 Z"
-                fill="url(#chartGradient)"
-              />
+              d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50 L800,100 L0,100 Z"
+              fill="url(#chartGradient)" />
+
               <path
-                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50"
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-              />
+              d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50"
+              fill="none"
+              stroke="hsl(var(--primary))"
+              strokeWidth="2" />
+
             </svg>
           </div>
           {/* Live indicator */}
@@ -209,7 +209,7 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Bring all your data under one roof.
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
+            <p className="text-muted-foreground max-w-xl mx-auto text-xl">
               No more messy spreadsheets or delayed analytics. Get a single source of truth for your entire funnel.
             </p>
           </div>
@@ -219,8 +219,8 @@ export default function Landing() {
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="font-semibold text-foreground mb-2 text-2xl">{feature.title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-xl">{feature.description}</p>
               </div>)}
           </div>
         </div>
@@ -298,6 +298,9 @@ export default function Landing() {
                   try {
                     await navigator.share({ title: 'Ghost Link', url: shareUrl });
                   } catch (e) {
+
+
+
 
 
 
