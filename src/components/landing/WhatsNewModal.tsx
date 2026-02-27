@@ -40,7 +40,7 @@ export function WhatsNewModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="text-xs font-semibold h-7 px-3 gap-1.5 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+        <Button variant="outline" size="sm" className="text-xs font-semibold h-7 px-3 gap-1.5 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary animate-[pulse-glow_1s_ease-in-out_infinite]">
           <Rocket className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">What's New</span>
         </Button>
