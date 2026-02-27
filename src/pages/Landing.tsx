@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Ghost, Zap, Target, BarChart, Share2 } from 'lucide-react';
+import { Ghost, Zap, Target, BarChart, Share2, Shield, CreditCard, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { FloatingParticles } from '@/components/landing/FloatingParticles';
 import { ComparisonSection } from '@/components/landing/ComparisonSection';
 import { PricingSection } from '@/components/landing/PricingSection';
+import { WhatsNewModal } from '@/components/landing/WhatsNewModal';
 
 // Mock chart component for hero
 function MockDashboardChart() {
@@ -115,6 +116,7 @@ export default function Landing() {
 
             {/* Nav Actions */}
               <div className="flex items-center gap-1.5 sm:gap-2">
+              <WhatsNewModal />
               <Link to="/auth">
                 <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5">
                   Log in
@@ -174,9 +176,9 @@ export default function Landing() {
           
           {/* Sub-headline */}
           <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">
-            Ghost Link is the missing piece of your sales funnel.
+            The tracking tool built for creators selling on Gumroad, Whop & social media.
             <br className="hidden sm:block" />
-            Track every click, lead, and sale from bio to bank account.
+            Get full-funnel insights — clicks, leads, sales — at a fraction of the cost.
           </p>
           
           {/* CTA Button */}
@@ -223,6 +225,27 @@ export default function Landing() {
       <ComparisonSection />
 
       <PricingSection />
+
+      {/* Trust Section */}
+      <section className="py-12 px-4">
+        <div className="container mx-auto max-w-3xl">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12">
+            {[
+              { icon: CreditCard, text: 'No credit card required', sub: 'Free plan, no strings attached' },
+              { icon: Shield, text: 'Secure Stripe checkout', sub: 'Payments handled by Stripe' },
+              { icon: Lock, text: '256-bit encryption', sub: 'Your data is always protected' },
+            ].map((item) => (
+              <div key={item.text} className="flex items-center gap-3 text-center sm:text-left">
+                <item.icon className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">{item.text}</p>
+                  <p className="text-xs text-muted-foreground">{item.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Testimonials Section — hidden until real testimonials are collected */}
       {/* <TestimonialsSection /> */}
