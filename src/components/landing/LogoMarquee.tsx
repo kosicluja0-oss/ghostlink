@@ -1,15 +1,20 @@
+import gumroadLogo from '@/assets/logos/gumroad.svg';
+import clickbankLogo from '@/assets/logos/clickbank.png';
+import hotmartLogo from '@/assets/logos/hotmart.png';
+import thrivecartLogo from '@/assets/logos/thrivecart.png';
+import whopLogo from '@/assets/logos/whop.png';
+
 const LOGOS = [
-  { name: 'Gumroad', slug: 'gumroad', color: 'FF90E8' },
-  { name: 'Shopify', slug: 'shopify', color: '7AB55C' },
-  { name: 'Stripe', slug: 'stripe', color: '6772E5' },
-  { name: 'Whop', slug: 'whop', color: 'FF6243' },
-  { name: 'LemonSqueezy', slug: 'lemonsqueezy', color: 'FFC233' },
-  { name: 'ClickBank', slug: 'clickbank', color: '2E7D32' },
-  { name: 'Hotmart', slug: 'hotmart', color: 'F04E23' },
-  { name: 'ThriveCart', slug: 'thrivecart', color: '2962FF' },
+  { name: 'Gumroad', src: `https://cdn.simpleicons.org/gumroad/FF90E8` },
+  { name: 'Shopify', src: `https://cdn.simpleicons.org/shopify/7AB55C` },
+  { name: 'Stripe', src: `https://cdn.simpleicons.org/stripe/6772E5` },
+  { name: 'Whop', src: whopLogo },
+  { name: 'LemonSqueezy', src: `https://cdn.simpleicons.org/lemonsqueezy/FFC233` },
+  { name: 'ClickBank', src: clickbankLogo },
+  { name: 'Hotmart', src: hotmartLogo },
+  { name: 'ThriveCart', src: thrivecartLogo },
 ];
 
-// Double the list for seamless looping
 const MARQUEE_LOGOS = [...LOGOS, ...LOGOS];
 
 export function LogoMarquee() {
@@ -25,16 +30,16 @@ export function LogoMarquee() {
           WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
         }}
       >
-        <div className="flex w-max animate-[marquee_25s_linear_infinite] group-hover:[animation-play-state:paused]">
+        <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused]">
           {MARQUEE_LOGOS.map((logo, i) => (
             <div
-              key={`${logo.slug}-${i}`}
+              key={`${logo.name}-${i}`}
               className="flex items-center justify-center mx-6 md:mx-10 shrink-0"
             >
               <img
-                src={`https://cdn.simpleicons.org/${logo.slug}/${logo.color}`}
+                src={logo.src}
                 alt={logo.name}
-                className="h-5 md:h-6 w-auto object-contain transition-all duration-300 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100"
+                className="h-5 md:h-6 w-auto object-contain transition-all duration-300 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 invert"
                 loading="lazy"
               />
             </div>
