@@ -232,11 +232,16 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12">
             {[
               { icon: CreditCard, text: 'No credit card required', sub: 'Free plan, no strings attached' },
-              { icon: Shield, text: 'Secure Stripe checkout', sub: 'Payments handled by Stripe' },
+              { icon: null, stripeLogo: true, text: 'Secure Stripe checkout', sub: 'Payments handled by Stripe' },
+              { icon: Lock, text: '256-bit encryption', sub: 'Your data is always protected' },
               { icon: Lock, text: '256-bit encryption', sub: 'Your data is always protected' },
             ].map((item) => (
               <div key={item.text} className="flex items-center gap-3 text-center sm:text-left">
-                <item.icon className="h-5 w-5 text-primary shrink-0" />
+                {'stripeLogo' in item && item.stripeLogo ? (
+                  <img src="https://cdn.simpleicons.org/stripe/6772E5" alt="Stripe" className="h-5 w-5 shrink-0" />
+                ) : item.icon ? (
+                  <item.icon className="h-5 w-5 text-primary shrink-0" />
+                ) : null}
                 <div>
                   <p className="text-sm font-medium text-foreground">{item.text}</p>
                   <p className="text-xs text-muted-foreground">{item.sub}</p>
