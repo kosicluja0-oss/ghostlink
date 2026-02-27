@@ -23,7 +23,7 @@ function MockDashboardChart() {
             <span className="text-xs md:text-sm font-medium text-foreground">Traffic Overview</span>
           </div>
           <div className="flex gap-1.5 md:gap-2">
-            {['24h', '7d', '30d'].map(period => <span key={period} className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
+            {['24h', '7d', '30d'].map((period) => <span key={period} className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
                 {period}
               </span>)}
           </div>
@@ -146,13 +146,13 @@ export default function Landing() {
           {/* Accent gradient orb */}
           <div className="absolute bottom-1/4 left-1/3 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
           {/* Grid overlay */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
-              backgroundSize: '60px 60px'
-            }}
-          />
+          <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px'
+          }} />
+
         </div>
         
         <div className="container mx-auto flex flex-col items-center text-center relative z-10">
@@ -175,9 +175,9 @@ export default function Landing() {
           </h1>
           
           {/* Sub-headline */}
-          <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">
-            The tracking tool built for creators selling on Gumroad, Whop & social media.
-            <br className="hidden sm:block" />
+          <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">The all-in-one tracking tool for creators on top digital marketplaces and social media. Get full-funnel insights — clicks, leads, and sales — at a fraction of the cost.
+
+          <br className="hidden sm:block" />
             Get full-funnel insights — clicks, leads, sales — at a fraction of the cost.
           </p>
           
@@ -210,7 +210,7 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map(feature => <div key={feature.title} className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300">
+            {features.map((feature) => <div key={feature.title} className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -231,21 +231,21 @@ export default function Landing() {
         <div className="container mx-auto max-w-3xl">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12">
             {[
-              { icon: CreditCard, text: 'No credit card required', sub: 'Free plan, no strings attached' },
-              { icon: null, stripeLogo: true, text: 'Secure Stripe checkout', sub: 'Payments handled by Stripe' },
-            ].map((item) => (
-              <div key={item.text} className="flex items-center gap-3 text-center sm:text-left">
-                {'stripeLogo' in item && item.stripeLogo ? (
-                  <img src="https://cdn.simpleicons.org/stripe/6772E5" alt="Stripe" className="h-5 w-5 shrink-0" />
-                ) : item.icon ? (
-                  <item.icon className="h-5 w-5 text-primary shrink-0" />
-                ) : null}
+          { icon: CreditCard, text: 'No credit card required', sub: 'Free plan, no strings attached' },
+          { icon: null, stripeLogo: true, text: 'Secure Stripe checkout', sub: 'Payments handled by Stripe' }].
+          map((item) =>
+          <div key={item.text} className="flex items-center gap-3 text-center sm:text-left">
+                {'stripeLogo' in item && item.stripeLogo ?
+            <img src="https://cdn.simpleicons.org/stripe/6772E5" alt="Stripe" className="h-5 w-5 shrink-0" /> :
+            item.icon ?
+            <item.icon className="h-5 w-5 text-primary shrink-0" /> :
+            null}
                 <div>
                   <p className="text-sm font-medium text-foreground">{item.text}</p>
                   <p className="text-xs text-muted-foreground">{item.sub}</p>
                 </div>
               </div>
-            ))}
+          )}
           </div>
         </div>
       </section>
@@ -287,21 +287,21 @@ export default function Landing() {
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
               <button
-                onClick={async () => {
-                  const shareUrl = 'https://ghstlink.com';
-                  if (navigator.share) {
-                    try {
-                      await navigator.share({ title: 'Ghost Link', url: shareUrl });
-                    } catch (e) {
-                      // User cancelled share
-                    }
-                  } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    toast.success('Link copied to clipboard!');
-                  }
-                }}
-                className="flex items-center gap-1.5 hover:text-foreground transition-colors"
-              >
+              onClick={async () => {
+                const shareUrl = 'https://ghstlink.com';
+                if (navigator.share) {
+                  try {
+                    await navigator.share({ title: 'Ghost Link', url: shareUrl });
+                  } catch (e) {
+
+
+
+                    // User cancelled share
+                  }} else {navigator.clipboard.writeText(shareUrl);toast.success('Link copied to clipboard!');
+                }
+              }}
+              className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+
                 <Share2 className="h-3.5 w-3.5" />
                 Share
               </button>
