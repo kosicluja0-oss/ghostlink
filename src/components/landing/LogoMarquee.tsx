@@ -39,7 +39,7 @@ export function LogoMarquee() {
               <img
                 src={logo.src}
                 alt={logo.name}
-                className="h-5 md:h-6 w-auto object-contain transition-all duration-300 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 invert"
+                className="h-5 md:h-6 w-auto object-contain"
                 loading="lazy"
               />
             </div>
