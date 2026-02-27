@@ -207,7 +207,7 @@ export default function Landing() {
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Built for Performance
+              Bring all your data under one roof.
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Everything you need to track, analyze, and optimize your affiliate campaigns.
