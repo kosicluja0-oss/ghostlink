@@ -199,6 +199,10 @@ export default {
 				'100%': {
 					clipPath: 'inset(0 0% 0 0)'
 				}
+			},
+			marquee: {
+				'0%': { transform: 'translateX(0)' },
+				'100%': { transform: 'translateX(-50%)' }
 			}
 		},
 		animation: {
@@ -210,7 +214,8 @@ export default {
 			'count-up': 'count-up 0.5s ease-out',
 			float: 'float 20s ease-in-out infinite',
 			'border-beam': 'border-beam 10s linear infinite',
-			'chart-reveal': 'chart-reveal 0.7s ease-out forwards'
+			'chart-reveal': 'chart-reveal 0.7s ease-out forwards',
+			marquee: 'marquee 25s linear infinite'
 		}
   	}
   },
