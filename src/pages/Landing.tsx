@@ -17,17 +17,7 @@ function MockDashboardChart() {
       <div className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-3 md:p-6 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-3 md:mb-6">
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="h-6 w-6 md:h-8 md:w-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <Ghost className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-            </div>
-            <span className="text-xs md:text-sm font-medium text-foreground">Traffic Overview</span>
-          </div>
-          <div className="flex gap-1.5 md:gap-2">
-            {['24h', '7d', '30d'].map((period) => <span key={period} className={`text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded ${period === '7d' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>
-                {period}
-              </span>)}
-          </div>
+          <span className="text-xs md:text-sm font-medium text-foreground">Overview</span>
         </div>
         
         {/* Stats Row */}
