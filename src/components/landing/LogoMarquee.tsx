@@ -30,7 +30,7 @@ export function LogoMarquee() {
           WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
         }}
       >
-        <div className="flex w-max animate-marquee group-hover:[animation-play-state:paused]">
+        <div className="flex w-max animate-marquee">
           {MARQUEE_LOGOS.map((logo, i) => (
             <div
               key={`${logo.name}-${i}`}
