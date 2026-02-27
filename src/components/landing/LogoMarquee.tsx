@@ -4,6 +4,9 @@ const LOGOS = [
   { name: 'Stripe', slug: 'stripe', color: '6772E5' },
   { name: 'Whop', slug: 'whop', color: 'FF6243' },
   { name: 'LemonSqueezy', slug: 'lemonsqueezy', color: 'FFC233' },
+  { name: 'ClickBank', slug: 'clickbank', color: '2E7D32' },
+  { name: 'Hotmart', slug: 'hotmart', color: 'F04E23' },
+  { name: 'ThriveCart', slug: 'thrivecart', color: '2962FF' },
 ];
 
 // Double the list for seamless looping
