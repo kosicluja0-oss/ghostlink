@@ -175,7 +175,7 @@ export default function Landing() {
           </h1>
           
           {/* Sub-headline */}
-          <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">The all-in-one tracking tool for creators on top digital marketplaces and social media. Get full-funnel insights — clicks, leads, and sales — at a fraction of the cost.
+          <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">The all-in-one tracking tool for creators on top digital marketplaces and social media. Get insights clicks, leads, and sales at a fraction of the cost.
 
           <br className="hidden sm:block" />
             Get full-funnel insights — clicks, leads, sales — at a fraction of the cost.
@@ -296,11 +296,18 @@ export default function Landing() {
 
 
 
+
+
+
+
+
+
+
+
+
+
                     // User cancelled share
-                  }} else {navigator.clipboard.writeText(shareUrl);toast.success('Link copied to clipboard!');
-                }
-              }}
-              className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+                  }} else {navigator.clipboard.writeText(shareUrl);toast.success('Link copied to clipboard!');}}} className="flex items-center gap-1.5 hover:text-foreground transition-colors">
 
                 <Share2 className="h-3.5 w-3.5" />
                 Share
@@ -312,5 +319,4 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>;
-}
+    </div>;}
