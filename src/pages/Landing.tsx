@@ -233,8 +233,6 @@ export default function Landing() {
             {[
               { icon: CreditCard, text: 'No credit card required', sub: 'Free plan, no strings attached' },
               { icon: null, stripeLogo: true, text: 'Secure Stripe checkout', sub: 'Payments handled by Stripe' },
-              { icon: Lock, text: '256-bit encryption', sub: 'Your data is always protected' },
-              { icon: Lock, text: '256-bit encryption', sub: 'Your data is always protected' },
             ].map((item) => (
               <div key={item.text} className="flex items-center gap-3 text-center sm:text-left">
                 {'stripeLogo' in item && item.stripeLogo ? (
