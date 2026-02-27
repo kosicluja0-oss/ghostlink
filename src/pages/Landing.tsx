@@ -38,7 +38,7 @@ function MockDashboardChart() {
         
         {/* Animated Chart - scrolls right to left like a real-time chart */}
         <div className="h-16 md:h-32 relative overflow-hidden">
-          <div className="absolute inset-0" style={{ width: '200%', animation: 'chartScroll 15s linear infinite' }}>
+          <div className="absolute inset-0" style={{ width: '200%', animation: 'chartScroll 30s linear infinite' }}>
             <svg className="h-full w-full" viewBox="0 0 800 100" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -48,11 +48,11 @@ function MockDashboardChart() {
               </defs>
               {/* The path is doubled (0-400 then 400-800 repeats) so the loop is seamless */}
               <path
-                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,50 420,45 440,60 460,65 C480,70 500,40 520,35 C540,30 560,50 580,58 C600,65 620,72 640,65 C660,58 680,42 700,38 C720,34 740,28 760,45 C780,62 800,50 800,50 L800,100 L0,100 Z"
+                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50 L800,100 L0,100 Z"
                 fill="url(#chartGradient)"
               />
               <path
-                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,50 420,45 440,60 460,65 C480,70 500,40 520,35 C540,30 560,50 580,58 C600,65 620,72 640,65 C660,58 680,42 700,38 C720,34 740,28 760,45 C780,62 800,50 800,50"
+                d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50"
                 fill="none"
                 stroke="hsl(var(--primary))"
                 strokeWidth="2"
