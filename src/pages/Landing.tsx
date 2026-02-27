@@ -9,6 +9,7 @@ import { FloatingParticles } from '@/components/landing/FloatingParticles';
 import { ComparisonSection } from '@/components/landing/ComparisonSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { WhatsNewModal } from '@/components/landing/WhatsNewModal';
+import { LogoMarquee } from '@/components/landing/LogoMarquee';
 
 // Mock chart component for hero
 function MockDashboardChart() {
@@ -180,6 +181,11 @@ export default function Landing() {
           <br className="hidden sm:block" />
             Get full-funnel insights — clicks, leads, sales — at a fraction of the cost.
           </p>
+
+          {/* Logo Marquee */}
+          <div className="mt-8 w-full">
+            <LogoMarquee />
+          </div>
           
           {/* CTA Button */}
           <div className="mt-10">
