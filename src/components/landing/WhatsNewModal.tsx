@@ -12,8 +12,8 @@ import {
 
 const entries = [
   {
-    version: 'v2.0',
-    label: 'Beta Launch',
+    version: 'v1.0',
+    label: 'Launch',
     date: 'Feb 2026',
     items: [
       'Real-time analytics with millisecond precision',
