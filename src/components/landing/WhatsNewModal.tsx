@@ -28,7 +28,7 @@ const entries = [
     date: '',
     items: [
       'Email notifications on Sales conversions',
-      'Referral system for organic growth',
+      'Refferal system',
       'Advanced link customization & branding',
     ],
   },
