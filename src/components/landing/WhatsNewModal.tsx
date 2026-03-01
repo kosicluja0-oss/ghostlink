@@ -22,6 +22,16 @@ const entries = [
       'Native integrations: Whop, ThriveCart, SamCart & more',
     ],
   },
+  {
+    version: 'Next',
+    label: 'Coming Soon',
+    date: '',
+    items: [
+      'Email notifications on Sales conversions',
+      'Referral system for organic growth',
+      'Advanced link customization & branding',
+    ],
+  },
 ];
 
 export function WhatsNewModal() {
