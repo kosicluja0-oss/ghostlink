@@ -85,7 +85,7 @@ const features = [{
 }, {
   icon: BarChart,
   title: 'Detailed Reporting',
-  description: 'Geographic insights, device breakdown, and traffic source analysis. Make data-driven decisions.'
+  description: 'Identify your traffic sources instantly. Track countries and social networks to make decisions based on facts, not guesswork.'
 }];
 
 const faqs = [{
