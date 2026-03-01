@@ -22,16 +22,6 @@ const entries = [
       'Native integrations: Whop, ThriveCart, SamCart & more',
     ],
   },
-  {
-    version: 'Next',
-    label: 'Coming Soon',
-    date: '',
-    items: [
-      'LemonSqueezy & Gumroad native integrations',
-      'Team workspaces for agencies',
-      'Custom tracking domains',
-    ],
-  },
 ];
 
 export function WhatsNewModal() {
