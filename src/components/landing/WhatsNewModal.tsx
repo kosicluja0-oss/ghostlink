@@ -23,8 +23,8 @@ const entries = [
     ],
   },
   {
-    version: 'Next',
-    label: 'Coming Soon',
+    version: 'v1.1',
+    label: 'Upcoming Features',
     date: '',
     items: [
       'Email notifications on Sales conversions',
