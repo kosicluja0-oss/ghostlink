@@ -165,7 +165,7 @@ export default function Landing() {
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
             </span>
             <span className="text-[9px] md:text-[10px] font-semibold tracking-widest text-primary uppercase">
-              Now in Beta V2.0
+              Now in V1.0
             </span>
           </div>
           
