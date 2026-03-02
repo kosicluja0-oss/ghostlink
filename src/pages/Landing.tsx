@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ghost, Zap, Target, BarChart, Share2, Shield, CreditCard, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
@@ -215,13 +216,22 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature) => <div key={feature.title} className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: index * 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300"
+              >
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2 text-2xl">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed text-xl">{feature.description}</p>
-              </div>)}
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
