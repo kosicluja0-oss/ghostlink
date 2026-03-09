@@ -1,34 +1,64 @@
 
-Cílený plán (podle tvého screenshotu v CZ IONOS), protože v „Registrace domény“ nic nevidíš:
 
-1) Otevři správné místo pro ověření kontaktu
-- V kartě **Pokročilá nastavení** klikni na modrý odkaz **„Lukáš Kosina“** u položky **Kontakty domény**.
-- Ověření ICANN bývá právě u kontaktu registranta, ne vždy v menu „MOŽNOSTI“.
+## Plan: 3 Landing Page Trust & Conversion Upgrades
 
-2) Zkontroluj registrantský e-mail
-- Na stránce kontaktu najdi e-mail u **registranta držitele domény**.
-- Pokud je tam jiný/starý e-mail, uprav ho na aktuální schránku, ulož změnu (tím se často vyvolá nové ověření).
+### 1. H1 Headline Tweak
 
-3) Hledej akci pro verifikaci
-- Hledej tlačítko/odkaz typu:
-  - **Ověřit e-mail**
-  - **Znovu odeslat ověřovací e-mail**
-  - **Resend verification**
-- Pokud je dostupné, klikni a ověřovací link otevři z mailu.
+**Current state:**
+- H1: "Stop guessing. Start scaling."
+- Sub-headline: "Ghost Link is the missing piece of your sales funnel. Track every click, lead, and sale from bio to bank account."
 
-4) Když ani tam nic není (nejpravděpodobnější další krok)
-- V levém menu klikni **Zákaznická podpora** a otevři chat/požadavek.
-- Pošli jim přesně toto:
-  - „Doména **ghstlink.com** zobrazuje stránku *suspended due to unverified registrant email*. V administraci nevidím možnost resend. Prosím o **ruční znovuodeslání ICANN registrant verification mailu** a potvrzení, na jaký e-mail byl odeslán.“
-- Tohle je v této situaci nejrychlejší eskalace.
+**Proposed change (file: `src/pages/Landing.tsx`, lines 169-180):**
 
-5) Ověření výsledku po reaktivaci
-- Po kliknutí na verifikační link nebo zásahu podpory počkej cca **15–30 min**.
-- Pak zkontroluj, že `https://ghstlink.com` už neukazuje suspend stránku.
+Keep the punchy H1 but sharpen the sub-headline to communicate specific value and target audience:
 
-Technická poznámka (pro jistotu)
-- Web na `ghostlink.lovable.app` běží správně; problém je čistě registrátor/ICANN verifikace domény `ghstlink.com`.
-- DNS a app kód tímto krokem typicky nejsou hlavní blokátor.
+- H1 stays: **"Stop guessing. Start scaling."** (it's strong, short, memorable)
+- Sub-headline changes to: **"The tracking tool built for creators selling on Gumroad, Whop & social media. Get full-funnel insights — clicks, leads, sales — at a fraction of the cost."**
 
-Co po tobě teď potřebuji pro pokračování navigace:
-- Otevři prosím stránku přes **Kontakty domény → Lukáš Kosina** a pošli screenshot té konkrétní stránky (nebo screenshot chatu s podporou, pokud už eskaluješ).
+This anchors the product to a specific audience (creators, affiliates) and implies price advantage without sounding cheap.
+
+---
+
+### 2. Trust Section (new section between Pricing and FAQ)
+
+**File: `src/pages/Landing.tsx`** — insert a new section between `<PricingSection />` and the FAQ section (around line 230).
+
+A compact, centered trust bar with three trust signals side by side, using icons (Shield, CreditCard, Lock from lucide-react):
+
+- **"No credit card required"** — Free plan, no strings attached.
+- **"Secure Stripe checkout"** — Payments handled by Stripe.
+- **"256-bit encryption"** — Your data is always protected.
+
+Styled as a single-row horizontal layout (3 columns on desktop, stacked on mobile), with subtle icon + text pairs. Minimal design, no heavy card borders — just clean text with muted icons to feel trustworthy, not salesy.
+
+---
+
+### 3. "What's New" Modal
+
+**New file: `src/components/landing/WhatsNewModal.tsx`**
+
+A simple Dialog modal triggered from a "What's New" link in the navbar (next to Log in / Sign Up).
+
+Content — a short changelog with timeline styling:
+
+```text
+v2.0 — Beta Launch
+  Ghost Link V2 is live with real-time analytics,
+  conversion tracking, and geographic insights.
+
+Coming Soon
+  LemonSqueezy & Gumroad native integrations.
+  Team workspaces for agencies.
+```
+
+**File: `src/pages/Landing.tsx`** — add a "What's New" button/link in the navbar area (around line 120), opening the modal. Styled as a subtle ghost button or text link with a small sparkle/rocket icon.
+
+---
+
+### Summary of file changes
+
+| File | Change |
+|------|--------|
+| `src/pages/Landing.tsx` | Update sub-headline text; add Trust section between Pricing and FAQ; add "What's New" button in navbar |
+| `src/components/landing/WhatsNewModal.tsx` | New file — simple Dialog with changelog content |
+
