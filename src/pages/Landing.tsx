@@ -166,7 +166,7 @@ export default function Landing() {
           
           {/* Dashboard Preview */}
           <div className="mt-8 w-full">
-            <MockDashboardChart />
+            <DashboardPreview />
           </div>
         </div>
       </section>
