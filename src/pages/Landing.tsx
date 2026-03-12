@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ghost, Zap, Target, BarChart, Share2, Shield, CreditCard, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import dashboardPreview from '@/assets/dashboard-preview.png';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
