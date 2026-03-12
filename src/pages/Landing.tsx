@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ghost, Zap, Target, BarChart, Share2, Shield, CreditCard, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import dashboardPreview from '@/assets/dashboard-preview.png';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,67 +14,34 @@ import { WhatsNewModal } from '@/components/landing/WhatsNewModal';
 import { LogoMarquee } from '@/components/landing/LogoMarquee';
 
 // Mock chart component for hero
-function MockDashboardChart() {
-  return <div className="relative w-full max-w-4xl mx-auto">
-      <div className="bg-card/80 backdrop-blur-xl border border-border rounded-xl p-3 md:p-6 shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3 md:mb-6">
-          <span className="text-xs md:text-sm font-medium text-foreground">Overview</span>
+function DashboardPreview() {
+  return (
+    <div className="relative w-full max-w-5xl mx-auto">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="relative rounded-xl border border-border/60 overflow-hidden shadow-[0_20px_70px_-15px_hsl(var(--primary)/0.25)]"
+      >
+        <img
+          src={dashboardPreview}
+          alt="Ghost Link dashboard showing real-time analytics, conversion tracking, and geographic insights"
+          className="w-full h-auto"
+          loading="eager"
+        />
+        {/* Live indicator */}
+        <div className="absolute top-3 right-3 md:top-4 md:right-4 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-[10px] md:text-xs text-primary font-medium">
+          <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-primary"></span>
+          </span>
+          Live
         </div>
-        
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-6">
-          <div className="text-center">
-            <div className="text-lg md:text-2xl font-bold text-foreground">24,847</div>
-            <div className="text-[10px] md:text-xs text-muted-foreground">Total Clicks</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg md:text-2xl font-bold text-warning">1,293</div>
-            <div className="text-[10px] md:text-xs text-muted-foreground">Leads</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg md:text-2xl font-bold text-success">847</div>
-            <div className="text-[10px] md:text-xs text-muted-foreground">Sales</div>
-          </div>
-        </div>
-        
-        {/* Animated Chart - scrolls right to left like a real-time chart */}
-        <div className="h-16 md:h-32 relative overflow-hidden">
-          <div className="absolute inset-0" style={{ width: '200%', animation: 'chartScroll 30s linear infinite' }}>
-            <svg className="h-full w-full" viewBox="0 0 800 100" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {/* The path is doubled (0-400 then 400-800 repeats) so the loop is seamless */}
-              <path
-              d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50 L800,100 L0,100 Z"
-              fill="url(#chartGradient)" />
-
-              <path
-              d="M0,50 C20,45 40,60 60,65 C80,70 100,40 120,35 C140,30 160,50 180,58 C200,65 220,72 240,65 C260,58 280,42 300,38 C320,34 340,28 360,45 C380,62 400,72 420,75 C440,78 460,62 480,50 C500,38 520,30 540,42 C560,54 580,62 600,55 C620,48 640,35 660,30 C680,25 700,42 720,58 C740,72 760,62 780,50 C800,50 800,50 800,50"
-              fill="none"
-              stroke="hsl(var(--primary))"
-              strokeWidth="2" />
-
-            </svg>
-          </div>
-          {/* Live indicator */}
-          <div className="absolute top-0 right-0 z-10 flex items-center gap-1.5 text-[10px] md:text-xs text-primary">
-            <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 md:h-2 md:w-2 bg-primary"></span>
-            </span>
-            Live
-          </div>
-        </div>
-      </div>
-      
+      </motion.div>
       {/* Glow effect */}
       <div className="absolute inset-0 -z-10 bg-primary/10 blur-3xl rounded-full scale-75" />
-    </div>;
+    </div>
+  );
 }
 const features = [{
   icon: Zap,
@@ -198,7 +166,7 @@ export default function Landing() {
           
           {/* Dashboard Preview */}
           <div className="mt-8 w-full">
-            <MockDashboardChart />
+            <DashboardPreview />
           </div>
         </div>
       </section>
