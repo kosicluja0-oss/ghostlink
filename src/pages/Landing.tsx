@@ -147,7 +147,7 @@ export default function Landing() {
           
           {/* Sub-headline */}
           <p className="mt-6 text-[13px] md:text-xl text-muted-foreground max-w-2xl leading-relaxed mx-auto">
-            The all-in-one tracking tool for creators on top digital marketplaces and social media. Get full-funnel insights — clicks, leads, and sales — at a fraction of the cost.
+            While you're guessing which link works, your competitors are already scaling the ones that do.
           </p>
 
           {/* Logo Marquee */}
