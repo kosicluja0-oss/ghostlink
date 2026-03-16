@@ -22,14 +22,14 @@ function DashboardPreview() {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative rounded-xl border border-border/60 overflow-hidden shadow-[0_20px_70px_-15px_hsl(var(--primary)/0.25)]"
-      >
+        className="relative rounded-xl border border-border/60 overflow-hidden shadow-[0_20px_70px_-15px_hsl(var(--primary)/0.25)]">
+        
         <img
           src={dashboardPreview}
           alt="Ghost Link dashboard showing real-time analytics, conversion tracking, and geographic insights"
           className="w-full h-auto"
-          loading="eager"
-        />
+          loading="eager" />
+        
         {/* Live indicator */}
         <div className="absolute top-3 right-3 md:top-4 md:right-4 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-[10px] md:text-xs text-primary font-medium">
           <span className="relative flex h-1.5 w-1.5 md:h-2 md:w-2">
@@ -41,8 +41,8 @@ function DashboardPreview() {
       </motion.div>
       {/* Glow effect */}
       <div className="absolute inset-0 -z-10 bg-primary/10 blur-3xl rounded-full scale-75" />
-    </div>
-  );
+    </div>);
+
 }
 const features = [{
   icon: Zap,
@@ -148,7 +148,7 @@ export default function Landing() {
           <h1 className="text-[2.4rem] md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.1]">
             Stop guessing.
             <br />
-            <span className="text-primary">Start scaling.</span>
+            <span className="text-sidebar-primary">Start scaling.</span>
           </h1>
           
           {/* Sub-headline */}
@@ -190,22 +190,22 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300"
-              >
+            {features.map((feature, index) =>
+          <motion.div
+            key={feature.title}
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: index * 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 hover:-translate-y-1 hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)] transition-all duration-300">
+            
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2 text-2xl">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed text-xl">{feature.description}</p>
               </motion.div>
-            ))}
+          )}
           </div>
         </div>
       </section>
@@ -285,6 +285,7 @@ export default function Landing() {
                   try {
                     await navigator.share({ title: 'Ghost Link', url: shareUrl });
                   } catch (e) {
+
 
 
 
