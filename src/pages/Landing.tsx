@@ -148,7 +148,7 @@ export default function Landing() {
           <h1 className="text-[2.4rem] md:text-7xl lg:text-8xl font-bold text-foreground tracking-tight leading-[1.1]">
             Stop guessing.
             <br />
-            <span className="text-sidebar-primary">Start scaling.</span>
+            <span className="text-purple-600">Start scaling.</span>
           </h1>
           
           {/* Sub-headline */}
@@ -285,6 +285,8 @@ export default function Landing() {
                   try {
                     await navigator.share({ title: 'Ghost Link', url: shareUrl });
                   } catch (e) {
+
+
 
 
 
