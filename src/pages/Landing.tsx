@@ -210,6 +210,9 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Workflow Section */}
+      <WorkflowSection />
+
       {/* Comparison Section */}
       <ComparisonSection />
 
