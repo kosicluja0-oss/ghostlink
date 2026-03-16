@@ -12,6 +12,7 @@ import { ComparisonSection } from '@/components/landing/ComparisonSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { WhatsNewModal } from '@/components/landing/WhatsNewModal';
 import { LogoMarquee } from '@/components/landing/LogoMarquee';
+import { WorkflowSection } from '@/components/landing/WorkflowSection';
 
 // Mock chart component for hero
 function DashboardPreview() {
@@ -208,6 +209,9 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      {/* Workflow Section */}
+      <WorkflowSection />
 
       {/* Comparison Section */}
       <ComparisonSection />
