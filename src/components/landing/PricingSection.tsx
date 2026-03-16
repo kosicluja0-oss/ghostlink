@@ -4,61 +4,8 @@ import { ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { createCheckoutSession, STRIPE_PRICES, type PlanId, type BillingCycle } from '@/lib/stripe';
 import { toast } from 'sonner';
-import { PricingCard, type PricingPlanData } from './PricingCard';
-
-const YEARLY_DISCOUNT = 0.75;
-
-const pricingPlans: Record<string, PricingPlanData> = {
-  free: {
-    name: 'Free',
-    description: 'For hobbyists exploring the platform.',
-    monthlyPrice: 0,
-    priceIds: { monthly: null, yearly: null },
-    features: ['25 active links', 'Click tracking', 'Basic dashboard', 'Community support'],
-    highlighted: false
-  },
-  pro: {
-    name: 'Pro',
-    description: 'For serious marketers scaling up.',
-    monthlyPrice: 10,
-    priceIds: {
-      monthly: 'price_1SqvwMR7WITbhBZj8cbrc0Zz',
-      yearly: 'price_1SqvxyR7WITbhBZjcM73F1lN'
-    },
-    features: [
-    '100 active links',
-    'Leads & Sales tracking',
-    'Full analytics',
-    'Geographic insights',
-    'Priority support'],
-
-    highlighted: false
-  },
-  business: {
-    name: 'Business',
-    description: 'For teams and agencies at scale.',
-    monthlyPrice: 15,
-    priceIds: {
-      monthly: 'price_1Sqw2AR7WITbhBZjvQDRReY6',
-      yearly: 'price_1Sqw2aR7WITbhBZjzBBcN8H3'
-    },
-    badge: 'Most Popular',
-    features: [
-    '175 active links',
-    'All Pro features',
-    'Team collaboration',
-    'API access',
-    'Dedicated support'],
-
-    highlighted: true
-  }
-};
-
-function getDisplayPrice(plan: PricingPlanData, cycle: BillingCycle): number {
-  if (plan.monthlyPrice === 0) return 0;
-  if (cycle === 'monthly') return plan.monthlyPrice;
-  return plan.monthlyPrice * YEARLY_DISCOUNT;
-}
+import { PricingCard } from './PricingCard';
+import { pricingPlans, getDisplayPrice } from '@/lib/pricingData';
 
 // Mobile order: Pro, Business (swipeable), then Free below
 const mobileOrder = ['pro', 'business'] as const;
