@@ -55,6 +55,12 @@ export default function Pricing() {
               </span>
             </Link>
             <div className="flex items-center gap-1.5 sm:gap-2">
+              <WhatsNewModal />
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5">
+                  Home
+                </Button>
+              </Link>
               <Link to="/pricing">
                 <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5 text-primary">
                   Pricing
