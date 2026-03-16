@@ -88,6 +88,11 @@ export default function Landing() {
             {/* Nav Actions */}
               <div className="flex items-center gap-1.5 sm:gap-2">
               <WhatsNewModal />
+              <Link to="/pricing">
+                <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5">
+                  Pricing
+                </Button>
+              </Link>
               <Link to="/auth">
                 <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5">
                   Log in

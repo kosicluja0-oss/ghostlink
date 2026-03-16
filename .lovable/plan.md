@@ -1,63 +1,64 @@
 
 
-# Pricing Page — Plan
+## Plan: 3 Landing Page Trust & Conversion Upgrades
 
-## Co se změní
+### 1. H1 Headline Tweak
 
-1. **Nová stránka `/pricing`** (`src/pages/Pricing.tsx`)
-   - Samostatná stránka s detailním srovnáním všech tří plánů (Free, Pro, Business)
-   - Rozložení: nahoře pricing karty (reuse `PricingCard` + `PricingSection` logika), pod tím **feature comparison table** — řádky s checkmarky/křížky pro každý plán
-   - Feature tabulka bude obsahovat kategorie: Tracking (clicks, leads, sales, revenue), Analytics (real-time, geographic, EPC, conversion rates), Integrations, Support level, API access, Team collaboration
-   - FAQ sekce dole (reuse accordion pattern z landing page)
-   - Stejný tmavý styl jako landing page
+**Current state:**
+- H1: "Stop guessing. Start scaling."
+- Sub-headline: "Ghost Link is the missing piece of your sales funnel. Track every click, lead, and sale from bio to bank account."
 
-2. **Tlačítko "Pricing" do navbar** (`src/pages/Landing.tsx`)
-   - Přidá se `<Link to="/pricing">` mezi logo a Log in tlačítko
-   - Styl: `variant="ghost"`, stejná velikost jako Log in
+**Proposed change (file: `src/pages/Landing.tsx`, lines 169-180):**
 
-3. **Route v App.tsx**
-   - Přidá se `<Route path="/pricing" element={<Pricing />} />` (veřejná, bez ProtectedRoute)
+Keep the punchy H1 but sharpen the sub-headline to communicate specific value and target audience:
 
-## Struktura pricing stránky
+- H1 stays: **"Stop guessing. Start scaling."** (it's strong, short, memorable)
+- Sub-headline changes to: **"The tracking tool built for creators selling on Gumroad, Whop & social media. Get full-funnel insights — clicks, leads, sales — at a fraction of the cost."**
+
+This anchors the product to a specific audience (creators, affiliates) and implies price advantage without sounding cheap.
+
+---
+
+### 2. Trust Section (new section between Pricing and FAQ)
+
+**File: `src/pages/Landing.tsx`** — insert a new section between `<PricingSection />` and the FAQ section (around line 230).
+
+A compact, centered trust bar with three trust signals side by side, using icons (Shield, CreditCard, Lock from lucide-react):
+
+- **"No credit card required"** — Free plan, no strings attached.
+- **"Secure Stripe checkout"** — Payments handled by Stripe.
+- **"256-bit encryption"** — Your data is always protected.
+
+Styled as a single-row horizontal layout (3 columns on desktop, stacked on mobile), with subtle icon + text pairs. Minimal design, no heavy card borders — just clean text with muted icons to feel trustworthy, not salesy.
+
+---
+
+### 3. "What's New" Modal
+
+**New file: `src/components/landing/WhatsNewModal.tsx`**
+
+A simple Dialog modal triggered from a "What's New" link in the navbar (next to Log in / Sign Up).
+
+Content — a short changelog with timeline styling:
 
 ```text
-┌─────────────────────────────────────────┐
-│  Navbar (logo + Pricing + Login/Signup) │
-├─────────────────────────────────────────┤
-│  Headline: "Choose Your Plan"           │
-│  Billing toggle (monthly/yearly)        │
-│                                         │
-│  ┌─────┐  ┌─────┐  ┌─────┐             │
-│  │Free │  │ Pro │  │Biz  │             │
-│  │ $0  │  │ $10 │  │ $15 │             │
-│  │ CTA │  │ CTA │  │ CTA │             │
-│  └─────┘  └─────┘  └─────┘             │
-│                                         │
-│  ── Feature Comparison Table ──         │
-│  Active links     25    100    175      │
-│  Click tracking    ✓     ✓      ✓       │
-│  Lead tracking     ✗     ✓      ✓       │
-│  Sale tracking     ✗     ✓      ✓       │
-│  Full analytics    ✗     ✓      ✓       │
-│  Geo insights      ✗     ✓      ✓       │
-│  Priority support  ✗     ✓      ✓       │
-│  API access        ✗     ✗      ✓       │
-│  Team collab       ✗     ✗      ✓       │
-│  Dedicated support ✗     ✗      ✓       │
-│                                         │
-│  ── FAQ ──                              │
-│  Can I switch plans?                    │
-│  What happens when I cancel?            │
-│  ...                                    │
-│                                         │
-│  Footer                                │
-└─────────────────────────────────────────┘
+v2.0 — Beta Launch
+  Ghost Link V2 is live with real-time analytics,
+  conversion tracking, and geographic insights.
+
+Coming Soon
+  LemonSqueezy & Gumroad native integrations.
+  Team workspaces for agencies.
 ```
 
-## Technické detaily
+**File: `src/pages/Landing.tsx`** — add a "What's New" button/link in the navbar area (around line 120), opening the modal. Styled as a subtle ghost button or text link with a small sparkle/rocket icon.
 
-- Plan data a checkout logika se reusne z `PricingSection` / `PricingCard` — extrahuje se `pricingPlans` objekt do sdíleného souboru nebo se importuje přímo
-- Feature comparison tabulka bude nová komponenta `src/components/pricing/FeatureComparisonTable.tsx`
-- Na mobilu se tabulka horizontálně scrolluje nebo se změní na stacked karty
-- Navbar pricing tlačítko se přidá i na samotnou pricing stránku (sdílený header)
+---
+
+### Summary of file changes
+
+| File | Change |
+|------|--------|
+| `src/pages/Landing.tsx` | Update sub-headline text; add Trust section between Pricing and FAQ; add "What's New" button in navbar |
+| `src/components/landing/WhatsNewModal.tsx` | New file — simple Dialog with changelog content |
 
