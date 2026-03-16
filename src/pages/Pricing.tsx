@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Ghost, Share2, CreditCard } from 'lucide-react';
+import { WhatsNewModal } from '@/components/landing/WhatsNewModal';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,6 +55,12 @@ export default function Pricing() {
               </span>
             </Link>
             <div className="flex items-center gap-1.5 sm:gap-2">
+              <WhatsNewModal />
+              <Link to="/">
+                <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5">
+                  Home
+                </Button>
+              </Link>
               <Link to="/pricing">
                 <Button variant="ghost" size="sm" className="text-xs font-medium h-7 px-2.5 text-primary">
                   Pricing
